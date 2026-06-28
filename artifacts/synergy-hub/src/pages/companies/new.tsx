@@ -18,7 +18,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Factory, Sparkles, UploadCloud, Loader2, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X, Plus, Factory, Sparkles, UploadCloud, Loader2, FileText, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
+
+const ZOOM_STEPS = [1, 1.5, 2, 3, 4] as const;
 
 const MAX_FILE_BYTES = 7 * 1024 * 1024;
 
@@ -51,6 +54,9 @@ export default function NewCompany() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createCompany = useCreateCompany();
@@ -89,10 +95,14 @@ export default function NewCompany() {
 
     const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "application/pdf"];
     if (!allowed.includes(file.type)) {
+      setUploadedFileName(null);
+      setPreviewImageUrl(null);
       toast({ title: "지원하지 않는 형식", description: "이미지(PNG, JPG, WEBP) 또는 PDF 파일만 업로드할 수 있습니다.", variant: "destructive" });
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
+      setUploadedFileName(null);
+      setPreviewImageUrl(null);
       toast({ title: "파일이 너무 큽니다", description: "7MB 이하의 파일을 업로드해주세요.", variant: "destructive" });
       return;
     }
@@ -100,6 +110,9 @@ export default function NewCompany() {
     try {
       const fileBase64 = await fileToBase64(file);
       setUploadedFileName(file.name);
+      setPreviewImageUrl(
+        file.type.startsWith("image/") ? `data:${file.type};base64,${fileBase64}` : null,
+      );
       analyzeMaterial.mutate(
         { data: { fileBase64, mimeType: file.type } },
         {
@@ -117,6 +130,7 @@ export default function NewCompany() {
           },
           onError: () => {
             setUploadedFileName(null);
+            setPreviewImageUrl(null);
             toast({ title: "분석 실패", description: "홍보자료 분석 중 문제가 발생했습니다. 다른 자료로 다시 시도해주세요.", variant: "destructive" });
           },
         },
@@ -217,8 +231,105 @@ export default function NewCompany() {
               </>
             )}
           </div>
+
+          {previewImageUrl && (
+            <div className="mt-4 flex items-center gap-4 rounded-lg border bg-background/60 p-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setZoomIndex(0);
+                  setLightboxOpen(true);
+                }}
+                className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-md border bg-muted"
+                aria-label="업로드한 이미지 크게 보기"
+              >
+                <img src={previewImageUrl} alt="업로드한 홍보자료 미리보기" className="h-full w-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Maximize2 className="h-6 w-6 text-white" />
+                </span>
+              </button>
+              <div className="min-w-0">
+                <p className="font-medium">업로드한 이미지</p>
+                <p className="mt-1 text-sm text-muted-foreground">이미지를 클릭하면 크게 보고 확대할 수 있습니다.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 gap-1.5"
+                  onClick={() => {
+                    setZoomIndex(0);
+                    setLightboxOpen(true);
+                  }}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                  크게 보기
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-5xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Maximize2 className="h-5 w-5 text-primary" />
+              홍보자료 미리보기
+            </DialogTitle>
+          </DialogHeader>
+          {previewImageUrl && (
+            <>
+              <div className="max-h-[70vh] overflow-auto rounded-lg border bg-muted/40 p-2">
+                <img
+                  src={previewImageUrl}
+                  alt="업로드한 홍보자료"
+                  style={{ width: `${ZOOM_STEPS[zoomIndex] * 100}%` }}
+                  className="mx-auto h-auto max-w-none origin-top transition-[width] duration-200"
+                />
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={zoomIndex === 0}
+                  onClick={() => setZoomIndex((i) => Math.max(0, i - 1))}
+                >
+                  <ZoomOut className="h-4 w-4" />
+                  축소
+                </Button>
+                <span className="min-w-16 text-center text-sm font-medium tabular-nums">
+                  {Math.round(ZOOM_STEPS[zoomIndex] * 100)}%
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={zoomIndex === ZOOM_STEPS.length - 1}
+                  onClick={() => setZoomIndex((i) => Math.min(ZOOM_STEPS.length - 1, i + 1))}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                  확대
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={zoomIndex === 0}
+                  onClick={() => setZoomIndex(0)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  원래대로
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Card>
         <CardHeader>
