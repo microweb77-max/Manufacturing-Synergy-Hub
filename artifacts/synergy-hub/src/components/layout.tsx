@@ -29,13 +29,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
-            <Factory className="h-6 w-6 text-primary" />
-            <span className="tracking-tight">Manufacturing Synergy Hub</span>
-          </h1>
-          <p className="mt-1.5 text-xs text-sidebar-foreground/60 text-center">베트남 제조산업 협력 네트워크</p>
-        </div>
+        <Link href="/">
+          <div className="p-6 cursor-pointer">
+            <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
+              <Factory className="h-6 w-6 text-primary" />
+              <span className="tracking-tight">Manufacturing Synergy Hub</span>
+            </h1>
+            <p className="mt-1.5 text-xs text-sidebar-foreground/60 text-center">베트남 제조산업 협력 네트워크</p>
+          </div>
+        </Link>
         <nav className="flex-1 px-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
