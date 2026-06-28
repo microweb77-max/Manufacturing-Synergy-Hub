@@ -62,14 +62,11 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 p-8 pt-6 space-y-8 max-w-7xl mx-auto w-full">
-      <div className="space-y-4">
-        <h2 className="text-3xl font-bold tracking-tight">대시보드</h2>
-        <img
-          src={heroBanner}
-          alt="베트남 제조산업의 새로운 미래, 당신의 파트너십을 연결합니다"
-          className="w-full rounded-lg"
-        />
-      </div>
+      <img
+        src={heroBanner}
+        alt="베트남 제조산업의 새로운 미래, 당신의 파트너십을 연결합니다"
+        className="w-full rounded-lg"
+      />
 
       {/* Promotion CTA banner */}
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-secondary/5">
