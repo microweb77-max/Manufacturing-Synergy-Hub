@@ -16,11 +16,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "대시보드", icon: LayoutDashboard },
     { href: "/companies", label: "기업 디렉토리", icon: Factory },
+    { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
     { href: "/projects", label: "프로젝트", icon: Activity },
     { href: "/matches", label: "매칭 보드", icon: Network },
     { href: "/solutions", label: "솔루션 갤러리", icon: Server },
     { href: "/talent", label: "인력 Pool", icon: Users },
-    { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
   ];
 
   return (
