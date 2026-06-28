@@ -28,7 +28,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-6">
           <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
             <Factory className="h-6 w-6 text-primary" />
-            <span className="tracking-tight">Synergy Hub</span>
+            <span className="tracking-tight">Manufacturing Synergy Hub</span>
           </h1>
           <p className="mt-1.5 text-xs text-sidebar-foreground/60">베트남 제조산업 협력 네트워크</p>
         </div>
