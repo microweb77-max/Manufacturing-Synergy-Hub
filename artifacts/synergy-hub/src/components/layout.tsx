@@ -7,6 +7,7 @@ import {
   BarChart, 
   LayoutDashboard
 } from "lucide-react";
+import networkLogo from "@assets/image_1782637730787.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -24,7 +25,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col shrink-0">
-        <div className="p-6">
+        <div className="p-6 space-y-4">
+          <img
+            src={networkLogo}
+            alt="Vietnam Manufacturing Network"
+            className="w-full rounded-lg border border-sidebar-border"
+          />
           <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
             <Factory className="h-6 w-6 text-primary" />
             <span className="tracking-tight">Synergy Hub</span>
