@@ -4,7 +4,7 @@ import {
   Activity, 
   Network, 
   Server, 
-  BarChart, 
+  Users, 
   LayoutDashboard
 } from "lucide-react";
 import networkLogo from "../assets/network-logo.png";
@@ -18,7 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/projects", label: "프로젝트", icon: Activity },
     { href: "/matches", label: "매칭 보드", icon: Network },
     { href: "/solutions", label: "솔루션 갤러리", icon: Server },
-    { href: "/performance", label: "성과 보드", icon: BarChart },
+    { href: "/talent", label: "인력 Pool", icon: Users },
   ];
 
   return (

@@ -20,6 +20,8 @@ tags:
     description: Joint solution portfolio
   - name: performance
     description: Performance and contribution logs
+  - name: talent
+    description: Talent pool job postings and seekers
   - name: dashboard
     description: Aggregated dashboard data
 paths:
@@ -517,6 +519,60 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PerformanceLog"
+
+  /talent:
+    get:
+      operationId: listTalentPosts
+      tags: [talent]
+      summary: List talent pool posts
+      parameters:
+        - name: postType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [hiring, seeking]
+      responses:
+        "200":
+          description: Posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TalentPost"
+    post:
+      operationId: createTalentPost
+      tags: [talent]
+      summary: Create a talent pool post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentPostInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentPost"
+
+  /talent/{id}:
+    delete:
+      operationId: deleteTalentPost
+      tags: [talent]
+      summary: Delete a talent pool post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /dashboard/summary:
     get:
@@ -1037,6 +1093,90 @@ components:
         revenue:
           type: string
         notes:
+          type: string
+
+    TalentPost:
+      type: object
+      required:
+        - id
+        - postType
+        - title
+        - authorName
+        - position
+        - location
+        - employmentType
+        - experienceLevel
+        - headcount
+        - skills
+        - description
+        - contactEmail
+        - contactPhone
+        - createdAt
+      properties:
+        id:
+          type: integer
+        postType:
+          type: string
+          enum: [hiring, seeking]
+        title:
+          type: string
+        authorName:
+          type: string
+        position:
+          type: string
+        location:
+          type: string
+        employmentType:
+          type: ["string", "null"]
+        experienceLevel:
+          type: ["string", "null"]
+        headcount:
+          type: ["integer", "null"]
+        skills:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+    TalentPostInput:
+      type: object
+      required:
+        - postType
+        - title
+        - authorName
+      properties:
+        postType:
+          type: string
+          enum: [hiring, seeking]
+        title:
+          type: string
+        authorName:
+          type: string
+        position:
+          type: string
+        location:
+          type: string
+        employmentType:
+          type: string
+        experienceLevel:
+          type: string
+        headcount:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
           type: string
 
     DashboardSummary:

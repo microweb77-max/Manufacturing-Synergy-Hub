@@ -5,6 +5,7 @@ import projectsRouter from "./projects";
 import matchesRouter from "./matches";
 import solutionsRouter from "./solutions";
 import performanceRouter from "./performance";
+import talentRouter from "./talent";
 import dashboardRouter from "./dashboard";
 
 const router: IRouter = Router();
@@ -15,6 +16,7 @@ router.use(projectsRouter);
 router.use(matchesRouter);
 router.use(solutionsRouter);
 router.use(performanceRouter);
+router.use(talentRouter);
 router.use(dashboardRouter);
 
 export default router;

@@ -864,6 +864,78 @@ export const CreatePerformanceLogResponse = zod.object({
 
 
 /**
+ * @summary List talent pool posts
+ */
+export const ListTalentPostsQueryParams = zod.object({
+  "postType": zod.enum(['hiring', 'seeking']).optional()
+})
+
+export const ListTalentPostsResponseItem = zod.object({
+  "id": zod.number(),
+  "postType": zod.enum(['hiring', 'seeking']),
+  "title": zod.string(),
+  "authorName": zod.string(),
+  "position": zod.string(),
+  "location": zod.string(),
+  "employmentType": zod.string().nullable(),
+  "experienceLevel": zod.string().nullable(),
+  "headcount": zod.number().nullable(),
+  "skills": zod.array(zod.string()),
+  "description": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "createdAt": zod.string()
+})
+export const ListTalentPostsResponse = zod.array(ListTalentPostsResponseItem)
+
+
+/**
+ * @summary Create a talent pool post
+ */
+export const CreateTalentPostBody = zod.object({
+  "postType": zod.enum(['hiring', 'seeking']),
+  "title": zod.string(),
+  "authorName": zod.string(),
+  "position": zod.string().optional(),
+  "location": zod.string().optional(),
+  "employmentType": zod.string().optional(),
+  "experienceLevel": zod.string().optional(),
+  "headcount": zod.number().optional(),
+  "skills": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional()
+})
+
+export const CreateTalentPostResponse = zod.object({
+  "id": zod.number(),
+  "postType": zod.enum(['hiring', 'seeking']),
+  "title": zod.string(),
+  "authorName": zod.string(),
+  "position": zod.string(),
+  "location": zod.string(),
+  "employmentType": zod.string().nullable(),
+  "experienceLevel": zod.string().nullable(),
+  "headcount": zod.number().nullable(),
+  "skills": zod.array(zod.string()),
+  "description": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a talent pool post
+ */
+export const DeleteTalentPostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteTalentPostResponse = zod.void()
+
+
+/**
  * @summary Aggregated platform metrics
  */
 export const GetDashboardSummaryResponse = zod.object({

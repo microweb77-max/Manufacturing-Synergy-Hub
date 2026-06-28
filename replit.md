@@ -38,7 +38,9 @@ A B2B manufacturing collaboration network for Vietnam that matches hardware spec
 
 ## Product
 
-Company capability directory, demand-project posting with smart partner matching (synergy score + reasons), a co-selling matchboard, joint-solution packages, and a contribution/performance board with a trust leaderboard. UI labels are in Korean.
+Company capability directory, demand-project posting with smart partner matching (synergy score + reasons), a co-selling matchboard, joint-solution packages, and a talent pool (인력 Pool) where companies post hiring openings (구인) and individuals post job-seeking profiles (구직). UI labels are in Korean.
+
+The talent pool replaced the former performance/trust-leaderboard board in the sidebar. Talent schema: `lib/db/src/schema/talent.ts` (`talent_posts`); API routes: `artifacts/api-server/src/routes/talent.ts` (GET `/talent` with `postType` filter, POST `/talent`, DELETE `/talent/{id}`); frontend page: `artifacts/synergy-hub/src/pages/talent/index.tsx`. The performance backend (schema/routes) remains but is no longer linked in the frontend nav.
 
 On the new-company page, users can upload an existing promotional material (image or PDF); Gemini (via Replit AI Integrations) reads the text/visuals and auto-fills the registration form. Endpoint: `POST /companies/analyze-material` in `artifacts/api-server/src/routes/companies.ts`; the Gemini client lives in `lib/integrations-gemini-ai`.
 

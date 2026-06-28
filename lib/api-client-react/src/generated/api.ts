@@ -34,6 +34,7 @@ import type {
   ListPerformanceLogsParams,
   ListProjectsParams,
   ListSolutionsParams,
+  ListTalentPostsParams,
   Match,
   MatchInput,
   MatchUpdate,
@@ -45,7 +46,9 @@ import type {
   Recommendation,
   Solution,
   SolutionInput,
-  SolutionUpdate
+  SolutionUpdate,
+  TalentPost,
+  TalentPostInput
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1877,6 +1880,230 @@ export const useCreatePerformanceLog = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreatePerformanceLogMutationOptions(options));
+    }
+
+export const getListTalentPostsUrl = (params?: ListTalentPostsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/talent?${stringifiedParams}` : `/api/talent`
+}
+
+/**
+ * @summary List talent pool posts
+ */
+export const listTalentPosts = async (params?: ListTalentPostsParams, options?: RequestInit): Promise<TalentPost[]> => {
+
+  return customFetch<TalentPost[]>(getListTalentPostsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTalentPostsQueryKey = (params?: ListTalentPostsParams,) => {
+    return [
+    `/api/talent`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListTalentPostsQueryOptions = <TData = Awaited<ReturnType<typeof listTalentPosts>>, TError = ErrorType<unknown>>(params?: ListTalentPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTalentPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTalentPostsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTalentPosts>>> = ({ signal }) => listTalentPosts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTalentPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTalentPostsQueryResult = NonNullable<Awaited<ReturnType<typeof listTalentPosts>>>
+export type ListTalentPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List talent pool posts
+ */
+
+export function useListTalentPosts<TData = Awaited<ReturnType<typeof listTalentPosts>>, TError = ErrorType<unknown>>(
+ params?: ListTalentPostsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTalentPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTalentPostsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTalentPostUrl = () => {
+
+
+
+
+  return `/api/talent`
+}
+
+/**
+ * @summary Create a talent pool post
+ */
+export const createTalentPost = async (talentPostInput: TalentPostInput, options?: RequestInit): Promise<TalentPost> => {
+
+  return customFetch<TalentPost>(getCreateTalentPostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(talentPostInput)
+  }
+);}
+
+
+
+
+export const getCreateTalentPostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTalentPost>>, TError,{data: BodyType<TalentPostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTalentPost>>, TError,{data: BodyType<TalentPostInput>}, TContext> => {
+
+const mutationKey = ['createTalentPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTalentPost>>, {data: BodyType<TalentPostInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTalentPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTalentPostMutationResult = NonNullable<Awaited<ReturnType<typeof createTalentPost>>>
+    export type CreateTalentPostMutationBody = BodyType<TalentPostInput>
+    export type CreateTalentPostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a talent pool post
+ */
+export const useCreateTalentPost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTalentPost>>, TError,{data: BodyType<TalentPostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTalentPost>>,
+        TError,
+        {data: BodyType<TalentPostInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTalentPostMutationOptions(options));
+    }
+
+export const getDeleteTalentPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/talent/${id}`
+}
+
+/**
+ * @summary Delete a talent pool post
+ */
+export const deleteTalentPost = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTalentPostUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTalentPostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTalentPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTalentPost>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteTalentPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTalentPost>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTalentPost(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTalentPostMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTalentPost>>>
+
+    export type DeleteTalentPostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a talent pool post
+ */
+export const useDeleteTalentPost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTalentPost>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTalentPost>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTalentPostMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = () => {

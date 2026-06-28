@@ -21,7 +21,7 @@ import SolutionsList from "./pages/solutions";
 import SolutionDetail from "./pages/solutions/[id]";
 import NewSolution from "./pages/solutions/new";
 
-import PerformanceList from "./pages/performance";
+import TalentPool from "./pages/talent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,7 +52,7 @@ function Router() {
         <Route path="/solutions/new" component={NewSolution} />
         <Route path="/solutions/:id" component={SolutionDetail} />
         
-        <Route path="/performance" component={PerformanceList} />
+        <Route path="/talent" component={TalentPool} />
         
         <Route component={NotFound} />
       </Switch>

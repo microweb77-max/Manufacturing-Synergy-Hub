@@ -287,6 +287,59 @@ export interface PerformanceLogInput {
   notes?: string;
 }
 
+export type TalentPostPostType = typeof TalentPostPostType[keyof typeof TalentPostPostType];
+
+
+export const TalentPostPostType = {
+  hiring: 'hiring',
+  seeking: 'seeking',
+} as const;
+
+export interface TalentPost {
+  id: number;
+  postType: TalentPostPostType;
+  title: string;
+  authorName: string;
+  position: string;
+  location: string;
+  /** @nullable */
+  employmentType: string | null;
+  /** @nullable */
+  experienceLevel: string | null;
+  /** @nullable */
+  headcount: number | null;
+  skills: string[];
+  description: string;
+  /** @nullable */
+  contactEmail: string | null;
+  /** @nullable */
+  contactPhone: string | null;
+  createdAt: string;
+}
+
+export type TalentPostInputPostType = typeof TalentPostInputPostType[keyof typeof TalentPostInputPostType];
+
+
+export const TalentPostInputPostType = {
+  hiring: 'hiring',
+  seeking: 'seeking',
+} as const;
+
+export interface TalentPostInput {
+  postType: TalentPostInputPostType;
+  title: string;
+  authorName: string;
+  position?: string;
+  location?: string;
+  employmentType?: string;
+  experienceLevel?: string;
+  headcount?: number;
+  skills?: string[];
+  description?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
 export interface TagCount {
   tag: string;
   count: number;
@@ -372,4 +425,16 @@ export type ListPerformanceLogsParams = {
 projectId?: number;
 companyId?: number;
 };
+
+export type ListTalentPostsParams = {
+postType?: ListTalentPostsPostType;
+};
+
+export type ListTalentPostsPostType = typeof ListTalentPostsPostType[keyof typeof ListTalentPostsPostType];
+
+
+export const ListTalentPostsPostType = {
+  hiring: 'hiring',
+  seeking: 'seeking',
+} as const;
 
