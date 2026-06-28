@@ -21,6 +21,8 @@ import type {
 
 import type {
   ActivityItem,
+  AnalyzeMaterialInput,
+  AnalyzeMaterialResult,
   Company,
   CompanyInput,
   CompanyUpdate,
@@ -599,6 +601,76 @@ export function useGetCompanyLeaderboard<TData = Awaited<ReturnType<typeof getCo
 
 
 
+
+export const getAnalyzeCompanyMaterialUrl = () => {
+
+
+
+
+  return `/api/companies/analyze-material`
+}
+
+/**
+ * @summary Analyze a promotional material file and extract company profile fields
+ */
+export const analyzeCompanyMaterial = async (analyzeMaterialInput: AnalyzeMaterialInput, options?: RequestInit): Promise<AnalyzeMaterialResult> => {
+
+  return customFetch<AnalyzeMaterialResult>(getAnalyzeCompanyMaterialUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(analyzeMaterialInput)
+  }
+);}
+
+
+
+
+export const getAnalyzeCompanyMaterialMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeCompanyMaterial>>, TError,{data: BodyType<AnalyzeMaterialInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analyzeCompanyMaterial>>, TError,{data: BodyType<AnalyzeMaterialInput>}, TContext> => {
+
+const mutationKey = ['analyzeCompanyMaterial'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analyzeCompanyMaterial>>, {data: BodyType<AnalyzeMaterialInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  analyzeCompanyMaterial(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalyzeCompanyMaterialMutationResult = NonNullable<Awaited<ReturnType<typeof analyzeCompanyMaterial>>>
+    export type AnalyzeCompanyMaterialMutationBody = BodyType<AnalyzeMaterialInput>
+    export type AnalyzeCompanyMaterialMutationError = ErrorType<Error>
+
+    /**
+ * @summary Analyze a promotional material file and extract company profile fields
+ */
+export const useAnalyzeCompanyMaterial = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analyzeCompanyMaterial>>, TError,{data: BodyType<AnalyzeMaterialInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof analyzeCompanyMaterial>>,
+        TError,
+        {data: BodyType<AnalyzeMaterialInput>},
+        TContext
+      > => {
+      return useMutation(getAnalyzeCompanyMaterialMutationOptions(options));
+    }
 
 export const getListProjectsUrl = (params?: ListProjectsParams,) => {
   const normalizedParams = new URLSearchParams();

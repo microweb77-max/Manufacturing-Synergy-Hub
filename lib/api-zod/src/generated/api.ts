@@ -177,6 +177,25 @@ export const GetCompanyLeaderboardResponse = zod.array(GetCompanyLeaderboardResp
 
 
 /**
+ * @summary Analyze a promotional material file and extract company profile fields
+ */
+export const AnalyzeCompanyMaterialBody = zod.object({
+  "fileBase64": zod.string().describe('Base64-encoded content of the promotional material (image or PDF), without data URI prefix'),
+  "mimeType": zod.string().describe('MIME type of the uploaded file (e.g. image\/png, application\/pdf)')
+})
+
+export const AnalyzeCompanyMaterialResponse = zod.object({
+  "name": zod.string(),
+  "type": zod.enum(['hardware', 'software']),
+  "description": zod.string(),
+  "location": zod.string(),
+  "capabilityTags": zod.array(zod.string()),
+  "techSpecs": zod.string(),
+  "contactEmail": zod.string()
+})
+
+
+/**
  * @summary List projects
  */
 export const ListProjectsQueryParams = zod.object({

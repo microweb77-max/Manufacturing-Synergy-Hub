@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useCreateCompany, getListCompaniesQueryKey } from "@workspace/api-client-react";
+import {
+  useCreateCompany,
+  useAnalyzeCompanyMaterial,
+  getListCompaniesQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -14,7 +18,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { X, Plus, Factory } from "lucide-react";
+import { X, Plus, Factory, Sparkles, UploadCloud, Loader2, FileText } from "lucide-react";
+
+const MAX_FILE_BYTES = 7 * 1024 * 1024;
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
 
 const formSchema = z.object({
   name: z.string().min(2, "기업명을 입력해주세요"),
@@ -31,8 +50,11 @@ export default function NewCompany() {
   const queryClient = useQueryClient();
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createCompany = useCreateCompany();
+  const analyzeMaterial = useAnalyzeCompanyMaterial();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,6 +80,50 @@ export default function NewCompany() {
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast({ title: "지원하지 않는 형식", description: "이미지(PNG, JPG, WEBP) 또는 PDF 파일만 업로드할 수 있습니다.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      toast({ title: "파일이 너무 큽니다", description: "7MB 이하의 파일을 업로드해주세요.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const fileBase64 = await fileToBase64(file);
+      setUploadedFileName(file.name);
+      analyzeMaterial.mutate(
+        { data: { fileBase64, mimeType: file.type } },
+        {
+          onSuccess: (result) => {
+            if (result.name) form.setValue("name", result.name, { shouldValidate: true });
+            if (result.type) form.setValue("type", result.type, { shouldValidate: true });
+            if (result.description) form.setValue("description", result.description, { shouldValidate: true });
+            if (result.location) form.setValue("location", result.location, { shouldValidate: true });
+            if (result.contactEmail) form.setValue("contactEmail", result.contactEmail, { shouldValidate: true });
+            if (result.techSpecs) form.setValue("techSpecs", result.techSpecs, { shouldValidate: true });
+            if (result.capabilityTags?.length) {
+              setTags((prev) => Array.from(new Set([...prev, ...result.capabilityTags])));
+            }
+            toast({ title: "분석 완료", description: "홍보자료에서 기업 정보를 추출했습니다. 내용을 확인하고 수정해주세요." });
+          },
+          onError: () => {
+            setUploadedFileName(null);
+            toast({ title: "분석 실패", description: "홍보자료 분석 중 문제가 발생했습니다. 다른 자료로 다시 시도해주세요.", variant: "destructive" });
+          },
+        },
+      );
+    } catch {
+      toast({ title: "오류", description: "파일을 읽는 중 문제가 발생했습니다.", variant: "destructive" });
+    }
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -89,6 +155,70 @@ export default function NewCompany() {
         <h1 className="text-3xl font-bold tracking-tight">새 기업 등록</h1>
         <p className="text-muted-foreground mt-1">시너지 허브 네트워크에 귀사를 등록하고 파트너를 만나보세요.</p>
       </div>
+
+      <Card className="mb-6 border-primary/30 bg-primary/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Sparkles className="h-5 w-5 text-primary" />
+            홍보자료로 자동 입력
+          </CardTitle>
+          <CardDescription>
+            회사소개서, 브로슈어, 카탈로그 등 기존 홍보자료(이미지 또는 PDF)를 업로드하면 AI가 텍스트를 분석해 아래 양식을 자동으로 채워줍니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,application/pdf"
+            className="hidden"
+            onChange={handleFileSelected}
+          />
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => !analyzeMaterial.isPending && fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && !analyzeMaterial.isPending) {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            className={`flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-primary/40 bg-background/60 px-6 py-8 text-center transition-colors ${
+              analyzeMaterial.isPending ? "cursor-wait opacity-80" : "cursor-pointer hover:border-primary hover:bg-primary/5"
+            }`}
+          >
+            {analyzeMaterial.isPending ? (
+              <>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <div>
+                  <p className="font-medium">홍보자료를 분석하고 있습니다...</p>
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5" />
+                    {uploadedFileName}
+                  </p>
+                </div>
+              </>
+            ) : uploadedFileName ? (
+              <>
+                <FileText className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">{uploadedFileName}</p>
+                  <p className="text-sm text-muted-foreground mt-1">분석이 완료되었습니다. 다른 자료로 다시 시도하려면 클릭하세요.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <UploadCloud className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="font-medium">클릭하여 홍보자료 업로드</p>
+                  <p className="text-sm text-muted-foreground mt-1">이미지(PNG, JPG, WEBP) 또는 PDF · 최대 7MB</p>
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -179,7 +309,7 @@ export default function NewCompany() {
               />
 
               <div className="space-y-3">
-                <FormLabel>역량 태그 (엔터로 추가)</FormLabel>
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">역량 태그 (엔터로 추가)</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="px-2 py-1 text-sm">

@@ -1,1 +1,2 @@
 - [Zod date serialization](zod-date-serialization.md) — Drizzle Date objects fail generated Zod response schemas; wrap rows in toJson() (JSON round-trip) before .parse().
+- [api-server esbuild externals](api-server-esbuild-externals.md) — externalized runtime deps (e.g. @google/*) must be DIRECT api-server deps or runtime ERR_MODULE_NOT_FOUND; load integration clients lazily so missing env can't crash startup.

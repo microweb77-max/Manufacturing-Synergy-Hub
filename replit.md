@@ -40,6 +40,8 @@ A B2B manufacturing collaboration network for Vietnam that matches hardware spec
 
 Company capability directory, demand-project posting with smart partner matching (synergy score + reasons), a co-selling matchboard, joint-solution packages, and a contribution/performance board with a trust leaderboard. UI labels are in Korean.
 
+On the new-company page, users can upload an existing promotional material (image or PDF); Gemini (via Replit AI Integrations) reads the text/visuals and auto-fills the registration form. Endpoint: `POST /companies/analyze-material` in `artifacts/api-server/src/routes/companies.ts`; the Gemini client lives in `lib/integrations-gemini-ai`.
+
 ## User preferences
 
 - UI labels and user-facing text should be in Korean.
@@ -49,6 +51,7 @@ Company capability directory, demand-project posting with smart partner matching
 
 - Always wrap API responses in `toJson()` before validating with generated Zod response schemas, or Date fields throw `invalid_type` ZodErrors.
 - Workflow names are prefixed: `artifacts/<slug>: <service>` (e.g. `artifacts/api-server: API Server`).
+- esbuild externalizes `@google/*` (see `api-server/build.mjs`), so `@google/genai` must be a DIRECT api-server dependency or the bundle fails at runtime with `ERR_MODULE_NOT_FOUND`. Import integration clients lazily inside handlers so a missing integration can't crash server startup.
 
 ## Pointers
 

@@ -161,6 +161,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/Company"
 
+  /companies/analyze-material:
+    post:
+      operationId: analyzeCompanyMaterial
+      tags: [companies]
+      summary: Analyze a promotional material file and extract company profile fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeMaterialInput"
+      responses:
+        "200":
+          description: Extracted company profile fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeMaterialResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /projects:
     get:
       operationId: listProjects
@@ -640,6 +665,48 @@ components:
         contactEmail:
           type: string
         logoUrl:
+          type: string
+
+    AnalyzeMaterialInput:
+      type: object
+      required:
+        - fileBase64
+        - mimeType
+      properties:
+        fileBase64:
+          type: string
+          description: Base64-encoded content of the promotional material (image or PDF), without data URI prefix
+        mimeType:
+          type: string
+          description: MIME type of the uploaded file (e.g. image/png, application/pdf)
+
+    AnalyzeMaterialResult:
+      type: object
+      required:
+        - name
+        - type
+        - description
+        - location
+        - capabilityTags
+        - techSpecs
+        - contactEmail
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [hardware, software]
+        description:
+          type: string
+        location:
+          type: string
+        capabilityTags:
+          type: array
+          items:
+            type: string
+        techSpecs:
+          type: string
+        contactEmail:
           type: string
 
     Project:

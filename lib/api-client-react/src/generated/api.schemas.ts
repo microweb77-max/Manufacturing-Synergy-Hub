@@ -79,6 +79,31 @@ export interface CompanyUpdate {
   logoUrl?: string;
 }
 
+export interface AnalyzeMaterialInput {
+  /** Base64-encoded content of the promotional material (image or PDF), without data URI prefix */
+  fileBase64: string;
+  /** MIME type of the uploaded file (e.g. image/png, application/pdf) */
+  mimeType: string;
+}
+
+export type AnalyzeMaterialResultType = typeof AnalyzeMaterialResultType[keyof typeof AnalyzeMaterialResultType];
+
+
+export const AnalyzeMaterialResultType = {
+  hardware: 'hardware',
+  software: 'software',
+} as const;
+
+export interface AnalyzeMaterialResult {
+  name: string;
+  type: AnalyzeMaterialResultType;
+  description: string;
+  location: string;
+  capabilityTags: string[];
+  techSpecs: string;
+  contactEmail: string;
+}
+
 export type ProjectStatus = typeof ProjectStatus[keyof typeof ProjectStatus];
 
 
