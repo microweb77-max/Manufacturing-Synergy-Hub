@@ -39,11 +39,36 @@ import {
   useUpdateOfferMatch,
   useDeleteOfferMatch,
   getListOfferMatchesQueryKey,
+  useCollectJobs,
 } from "@workspace/api-client-react";
+import { useState, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ShieldAlert } from "lucide-react";
+import {
+  ShieldAlert,
+  Sparkles,
+  Loader2,
+  Building2,
+  ClipboardList,
+  GitMerge,
+  Package,
+  Users,
+  PackageSearch,
+  Handshake,
+} from "lucide-react";
 import {
   AdminSection,
   toTags,
@@ -51,6 +76,97 @@ import {
   toNum,
   type FormValues,
 } from "./AdminSection";
+
+function CollectJobsControl() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [region, setRegion] = useState("");
+  const collectJobs = useCollectJobs();
+
+  const handleCollect = () => {
+    collectJobs.mutate(
+      { data: region.trim() ? { region: region.trim() } : {} },
+      {
+        onSuccess: (result) => {
+          toast({
+            title: "자동 수집 완료",
+            description:
+              result.inserted > 0
+                ? `새 구인 정보 ${result.inserted}건을 등록했습니다.${
+                    result.skipped > 0 ? ` (중복 ${result.skipped}건 제외)` : ""
+                  }`
+                : "새로 등록할 구인 정보를 찾지 못했습니다. 잠시 후 다시 시도해주세요.",
+          });
+          qc.invalidateQueries({ queryKey: getListTalentPostsQueryKey({}) });
+          setOpen(false);
+          setRegion("");
+        },
+        onError: () => {
+          toast({
+            title: "오류",
+            description: "구인 정보 자동 수집 중 문제가 발생했습니다.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Sparkles className="mr-1.5 h-4 w-4" />
+          구인 정보 자동 수집
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            베트남 제조업 구인 정보 자동 수집
+          </DialogTitle>
+          <DialogDescription>
+            웹에서 베트남 제조업 관련 최신 채용 공고를 검색해 구인 정보로 자동
+            등록합니다. 이미 등록된 공고는 제외됩니다.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="collect-region">
+            지역/분야 집중{" "}
+            <span className="text-muted-foreground font-normal">(선택)</span>
+          </Label>
+          <Input
+            id="collect-region"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            placeholder="예: 박닌, 호치민, 자동화, 금형"
+            disabled={collectJobs.isPending}
+          />
+          <p className="text-xs text-muted-foreground">
+            비워두면 베트남 전역 주요 산업단지를 폭넓게 검색합니다.
+          </p>
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={handleCollect} disabled={collectJobs.isPending}>
+            {collectJobs.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                수집 중...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                수집 시작
+              </>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function CompaniesAdmin() {
   const { toast } = useToast();
@@ -85,8 +201,23 @@ function CompaniesAdmin() {
       isLoading={isLoading}
       getId={(c) => c.id}
       getRowLabel={(c) => c.name}
+      getSearchText={(c) =>
+        [c.name, c.location ?? "", c.capabilityTags.join(" ")].join(" ")
+      }
+      searchPlaceholder="기업명 · 지역 · 태그 검색"
+      filters={[
+        {
+          key: "type",
+          label: "유형",
+          getValue: (c) => c.type,
+          options: [
+            { value: "hardware", label: "하드웨어" },
+            { value: "software", label: "소프트웨어" },
+          ],
+        },
+      ]}
       columns={[
-        { key: "name", header: "기업명", render: (c) => <span className="font-medium">{c.name}</span> },
+        { key: "name", header: "기업명", render: (c) => <span className="font-medium">{c.name}</span>, sortValue: (c) => c.name },
         {
           key: "type",
           header: "유형",
@@ -97,7 +228,7 @@ function CompaniesAdmin() {
           ),
         },
         { key: "location", header: "지역", render: (c) => c.location || "-" },
-        { key: "trustScore", header: "신뢰점수", render: (c) => c.trustScore },
+        { key: "trustScore", header: "신뢰점수", render: (c) => c.trustScore, sortValue: (c) => c.trustScore },
         {
           key: "tags",
           header: "역량 태그",
@@ -216,11 +347,23 @@ function ProjectsAdmin() {
       isLoading={isLoading}
       getId={(p) => p.id}
       getRowLabel={(p) => p.title}
+      getSearchText={(p) =>
+        [p.title, p.demandCompany ?? "", p.category ?? ""].join(" ")
+      }
+      searchPlaceholder="제목 · 수요기업 · 분야 검색"
+      filters={[
+        {
+          key: "status",
+          label: "상태",
+          getValue: (p) => p.status,
+          options: statusOptions.map((o) => ({ value: o.value, label: o.label })),
+        },
+      ]}
       columns={[
-        { key: "title", header: "제목", render: (p) => <span className="font-medium">{p.title}</span> },
+        { key: "title", header: "제목", render: (p) => <span className="font-medium">{p.title}</span>, sortValue: (p) => p.title },
         { key: "demandCompany", header: "수요기업", render: (p) => p.demandCompany || "-" },
         { key: "category", header: "분야", render: (p) => p.category || "-" },
-        { key: "status", header: "상태", render: (p) => <Badge variant="outline">{p.status}</Badge> },
+        { key: "status", header: "상태", render: (p) => <Badge variant="outline">{p.status}</Badge>, sortValue: (p) => p.status },
         { key: "budget", header: "예산", render: (p) => p.budget || "-" },
       ]}
       fields={[
@@ -333,11 +476,23 @@ function MatchesAdmin() {
       isLoading={isLoading}
       getId={(m) => m.id}
       getRowLabel={(m) => `매칭 #${m.id}`}
+      getSearchText={(m) =>
+        [`매칭 ${m.id}`, `프로젝트 ${m.projectId}`, `기업 ${m.companyId}`, m.status].join(" ")
+      }
+      searchPlaceholder="ID · 상태 검색"
+      filters={[
+        {
+          key: "status",
+          label: "상태",
+          getValue: (m) => m.status,
+          options: statusOptions.map((o) => ({ value: o.value, label: o.label })),
+        },
+      ]}
       columns={[
-        { key: "projectId", header: "프로젝트 ID", render: (m) => m.projectId },
-        { key: "companyId", header: "기업 ID", render: (m) => m.companyId },
-        { key: "status", header: "상태", render: (m) => <Badge variant="outline">{m.status}</Badge> },
-        { key: "synergyScore", header: "시너지 점수", render: (m) => m.synergyScore },
+        { key: "projectId", header: "프로젝트 ID", render: (m) => m.projectId, sortValue: (m) => m.projectId },
+        { key: "companyId", header: "기업 ID", render: (m) => m.companyId, sortValue: (m) => m.companyId },
+        { key: "status", header: "상태", render: (m) => <Badge variant="outline">{m.status}</Badge>, sortValue: (m) => m.status },
+        { key: "synergyScore", header: "시너지 점수", render: (m) => m.synergyScore, sortValue: (m) => m.synergyScore },
       ]}
       fields={[
         { name: "projectId", label: "프로젝트 ID", type: "number", required: true },
@@ -424,8 +579,21 @@ function SolutionsAdmin() {
       isLoading={isLoading}
       getId={(s) => s.id}
       getRowLabel={(s) => s.title}
+      getSearchText={(s) => [s.title, s.category ?? ""].join(" ")}
+      searchPlaceholder="제목 · 분야 검색"
+      filters={[
+        {
+          key: "featured",
+          label: "추천",
+          getValue: (s) => (s.featured ? "true" : "false"),
+          options: [
+            { value: "true", label: "추천" },
+            { value: "false", label: "일반" },
+          ],
+        },
+      ]}
       columns={[
-        { key: "title", header: "제목", render: (s) => <span className="font-medium">{s.title}</span> },
+        { key: "title", header: "제목", render: (s) => <span className="font-medium">{s.title}</span>, sortValue: (s) => s.title },
         { key: "category", header: "분야", render: (s) => s.category || "-" },
         {
           key: "companyIds",
@@ -532,11 +700,15 @@ function PerformanceAdmin() {
       isLoading={isLoading}
       getId={(p) => p.id}
       getRowLabel={(p) => `성과 #${p.id}`}
+      getSearchText={(p) =>
+        [`성과 ${p.id}`, p.role ?? "", `프로젝트 ${p.projectId}`, `기업 ${p.companyId}`].join(" ")
+      }
+      searchPlaceholder="역할 · ID 검색"
       columns={[
-        { key: "projectId", header: "프로젝트 ID", render: (p) => p.projectId },
-        { key: "companyId", header: "기업 ID", render: (p) => p.companyId },
+        { key: "projectId", header: "프로젝트 ID", render: (p) => p.projectId, sortValue: (p) => p.projectId },
+        { key: "companyId", header: "기업 ID", render: (p) => p.companyId, sortValue: (p) => p.companyId },
         { key: "role", header: "역할", render: (p) => p.role || "-" },
-        { key: "contributionPercent", header: "기여도(%)", render: (p) => p.contributionPercent },
+        { key: "contributionPercent", header: "기여도(%)", render: (p) => p.contributionPercent, sortValue: (p) => p.contributionPercent },
         { key: "revenue", header: "매출", render: (p) => p.revenue || "-" },
       ]}
       fields={[
@@ -630,6 +802,31 @@ function TalentAdmin() {
       isLoading={isLoading}
       getId={(t) => t.id}
       getRowLabel={(t) => t.title}
+      headerActions={<CollectJobsControl />}
+      getSearchText={(t) =>
+        [t.title, t.authorName, t.position ?? "", t.location ?? ""].join(" ")
+      }
+      searchPlaceholder="제목 · 작성자 · 포지션 · 지역 검색"
+      filters={[
+        {
+          key: "postType",
+          label: "유형",
+          getValue: (t) => t.postType,
+          options: [
+            { value: "hiring", label: "구인" },
+            { value: "seeking", label: "구직" },
+          ],
+        },
+        {
+          key: "source",
+          label: "출처",
+          getValue: (t) => (t.source === "auto" ? "auto" : "manual"),
+          options: [
+            { value: "manual", label: "직접 등록" },
+            { value: "auto", label: "자동 수집" },
+          ],
+        },
+      ]}
       columns={[
         {
           key: "postType",
@@ -639,11 +836,26 @@ function TalentAdmin() {
               {t.postType === "hiring" ? "구인" : "구직"}
             </Badge>
           ),
+          sortValue: (t) => t.postType,
         },
-        { key: "title", header: "제목", render: (t) => <span className="font-medium">{t.title}</span> },
+        { key: "title", header: "제목", render: (t) => <span className="font-medium">{t.title}</span>, sortValue: (t) => t.title },
         { key: "authorName", header: "작성자", render: (t) => t.authorName },
         { key: "position", header: "포지션", render: (t) => t.position || "-" },
         { key: "location", header: "지역", render: (t) => t.location || "-" },
+        {
+          key: "source",
+          header: "출처",
+          render: (t) =>
+            t.source === "auto" ? (
+              <Badge variant="outline" className="gap-1">
+                <Sparkles className="h-3 w-3" />
+                자동수집
+              </Badge>
+            ) : (
+              <span className="text-muted-foreground text-xs">직접</span>
+            ),
+          sortValue: (t) => (t.source === "auto" ? "auto" : "manual"),
+        },
       ]}
       fields={[
         { name: "postType", label: "유형", type: "select", required: true, options: [
@@ -760,10 +972,20 @@ function SupplyOffersAdmin() {
       isLoading={isLoading}
       getId={(o) => o.id}
       getRowLabel={(o) => o.itemName}
+      getSearchText={(o) => [o.itemName, o.companyName ?? ""].join(" ")}
+      searchPlaceholder="품명 · 공급기업 검색"
+      filters={[
+        {
+          key: "category",
+          label: "분류",
+          getValue: (o) => o.category,
+          options: categoryOptions,
+        },
+      ]}
       columns={[
-        { key: "itemName", header: "품명", render: (o) => <span className="font-medium">{o.itemName}</span> },
+        { key: "itemName", header: "품명", render: (o) => <span className="font-medium">{o.itemName}</span>, sortValue: (o) => o.itemName },
         { key: "companyName", header: "공급기업", render: (o) => o.companyName || "-" },
-        { key: "category", header: "분류", render: (o) => <Badge variant="secondary">{o.category}</Badge> },
+        { key: "category", header: "분류", render: (o) => <Badge variant="secondary">{o.category}</Badge>, sortValue: (o) => o.category },
         {
           key: "unitPrice",
           header: "단가",
@@ -871,12 +1093,24 @@ function OfferMatchesAdmin() {
       canCreate={false}
       getId={(m) => m.id}
       getRowLabel={(m) => `매칭 #${m.id}`}
+      getSearchText={(m) =>
+        [m.itemName ?? "", m.supplierCompanyName ?? "", m.clientCompanyName, m.contactName ?? ""].join(" ")
+      }
+      searchPlaceholder="품명 · 기업 · 담당자 검색"
+      filters={[
+        {
+          key: "status",
+          label: "상태",
+          getValue: (m) => m.status,
+          options: statusOptions.map((o) => ({ value: o.value, label: statusLabel[o.value] ?? o.label })),
+        },
+      ]}
       columns={[
-        { key: "itemName", header: "품명", render: (m) => <span className="font-medium">{m.itemName}</span> },
+        { key: "itemName", header: "품명", render: (m) => <span className="font-medium">{m.itemName}</span>, sortValue: (m) => m.itemName ?? "" },
         { key: "supplier", header: "공급기업", render: (m) => m.supplierCompanyName || "-" },
-        { key: "client", header: "고객사(요청)", render: (m) => m.clientCompanyName },
+        { key: "client", header: "고객사(요청)", render: (m) => m.clientCompanyName, sortValue: (m) => m.clientCompanyName },
         { key: "contact", header: "담당자", render: (m) => m.contactName || "-" },
-        { key: "status", header: "상태", render: (m) => <Badge variant="outline">{statusLabel[m.status] ?? m.status}</Badge> },
+        { key: "status", header: "상태", render: (m) => <Badge variant="outline">{statusLabel[m.status] ?? m.status}</Badge>, sortValue: (m) => m.status },
       ]}
       fields={[
         { name: "status", label: "상태", type: "select", options: statusOptions },
@@ -919,6 +1153,107 @@ function OfferMatchesAdmin() {
   );
 }
 
+function StatCard({
+  icon,
+  label,
+  value,
+  isLoading,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: number;
+  isLoading: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground truncate">{label}</p>
+          <p className="text-xl font-bold tabular-nums">
+            {isLoading ? "—" : value.toLocaleString("ko")}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AdminDashboard() {
+  const companies = useListCompanies({});
+  const projects = useListProjects({});
+  const matches = useListMatches({});
+  const solutions = useListSolutions({});
+  const talent = useListTalentPosts({});
+  const offers = useListSupplyOffers();
+  const offerMatches = useListOfferMatches();
+
+  const talentPosts = talent.data ?? [];
+  const hiring = talentPosts.filter((t) => t.postType === "hiring").length;
+  const seeking = talentPosts.filter((t) => t.postType === "seeking").length;
+
+  const cards = [
+    {
+      icon: <Building2 className="h-5 w-5" />,
+      label: "기업",
+      value: companies.data?.length ?? 0,
+      isLoading: companies.isLoading,
+    },
+    {
+      icon: <ClipboardList className="h-5 w-5" />,
+      label: "프로젝트",
+      value: projects.data?.length ?? 0,
+      isLoading: projects.isLoading,
+    },
+    {
+      icon: <GitMerge className="h-5 w-5" />,
+      label: "매칭",
+      value: matches.data?.length ?? 0,
+      isLoading: matches.isLoading,
+    },
+    {
+      icon: <Package className="h-5 w-5" />,
+      label: "솔루션",
+      value: solutions.data?.length ?? 0,
+      isLoading: solutions.isLoading,
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      label: "구인",
+      value: hiring,
+      isLoading: talent.isLoading,
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      label: "구직",
+      value: seeking,
+      isLoading: talent.isLoading,
+    },
+    {
+      icon: <PackageSearch className="h-5 w-5" />,
+      label: "공급 오퍼",
+      value: offers.data?.length ?? 0,
+      isLoading: offers.isLoading,
+    },
+    {
+      icon: <Handshake className="h-5 w-5" />,
+      label: "오퍼 매칭",
+      value: offerMatches.data?.length ?? 0,
+      isLoading: offerMatches.isLoading,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {cards.map((c) => (
+        <StatCard key={c.label} {...c} />
+      ))}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -931,6 +1266,8 @@ export default function AdminPage() {
           모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
         </p>
       </div>
+
+      <AdminDashboard />
 
       <Tabs defaultValue="companies" className="w-full">
         <TabsList className="flex flex-wrap h-auto">

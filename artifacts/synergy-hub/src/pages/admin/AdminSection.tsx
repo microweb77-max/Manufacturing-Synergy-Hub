@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Inbox } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Inbox,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
 
 export type FormValues = Record<string, string>;
 
@@ -56,6 +68,16 @@ export type AdminColumn<T> = {
   key: string;
   header: string;
   render: (item: T) => ReactNode;
+  /** When provided, the column header becomes clickable to sort by this value. */
+  sortValue?: (item: T) => string | number;
+};
+
+export type AdminFilter<T> = {
+  /** Stable key used as the filter's react key + state key. */
+  key: string;
+  label: string;
+  options: { value: string; label: string }[];
+  getValue: (item: T) => string;
 };
 
 export type AdminSectionProps<T> = {
@@ -73,7 +95,17 @@ export type AdminSectionProps<T> = {
   onUpdate: (id: number, values: FormValues) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
   canCreate?: boolean;
+  /** Returns the text searched by the toolbar search box. Defaults to the row label. */
+  getSearchText?: (item: T) => string;
+  searchPlaceholder?: string;
+  filters?: AdminFilter<T>[];
+  /** Rows shown per page (client-side pagination). Defaults to 10. */
+  pageSize?: number;
+  /** Extra controls rendered in the section header (e.g. an import/collect button). */
+  headerActions?: ReactNode;
 };
+
+type SortState = { key: string; dir: "asc" | "desc" } | null;
 
 export function AdminSection<T>({
   title,
@@ -90,12 +122,96 @@ export function AdminSection<T>({
   onUpdate,
   onDelete,
   canCreate = true,
+  getSearchText,
+  searchPlaceholder,
+  filters,
+  pageSize = 10,
+  headerActions,
 }: AdminSectionProps<T>) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<T | null>(null);
   const [values, setValues] = useState<FormValues>(emptyValues);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [query, setQuery] = useState("");
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const [sort, setSort] = useState<SortState>(null);
+  const [page, setPage] = useState(1);
+
+  const sortColumn = sort
+    ? columns.find((c) => c.key === sort.key)
+    : undefined;
+
+  const processed = useMemo(() => {
+    let list = items ? [...items] : [];
+
+    const q = query.trim().toLowerCase();
+    if (q) {
+      const text = getSearchText ?? getRowLabel;
+      list = list.filter((item) => text(item).toLowerCase().includes(q));
+    }
+
+    if (filters) {
+      for (const f of filters) {
+        const fv = filterValues[f.key];
+        if (fv && fv !== "__all__") {
+          list = list.filter((item) => f.getValue(item) === fv);
+        }
+      }
+    }
+
+    if (sort && sortColumn?.sortValue) {
+      const getV = sortColumn.sortValue;
+      list.sort((a, b) => {
+        const av = getV(a);
+        const bv = getV(b);
+        let cmp: number;
+        if (typeof av === "number" && typeof bv === "number") {
+          cmp = av - bv;
+        } else {
+          cmp = String(av).localeCompare(String(bv), "ko");
+        }
+        return sort.dir === "asc" ? cmp : -cmp;
+      });
+    }
+
+    return list;
+  }, [
+    items,
+    query,
+    filters,
+    filterValues,
+    sort,
+    sortColumn,
+    getSearchText,
+    getRowLabel,
+  ]);
+
+  const total = processed.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const pageItems = processed.slice(pageStart, pageStart + pageSize);
+
+  const hasActiveFilters =
+    query.trim().length > 0 ||
+    Object.values(filterValues).some((v) => v && v !== "__all__");
+
+  const toggleSort = (key: string) => {
+    setPage(1);
+    setSort((prev) => {
+      if (!prev || prev.key !== key) return { key, dir: "asc" };
+      if (prev.dir === "asc") return { key, dir: "desc" };
+      return null;
+    });
+  };
+
+  const resetFilters = () => {
+    setQuery("");
+    setFilterValues({});
+    setPage(1);
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -138,30 +254,109 @@ export function AdminSection<T>({
   const setField = (name: string, value: string) =>
     setValues((prev) => ({ ...prev, [name]: value }));
 
+  const colSpan = columns.length + 2;
+  const showToolbar = Boolean(getSearchText) || Boolean(filters?.length);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
           {description && (
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
         </div>
-        {canCreate && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            새 항목 추가
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {headerActions}
+          {canCreate && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              새 항목 추가
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="border rounded-lg bg-card">
+      {showToolbar && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          {getSearchText && (
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setPage(1);
+                }}
+                placeholder={searchPlaceholder ?? "검색..."}
+                className="pl-8"
+              />
+            </div>
+          )}
+          {filters?.map((f) => (
+            <Select
+              key={f.key}
+              value={filterValues[f.key] ?? "__all__"}
+              onValueChange={(v) => {
+                setFilterValues((prev) => ({ ...prev, [f.key]: v }));
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-auto min-w-[140px]">
+                <SelectValue placeholder={f.label} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">{f.label}: 전체</SelectItem>
+                {f.options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ))}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFilters}
+              className="text-muted-foreground"
+            >
+              <X className="mr-1 h-4 w-4" />
+              초기화
+            </Button>
+          )}
+        </div>
+      )}
+
+      <div className="border rounded-lg bg-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[60px]">ID</TableHead>
               {columns.map((c) => (
-                <TableHead key={c.key}>{c.header}</TableHead>
+                <TableHead key={c.key}>
+                  {c.sortValue ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(c.key)}
+                      className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      {c.header}
+                      {sort?.key === c.key ? (
+                        sort.dir === "asc" ? (
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        ) : (
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        )
+                      ) : (
+                        <ChevronsUpDown className="h-3.5 w-3.5 opacity-40" />
+                      )}
+                    </button>
+                  ) : (
+                    c.header
+                  )}
+                </TableHead>
               ))}
               <TableHead className="w-[120px] text-right">관리</TableHead>
             </TableRow>
@@ -170,23 +365,25 @@ export function AdminSection<T>({
             {isLoading ? (
               [1, 2, 3].map((i) => (
                 <TableRow key={i}>
-                  <TableCell colSpan={columns.length + 2}>
+                  <TableCell colSpan={colSpan}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               ))
-            ) : !items || items.length === 0 ? (
+            ) : total === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + 2}
+                  colSpan={colSpan}
                   className="text-center py-12 text-muted-foreground"
                 >
                   <Inbox className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  데이터가 없습니다.
+                  {hasActiveFilters
+                    ? "조건에 맞는 데이터가 없습니다."
+                    : "데이터가 없습니다."}
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => (
+              pageItems.map((item) => (
                 <TableRow key={getId(item)}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {getId(item)}
@@ -243,6 +440,39 @@ export function AdminSection<T>({
           </TableBody>
         </Table>
       </div>
+
+      {!isLoading && total > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm text-muted-foreground">
+          <span>
+            총 {total}건 중 {pageStart + 1}–{pageStart + pageItems.length}
+          </span>
+          {pageCount > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                이전
+              </Button>
+              <span className="px-1">
+                {currentPage} / {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= pageCount}
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              >
+                다음
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -310,9 +540,7 @@ export function AdminSection<T>({
               </div>
             ))}
           </div>
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               취소
