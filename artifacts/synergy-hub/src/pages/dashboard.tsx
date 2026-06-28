@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import heroBanner from "@assets/image_1782675934299.png";
+import heroBanner from "@assets/image_1782676670194.png";
 
 type ShowcaseCompany = {
   id: number;
