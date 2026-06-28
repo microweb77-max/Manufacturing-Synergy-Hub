@@ -1728,6 +1728,76 @@ export const useUpdateSolution = <TError = ErrorType<unknown>,
       return useMutation(getUpdateSolutionMutationOptions(options));
     }
 
+export const getDeleteSolutionUrl = (id: number,) => {
+
+
+
+
+  return `/api/solutions/${id}`
+}
+
+/**
+ * @summary Delete a joint solution
+ */
+export const deleteSolution = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteSolutionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteSolutionMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSolution>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteSolution>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteSolution'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteSolution>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteSolution(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteSolutionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteSolution>>>
+
+    export type DeleteSolutionMutationError = ErrorType<Error>
+
+    /**
+ * @summary Delete a joint solution
+ */
+export const useDeleteSolution = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteSolution>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteSolution>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteSolutionMutationOptions(options));
+    }
+
 export const getListPerformanceLogsUrl = (params?: ListPerformanceLogsParams,) => {
   const normalizedParams = new URLSearchParams();
 

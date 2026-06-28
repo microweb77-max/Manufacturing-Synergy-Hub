@@ -12,6 +12,7 @@ import {
   UpdateSolutionParams,
   UpdateSolutionBody,
   UpdateSolutionResponse,
+  DeleteSolutionParams,
 } from "@workspace/api-zod";
 import type { Company } from "@workspace/db";
 
@@ -158,6 +159,26 @@ router.patch("/solutions/:id", async (req, res): Promise<void> => {
   const companyMap = new Map(companies.map((c) => [c.id, c]));
 
   res.json(UpdateSolutionResponse.parse(toJson(attachCompanies(solution, companyMap))));
+});
+
+router.delete("/solutions/:id", async (req, res): Promise<void> => {
+  const params = DeleteSolutionParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [deleted] = await db
+    .delete(solutionsTable)
+    .where(eq(solutionsTable.id, params.data.id))
+    .returning();
+
+  if (!deleted) {
+    res.status(404).json({ error: "Solution not found" });
+    return;
+  }
+
+  res.status(204).end();
 });
 
 export default router;

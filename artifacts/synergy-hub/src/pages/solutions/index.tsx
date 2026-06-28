@@ -1,20 +1,59 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useListSolutions } from "@workspace/api-client-react";
+import {
+  useListSolutions,
+  useDeleteSolution,
+  getListSolutionsQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Server, Plus, Star, Factory, Monitor, Layers } from "lucide-react";
+import { Server, Plus, Star, Factory, Monitor, Layers, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function SolutionsList() {
   const [featuredOnly, setFeaturedOnly] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const deleteSolution = useDeleteSolution();
 
   const { data: solutions, isLoading } = useListSolutions({
     featured: featuredOnly ? true : undefined,
   });
+
+  const handleDelete = (id: number) => {
+    deleteSolution.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          toast({ title: "삭제 완료", description: "솔루션 패키지가 삭제되었습니다." });
+          queryClient.invalidateQueries({ queryKey: getListSolutionsQueryKey() });
+        },
+        onError: () => {
+          toast({
+            title: "오류",
+            description: "삭제 중 문제가 발생했습니다.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -64,7 +103,45 @@ export default function SolutionsList() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {solutions?.map(solution => (
             <Link key={solution.id} href={`/solutions/${solution.id}`}>
-              <Card className="h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden group border-border/50">
+              <Card className="h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden group border-border/50 relative">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute top-3 left-3 z-20 h-8 w-8 bg-background/90 backdrop-blur-sm hover:bg-destructive hover:text-destructive-foreground shadow-sm"
+                      aria-label="솔루션 삭제"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>솔루션 패키지 삭제</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        '{solution.title}' 솔루션을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>취소</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={() => handleDelete(solution.id)}
+                      >
+                        삭제
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
                 {/* Header Image Area */}
                 <div className="h-48 bg-secondary/20 relative flex items-center justify-center border-b border-border/50 overflow-hidden">
                   {solution.imageUrl ? (

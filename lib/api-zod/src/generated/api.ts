@@ -757,6 +757,16 @@ export const UpdateSolutionResponse = zod.object({
 
 
 /**
+ * @summary Delete a joint solution
+ */
+export const DeleteSolutionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteSolutionResponse = zod.void()
+
+
+/**
  * @summary List performance logs
  */
 export const ListPerformanceLogsQueryParams = zod.object({
