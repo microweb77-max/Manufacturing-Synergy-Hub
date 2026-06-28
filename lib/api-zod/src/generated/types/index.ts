@@ -11,6 +11,7 @@ export * from './activityItemType';
 export * from './analyzeMaterialInput';
 export * from './analyzeMaterialResult';
 export * from './analyzeMaterialResultType';
+export * from './clientCompany';
 export * from './company';
 export * from './companyInput';
 export * from './companyInputType';

@@ -1065,6 +1065,25 @@ export const DeleteTalentPostResponse = zod.void()
 
 
 /**
+ * @summary List Korean FDI manufacturing client companies (KOTRA directory)
+ */
+export const ListClientCompaniesResponseItem = zod.object({
+  "no": zod.number(),
+  "nameKo": zod.string(),
+  "nameEn": zod.string(),
+  "parentCompany": zod.string(),
+  "entryType": zod.string(),
+  "investmentType": zod.string(),
+  "industry": zod.string(),
+  "industryDetail": zod.string(),
+  "region": zod.string(),
+  "address": zod.string(),
+  "postalCode": zod.string()
+})
+export const ListClientCompaniesResponse = zod.array(ListClientCompaniesResponseItem)
+
+
+/**
  * @summary Aggregated platform metrics
  */
 export const GetDashboardSummaryResponse = zod.object({

@@ -91,6 +91,20 @@ export interface CompanyUpdate {
   logoUrl?: string;
 }
 
+export interface ClientCompany {
+  no: number;
+  nameKo: string;
+  nameEn: string;
+  parentCompany: string;
+  entryType: string;
+  investmentType: string;
+  industry: string;
+  industryDetail: string;
+  region: string;
+  address: string;
+  postalCode: string;
+}
+
 export interface AnalyzeMaterialInput {
   /** Base64-encoded content of the promotional material (image or PDF), without data URI prefix */
   fileBase64: string;

@@ -22,6 +22,8 @@ tags:
     description: Performance and contribution logs
   - name: talent
     description: Talent pool job postings and seekers
+  - name: clientCompanies
+    description: Korean FDI manufacturing client directory (KOTRA)
   - name: dashboard
     description: Aggregated dashboard data
 paths:
@@ -678,6 +680,21 @@ paths:
         "204":
           description: Deleted
 
+  /client-companies:
+    get:
+      operationId: listClientCompanies
+      tags: [clientCompanies]
+      summary: List Korean FDI manufacturing client companies (KOTRA directory)
+      responses:
+        "200":
+          description: Client company directory
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientCompany"
+
   /dashboard/summary:
     get:
       operationId: getDashboardSummary
@@ -841,6 +858,44 @@ components:
         contactEmail:
           type: string
         logoUrl:
+          type: string
+
+    ClientCompany:
+      type: object
+      required:
+        - no
+        - nameKo
+        - nameEn
+        - parentCompany
+        - entryType
+        - investmentType
+        - industry
+        - industryDetail
+        - region
+        - address
+        - postalCode
+      properties:
+        no:
+          type: integer
+        nameKo:
+          type: string
+        nameEn:
+          type: string
+        parentCompany:
+          type: string
+        entryType:
+          type: string
+        investmentType:
+          type: string
+        industry:
+          type: string
+        industryDetail:
+          type: string
+        region:
+          type: string
+        address:
+          type: string
+        postalCode:
           type: string
 
     AnalyzeMaterialInput:

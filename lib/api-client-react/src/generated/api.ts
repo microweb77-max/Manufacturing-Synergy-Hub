@@ -23,6 +23,7 @@ import type {
   ActivityItem,
   AnalyzeMaterialInput,
   AnalyzeMaterialResult,
+  ClientCompany,
   Company,
   CompanyInput,
   CompanyUpdate,
@@ -2459,6 +2460,83 @@ export const useDeleteTalentPost = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteTalentPostMutationOptions(options));
     }
+
+export const getListClientCompaniesUrl = () => {
+
+
+
+
+  return `/api/client-companies`
+}
+
+/**
+ * @summary List Korean FDI manufacturing client companies (KOTRA directory)
+ */
+export const listClientCompanies = async ( options?: RequestInit): Promise<ClientCompany[]> => {
+
+  return customFetch<ClientCompany[]>(getListClientCompaniesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClientCompaniesQueryKey = () => {
+    return [
+    `/api/client-companies`
+    ] as const;
+    }
+
+
+export const getListClientCompaniesQueryOptions = <TData = Awaited<ReturnType<typeof listClientCompanies>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientCompanies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClientCompaniesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClientCompanies>>> = ({ signal }) => listClientCompanies({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClientCompanies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListClientCompaniesQueryResult = NonNullable<Awaited<ReturnType<typeof listClientCompanies>>>
+export type ListClientCompaniesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List Korean FDI manufacturing client companies (KOTRA directory)
+ */
+
+export function useListClientCompanies<TData = Awaited<ReturnType<typeof listClientCompanies>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientCompanies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListClientCompaniesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetDashboardSummaryUrl = () => {
 
