@@ -337,7 +337,22 @@ export interface TalentPost {
   contactEmail: string | null;
   /** @nullable */
   contactPhone: string | null;
+  /** @nullable */
+  source: string | null;
+  /** @nullable */
+  sourceUrl: string | null;
   createdAt: string;
+}
+
+export interface CollectJobsRequest {
+  /** Optional region/keyword focus (e.g. 호치민, 박닌, 자동화) */
+  region?: string;
+}
+
+export interface CollectJobsResult {
+  inserted: number;
+  skipped: number;
+  posts: TalentPost[];
 }
 
 export type TalentPostInputPostType = typeof TalentPostInputPostType[keyof typeof TalentPostInputPostType];

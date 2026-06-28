@@ -24,6 +24,8 @@ import type {
   AnalyzeMaterialInput,
   AnalyzeMaterialResult,
   ClientCompany,
+  CollectJobsRequest,
+  CollectJobsResult,
   Company,
   CompanyInput,
   CompanyUpdate,
@@ -2466,6 +2468,76 @@ export const useDeleteTalentPost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteTalentPostMutationOptions(options));
+    }
+
+export const getCollectJobsUrl = () => {
+
+
+
+
+  return `/api/talent/collect-jobs`
+}
+
+/**
+ * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ */
+export const collectJobs = async (collectJobsRequest?: CollectJobsRequest, options?: RequestInit): Promise<CollectJobsResult> => {
+
+  return customFetch<CollectJobsResult>(getCollectJobsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(collectJobsRequest)
+  }
+);}
+
+
+
+
+export const getCollectJobsMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectJobs>>, TError,{data?: BodyType<CollectJobsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof collectJobs>>, TError,{data?: BodyType<CollectJobsRequest>}, TContext> => {
+
+const mutationKey = ['collectJobs'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectJobs>>, {data?: BodyType<CollectJobsRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  collectJobs(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CollectJobsMutationResult = NonNullable<Awaited<ReturnType<typeof collectJobs>>>
+    export type CollectJobsMutationBody = BodyType<CollectJobsRequest> | undefined
+    export type CollectJobsMutationError = ErrorType<Error>
+
+    /**
+ * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ */
+export const useCollectJobs = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectJobs>>, TError,{data?: BodyType<CollectJobsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof collectJobs>>,
+        TError,
+        {data?: BodyType<CollectJobsRequest>},
+        TContext
+      > => {
+      return useMutation(getCollectJobsMutationOptions(options));
     }
 
 export const getListSupplyOffersUrl = (params?: ListSupplyOffersParams,) => {

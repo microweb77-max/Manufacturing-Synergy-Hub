@@ -12,6 +12,8 @@ export * from './analyzeMaterialInput';
 export * from './analyzeMaterialResult';
 export * from './analyzeMaterialResultType';
 export * from './clientCompany';
+export * from './collectJobsRequest';
+export * from './collectJobsResult';
 export * from './company';
 export * from './companyInput';
 export * from './companyInputType';

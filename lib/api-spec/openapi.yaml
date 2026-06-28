@@ -680,6 +680,31 @@ paths:
         "204":
           description: Deleted
 
+  /talent/collect-jobs:
+    post:
+      operationId: collectJobs
+      tags: [talent]
+      summary: Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectJobsRequest"
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectJobsResult"
+        "502":
+          description: Collection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /supply-offers:
     get:
       operationId: listSupplyOffers
@@ -1448,6 +1473,8 @@ components:
         - description
         - contactEmail
         - contactPhone
+        - source
+        - sourceUrl
         - createdAt
       properties:
         id:
@@ -1479,8 +1506,33 @@ components:
           type: ["string", "null"]
         contactPhone:
           type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        sourceUrl:
+          type: ["string", "null"]
         createdAt:
           type: string
+    CollectJobsRequest:
+      type: object
+      properties:
+        region:
+          type: string
+          description: Optional region/keyword focus (e.g. 호치민, 박닌, 자동화)
+    CollectJobsResult:
+      type: object
+      required:
+        - inserted
+        - skipped
+        - posts
+      properties:
+        inserted:
+          type: integer
+        skipped:
+          type: integer
+        posts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TalentPost"
     TalentPostInput:
       type: object
       required:

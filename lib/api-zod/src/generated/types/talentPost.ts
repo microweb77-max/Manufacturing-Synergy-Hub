@@ -26,5 +26,9 @@ export interface TalentPost {
   contactEmail: string | null;
   /** @nullable */
   contactPhone: string | null;
+  /** @nullable */
+  source: string | null;
+  /** @nullable */
+  sourceUrl: string | null;
   createdAt: string;
 }

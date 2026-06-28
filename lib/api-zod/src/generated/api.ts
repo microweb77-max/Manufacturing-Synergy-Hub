@@ -973,6 +973,8 @@ export const ListTalentPostsResponseItem = zod.object({
   "description": zod.string(),
   "contactEmail": zod.string().nullable(),
   "contactPhone": zod.string().nullable(),
+  "source": zod.string().nullable(),
+  "sourceUrl": zod.string().nullable(),
   "createdAt": zod.string()
 })
 export const ListTalentPostsResponse = zod.array(ListTalentPostsResponseItem)
@@ -1010,6 +1012,8 @@ export const CreateTalentPostResponse = zod.object({
   "description": zod.string(),
   "contactEmail": zod.string().nullable(),
   "contactPhone": zod.string().nullable(),
+  "source": zod.string().nullable(),
+  "sourceUrl": zod.string().nullable(),
   "createdAt": zod.string()
 })
 
@@ -1050,6 +1054,8 @@ export const UpdateTalentPostResponse = zod.object({
   "description": zod.string(),
   "contactEmail": zod.string().nullable(),
   "contactPhone": zod.string().nullable(),
+  "source": zod.string().nullable(),
+  "sourceUrl": zod.string().nullable(),
   "createdAt": zod.string()
 })
 
@@ -1062,6 +1068,37 @@ export const DeleteTalentPostParams = zod.object({
 })
 
 export const DeleteTalentPostResponse = zod.void()
+
+
+/**
+ * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ */
+export const CollectJobsBody = zod.object({
+  "region": zod.string().optional().describe('Optional region\/keyword focus (e.g. 호치민, 박닌, 자동화)')
+})
+
+export const CollectJobsResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "posts": zod.array(zod.object({
+  "id": zod.number(),
+  "postType": zod.enum(['hiring', 'seeking']),
+  "title": zod.string(),
+  "authorName": zod.string(),
+  "position": zod.string(),
+  "location": zod.string(),
+  "employmentType": zod.string().nullable(),
+  "experienceLevel": zod.string().nullable(),
+  "headcount": zod.number().nullable(),
+  "skills": zod.array(zod.string()),
+  "description": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "source": zod.string().nullable(),
+  "sourceUrl": zod.string().nullable(),
+  "createdAt": zod.string()
+}))
+})
 
 
 /**

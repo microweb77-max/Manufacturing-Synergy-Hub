@@ -1,3 +1,4 @@
 - [Zod date serialization](zod-date-serialization.md) — Drizzle Date objects fail generated Zod response schemas; wrap rows in toJson() (JSON round-trip) before .parse().
 - [Prod API from sandbox](prod-api-from-sandbox.md) — sandbox fetches to the published .replit.app API return a Replit HTML page, not JSON; can't mutate prod data this way. Use executeSql(production) read-only or an in-app admin UI.
 - [api-server esbuild externals](api-server-esbuild-externals.md) — externalized runtime deps (e.g. @google/*) must be DIRECT api-server deps or runtime ERR_MODULE_NOT_FOUND; load integration clients lazily so missing env can't crash startup.
+- [Gemini grounding via proxy](gemini-grounding-proxy.md) — Google Search grounding works at runtime through the Replit Gemini proxy, but ONLY with httpOptions.apiVersion:"" (else INVALID_ENDPOINT).

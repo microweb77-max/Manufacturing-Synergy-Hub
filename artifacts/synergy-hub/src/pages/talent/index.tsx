@@ -3,6 +3,7 @@ import {
   useListTalentPosts,
   useCreateTalentPost,
   useDeleteTalentPost,
+  useCollectJobs,
   getListTalentPostsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -59,6 +60,9 @@ import {
   Building2,
   Clock,
   Trash2,
+  Sparkles,
+  Loader2,
+  ExternalLink,
 } from "lucide-react";
 
 const postSchema = z.object({
@@ -85,9 +89,47 @@ export default function TalentPool() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [isCollectOpen, setIsCollectOpen] = useState(false);
+  const [region, setRegion] = useState("");
+
   const { data: posts, isLoading } = useListTalentPosts({ postType: tab });
   const createPost = useCreateTalentPost();
   const deletePost = useDeleteTalentPost();
+  const collectJobs = useCollectJobs();
+
+  const handleCollect = () => {
+    collectJobs.mutate(
+      { data: region.trim() ? { region: region.trim() } : {} },
+      {
+        onSuccess: (result) => {
+          toast({
+            title: "자동 수집 완료",
+            description:
+              result.inserted > 0
+                ? `새 구인 정보 ${result.inserted}건을 등록했습니다.${
+                    result.skipped > 0
+                      ? ` (중복 ${result.skipped}건 제외)`
+                      : ""
+                  }`
+                : "새로 등록할 구인 정보를 찾지 못했습니다. 잠시 후 다시 시도해주세요.",
+          });
+          queryClient.invalidateQueries({
+            queryKey: getListTalentPostsQueryKey(),
+          });
+          setIsCollectOpen(false);
+          setRegion("");
+          setTab("hiring");
+        },
+        onError: () => {
+          toast({
+            title: "오류",
+            description: "구인 정보 자동 수집 중 문제가 발생했습니다.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
 
   const form = useForm<PostForm>({
     resolver: zodResolver(postSchema),
@@ -208,6 +250,62 @@ export default function TalentPool() {
           </p>
         </div>
 
+        <div className="flex flex-wrap items-center gap-2">
+        {tab === "hiring" && (
+          <Dialog open={isCollectOpen} onOpenChange={setIsCollectOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Sparkles className="mr-2 h-4 w-4" />
+                구인 정보 자동 수집
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[460px]">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  베트남 제조업 구인 정보 자동 수집
+                </DialogTitle>
+                <DialogDescription>
+                  웹에서 베트남 제조업 관련 최신 채용 공고를 검색해
+                  구인 정보로 자동 등록합니다. 이미 등록된 공고는 제외됩니다.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <Label htmlFor="collect-region">
+                  지역/분야 집중{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (선택)
+                  </span>
+                </Label>
+                <Input
+                  id="collect-region"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  placeholder="예: 박닌, 호치민, 자동화, 금형"
+                  disabled={collectJobs.isPending}
+                />
+                <p className="text-xs text-muted-foreground">
+                  비워두면 베트남 전역 주요 산업단지를 폭넓게 검색합니다.
+                </p>
+              </div>
+              <div className="flex justify-end pt-2">
+                <Button onClick={handleCollect} disabled={collectJobs.isPending}>
+                  {collectJobs.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      수집 중...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      수집 시작
+                    </>
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => openDialog(tab)}>
@@ -528,6 +626,7 @@ export default function TalentPool() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as "hiring" | "seeking")}>
@@ -572,14 +671,26 @@ export default function TalentPool() {
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
-                        <Badge
-                          variant={
-                            post.postType === "hiring" ? "default" : "secondary"
-                          }
-                          className="mb-1"
-                        >
-                          {post.postType === "hiring" ? "구인" : "구직"}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <Badge
+                            variant={
+                              post.postType === "hiring"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {post.postType === "hiring" ? "구인" : "구직"}
+                          </Badge>
+                          {post.source === "auto" && (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-primary/40 text-primary"
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              자동수집
+                            </Badge>
+                          )}
+                        </div>
                         <CardTitle className="text-lg">{post.title}</CardTitle>
                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                           {post.postType === "hiring" ? (
@@ -644,6 +755,18 @@ export default function TalentPool() {
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {post.description}
                       </p>
+                    )}
+
+                    {post.source === "auto" && post.sourceUrl && (
+                      <a
+                        href={post.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        출처 보기
+                      </a>
                     )}
 
                     {(post.contactEmail || post.contactPhone) && (

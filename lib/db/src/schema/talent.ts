@@ -20,6 +20,8 @@ export const talentPostsTable = pgTable("talent_posts", {
   description: text("description").notNull().default(""),
   contactEmail: text("contact_email"),
   contactPhone: text("contact_phone"),
+  source: text("source"),
+  sourceUrl: text("source_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
