@@ -19,7 +19,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/companies", label: "공급사 디렉토리", icon: Factory },
     { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
     { href: "/offers", label: "오퍼 리스트", icon: Package },
-    { href: "/projects", label: "프로젝트", icon: Activity },
+    { href: "/projects", label: "프로젝트 의뢰", icon: Activity },
     { href: "/matches", label: "매칭 보드", icon: Network },
     { href: "/solutions", label: "솔루션 갤러리", icon: Server },
     { href: "/talent", label: "인력 Pool", icon: Users },
