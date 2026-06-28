@@ -29,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <img
             src={networkLogo}
             alt="Vietnam Manufacturing Network"
-            className="w-full rounded-lg border border-sidebar-border"
+            className="w-full rounded-lg"
           />
           <h1 className="text-xl font-bold text-sidebar-foreground flex items-center gap-2">
             <Factory className="h-6 w-6 text-primary" />
