@@ -1,0 +1,1 @@
+- [Zod date serialization](zod-date-serialization.md) — Drizzle Date objects fail generated Zod response schemas; wrap rows in toJson() (JSON round-trip) before .parse().

@@ -1,6 +1,6 @@
-# [Project name]
+# Manufacturing Synergy Hub (제조업 시너지 허브)
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A B2B manufacturing collaboration network for Vietnam that matches hardware specialists (equipment, logistics, molding, robotics) with software specialists (MES, automation, ERP, machine-vision) via a synergy-score matching engine so they can co-sell joint solutions. UI is in Korean.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- API contract (source of truth): `lib/api-spec/openapi.yaml` — run codegen after edits.
+- DB schema (source of truth): `lib/db/src/schema/{companies,projects,matches,solutions,performance}.ts` + barrel `index.ts`.
+- API routes: `artifacts/api-server/src/routes/` (one router per domain), wired in `routes/index.ts`.
+- Matching engine: `artifacts/api-server/src/lib/synergy.ts` (synergy score + recommendation reason).
+- Date serialization helper: `artifacts/api-server/src/lib/serialize.ts`.
+- Frontend: `artifacts/synergy-hub/src/` — pages in `src/pages/`, theme in `src/index.css`, routes in `src/App.tsx`.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Persistence uses Replit PostgreSQL + Drizzle, not the MSSQL the user originally mentioned (noted to user).
+- Synergy score (0-100) blends required-tag coverage (60%), trust score (25%), and completed-project track record (15%).
+- Creating a project auto-triggers the matching engine, inserting up to 5 pending matches for top synergy partners.
+- Generated Zod response schemas expect ISO date-time strings, but Drizzle returns `Date` objects — route handlers wrap responses in `toJson()` (JSON round-trip) before `.parse()`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Company capability directory, demand-project posting with smart partner matching (synergy score + reasons), a co-selling matchboard, joint-solution packages, and a contribution/performance board with a trust leaderboard. UI labels are in Korean.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- UI labels and user-facing text should be in Korean.
+- User originally specified MSSQL; we use Replit PostgreSQL instead (accepted).
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always wrap API responses in `toJson()` before validating with generated Zod response schemas, or Date fields throw `invalid_type` ZodErrors.
+- Workflow names are prefixed: `artifacts/<slug>: <service>` (e.g. `artifacts/api-server: API Server`).
 
 ## Pointers
 
