@@ -348,9 +348,11 @@ ${searchText}`;
     );
   } catch (err) {
     req.log.error({ err }, "Failed to collect jobs");
-    res
-      .status(502)
-      .json({ error: "구인 정보 자동 수집 중 오류가 발생했습니다." });
+    res.status(502).json({
+      error: `${
+        postType === "seeking" ? "구직" : "구인"
+      } 정보 자동 수집 중 오류가 발생했습니다.`,
+    });
   } finally {
     collectInProgress = false;
   }

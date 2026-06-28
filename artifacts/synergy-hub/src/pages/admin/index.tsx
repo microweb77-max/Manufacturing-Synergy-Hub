@@ -77,26 +77,38 @@ import {
   type FormValues,
 } from "./AdminSection";
 
-function CollectJobsControl() {
+function CollectJobsControl({
+  postType,
+}: {
+  postType: "hiring" | "seeking";
+}) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [region, setRegion] = useState("");
   const collectJobs = useCollectJobs();
 
+  const label = postType === "seeking" ? "구직" : "구인";
+  const inputId = `collect-region-${postType}`;
+
   const handleCollect = () => {
     collectJobs.mutate(
-      { data: region.trim() ? { region: region.trim() } : {} },
+      {
+        data: {
+          postType,
+          ...(region.trim() ? { region: region.trim() } : {}),
+        },
+      },
       {
         onSuccess: (result) => {
           toast({
             title: "자동 수집 완료",
             description:
               result.inserted > 0
-                ? `새 구인 정보 ${result.inserted}건을 등록했습니다.${
+                ? `새 ${label} 정보 ${result.inserted}건을 등록했습니다.${
                     result.skipped > 0 ? ` (중복 ${result.skipped}건 제외)` : ""
                   }`
-                : "새로 등록할 구인 정보를 찾지 못했습니다. 잠시 후 다시 시도해주세요.",
+                : `새로 등록할 ${label} 정보를 찾지 못했습니다. 잠시 후 다시 시도해주세요.`,
           });
           qc.invalidateQueries({ queryKey: getListTalentPostsQueryKey({}) });
           setOpen(false);
@@ -105,7 +117,7 @@ function CollectJobsControl() {
         onError: () => {
           toast({
             title: "오류",
-            description: "구인 정보 자동 수집 중 문제가 발생했습니다.",
+            description: `${label} 정보 자동 수집 중 문제가 발생했습니다.`,
             variant: "destructive",
           });
         },
@@ -118,27 +130,28 @@ function CollectJobsControl() {
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <Sparkles className="mr-1.5 h-4 w-4" />
-          구인 정보 자동 수집
+          {label} 정보 자동 수집
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            베트남 제조업 구인 정보 자동 수집
+            베트남 제조업 {label} 정보 자동 수집
           </DialogTitle>
           <DialogDescription>
-            웹에서 베트남 제조업 관련 최신 채용 공고를 검색해 구인 정보로 자동
-            등록합니다. 이미 등록된 공고는 제외됩니다.
+            {postType === "seeking"
+              ? "웹에서 베트남 제조업 분야 구직자/인재 정보를 검색해 구직 정보로 자동 등록합니다. 이미 등록된 항목은 제외됩니다."
+              : "웹에서 베트남 제조업 관련 최신 채용 공고를 검색해 구인 정보로 자동 등록합니다. 이미 등록된 공고는 제외됩니다."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-2">
-          <Label htmlFor="collect-region">
+          <Label htmlFor={inputId}>
             지역/분야 집중{" "}
             <span className="text-muted-foreground font-normal">(선택)</span>
           </Label>
           <Input
-            id="collect-region"
+            id={inputId}
             value={region}
             onChange={(e) => setRegion(e.target.value)}
             placeholder="예: 박닌, 호치민, 자동화, 금형"
@@ -802,7 +815,12 @@ function TalentAdmin() {
       isLoading={isLoading}
       getId={(t) => t.id}
       getRowLabel={(t) => t.title}
-      headerActions={<CollectJobsControl />}
+      headerActions={
+        <>
+          <CollectJobsControl postType="hiring" />
+          <CollectJobsControl postType="seeking" />
+        </>
+      }
       getSearchText={(t) =>
         [t.title, t.authorName, t.position ?? "", t.location ?? ""].join(" ")
       }
