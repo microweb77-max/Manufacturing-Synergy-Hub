@@ -41,10 +41,13 @@ function fileToBase64(file: File): Promise<string> {
 const formSchema = z.object({
   name: z.string().min(2, "기업명을 입력해주세요"),
   type: z.enum(["hardware", "software"]),
-  description: z.string().min(10, "기업 소개를 자세히 입력해주세요"),
-  location: z.string().min(2, "위치를 입력해주세요"),
-  contactEmail: z.string().email("유효한 이메일 주소를 입력해주세요"),
-  techSpecs: z.string().min(5, "기술 스펙을 입력해주세요"),
+  taxCode: z.string().optional(),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  contactEmail: z
+    .union([z.literal(""), z.string().email("유효한 이메일 주소를 입력해주세요")])
+    .optional(),
+  techSpecs: z.string().optional(),
 });
 
 export default function NewCompany() {
@@ -67,6 +70,7 @@ export default function NewCompany() {
     defaultValues: {
       name: "",
       type: "hardware",
+      taxCode: "",
       description: "",
       location: "",
       contactEmail: "",
@@ -119,6 +123,7 @@ export default function NewCompany() {
           onSuccess: (result) => {
             if (result.name) form.setValue("name", result.name, { shouldValidate: true });
             if (result.type) form.setValue("type", result.type, { shouldValidate: true });
+            if (result.taxCode) form.setValue("taxCode", result.taxCode, { shouldValidate: true });
             if (result.description) form.setValue("description", result.description, { shouldValidate: true });
             if (result.location) form.setValue("location", result.location, { shouldValidate: true });
             if (result.contactEmail) form.setValue("contactEmail", result.contactEmail, { shouldValidate: true });
@@ -141,11 +146,6 @@ export default function NewCompany() {
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    if (tags.length === 0) {
-      toast({ title: "오류", description: "최소 1개의 역량 태그를 추가해주세요.", variant: "destructive" });
-      return;
-    }
-
     createCompany.mutate({
       data: {
         ...values,
@@ -378,10 +378,24 @@ export default function NewCompany() {
 
                 <FormField
                   control={form.control}
+                  name="taxCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>사업자세금코드 (MST) <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="예: 0312345678" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="location"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>위치 (지역)</FormLabel>
+                      <FormLabel>위치 (지역) <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
                       <FormControl>
                         <Input placeholder="예: 호치민 하이테크 파크" {...field} />
                       </FormControl>
@@ -395,7 +409,7 @@ export default function NewCompany() {
                   name="contactEmail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>담당자 이메일</FormLabel>
+                      <FormLabel>담당자 이메일 <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
                       <FormControl>
                         <Input placeholder="contact@example.com" {...field} />
                       </FormControl>
@@ -410,7 +424,7 @@ export default function NewCompany() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>기업 소개</FormLabel>
+                    <FormLabel>기업 소개 <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
                     <FormControl>
                       <Textarea placeholder="주요 사업 영역과 강점을 설명해주세요." className="h-24" {...field} />
                     </FormControl>
@@ -420,7 +434,7 @@ export default function NewCompany() {
               />
 
               <div className="space-y-3">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">역량 태그 (엔터로 추가)</label>
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">역량 태그 (엔터로 추가) <span className="text-muted-foreground font-normal">(선택)</span></label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {tags.map(tag => (
                     <Badge key={tag} variant="secondary" className="px-2 py-1 text-sm">
@@ -458,7 +472,7 @@ export default function NewCompany() {
                 name="techSpecs"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>기술 스펙 상세</FormLabel>
+                    <FormLabel>기술 스펙 상세 <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
                     <FormControl>
                       <Textarea placeholder="장비 사양, 사용 스택, 호환성 등 기술적 세부사항을 입력하세요." className="h-32 font-mono text-sm" {...field} />
                     </FormControl>

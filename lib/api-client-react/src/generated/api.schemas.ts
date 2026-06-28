@@ -25,6 +25,8 @@ export interface Company {
   id: number;
   name: string;
   type: CompanyType;
+  /** @nullable */
+  taxCode: string | null;
   description: string;
   location: string;
   capabilityTags: string[];
@@ -51,11 +53,12 @@ export interface CompanyInput {
   /** @minLength 1 */
   name: string;
   type: CompanyInputType;
-  description: string;
-  location: string;
-  capabilityTags: string[];
-  techSpecs: string;
-  contactEmail: string;
+  taxCode?: string;
+  description?: string;
+  location?: string;
+  capabilityTags?: string[];
+  techSpecs?: string;
+  contactEmail?: string;
   logoUrl?: string;
 }
 
@@ -71,6 +74,7 @@ export interface CompanyUpdate {
   /** @minLength 1 */
   name?: string;
   type?: CompanyUpdateType;
+  taxCode?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];
@@ -97,6 +101,7 @@ export const AnalyzeMaterialResultType = {
 export interface AnalyzeMaterialResult {
   name: string;
   type: AnalyzeMaterialResultType;
+  taxCode: string;
   description: string;
   location: string;
   capabilityTags: string[];

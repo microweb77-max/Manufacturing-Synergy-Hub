@@ -569,6 +569,7 @@ components:
         - id
         - name
         - type
+        - taxCode
         - description
         - location
         - capabilityTags
@@ -588,6 +589,8 @@ components:
         type:
           type: string
           enum: [hardware, software]
+        taxCode:
+          type: ["string", "null"]
         description:
           type: string
         location:
@@ -617,11 +620,6 @@ components:
       required:
         - name
         - type
-        - description
-        - location
-        - capabilityTags
-        - techSpecs
-        - contactEmail
       properties:
         name:
           type: string
@@ -629,6 +627,8 @@ components:
         type:
           type: string
           enum: [hardware, software]
+        taxCode:
+          type: string
         description:
           type: string
         location:
@@ -652,6 +652,8 @@ components:
         type:
           type: string
           enum: [hardware, software]
+        taxCode:
+          type: string
         description:
           type: string
         location:
@@ -685,6 +687,7 @@ components:
       required:
         - name
         - type
+        - taxCode
         - description
         - location
         - capabilityTags
@@ -696,6 +699,8 @@ components:
         type:
           type: string
           enum: [hardware, software]
+        taxCode:
+          type: string
         description:
           type: string
         location:

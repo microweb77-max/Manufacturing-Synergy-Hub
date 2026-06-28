@@ -11,6 +11,7 @@ export const companiesTable = pgTable("companies", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(),
+  taxCode: text("tax_code"),
   description: text("description").notNull().default(""),
   location: text("location").notNull().default(""),
   capabilityTags: text("capability_tags").array().notNull().default([]),

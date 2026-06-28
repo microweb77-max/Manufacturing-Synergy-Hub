@@ -11,6 +11,8 @@ export interface Company {
   id: number;
   name: string;
   type: CompanyType;
+  /** @nullable */
+  taxCode: string | null;
   description: string;
   location: string;
   capabilityTags: string[];

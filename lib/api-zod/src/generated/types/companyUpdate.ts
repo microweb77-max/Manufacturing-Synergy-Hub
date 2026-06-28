@@ -11,6 +11,7 @@ export interface CompanyUpdate {
   /** @minLength 1 */
   name?: string;
   type?: CompanyUpdateType;
+  taxCode?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];

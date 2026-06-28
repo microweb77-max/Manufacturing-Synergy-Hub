@@ -10,6 +10,7 @@ import type { AnalyzeMaterialResultType } from './analyzeMaterialResultType';
 export interface AnalyzeMaterialResult {
   name: string;
   type: AnalyzeMaterialResultType;
+  taxCode: string;
   description: string;
   location: string;
   capabilityTags: string[];

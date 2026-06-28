@@ -11,10 +11,11 @@ export interface CompanyInput {
   /** @minLength 1 */
   name: string;
   type: CompanyInputType;
-  description: string;
-  location: string;
-  capabilityTags: string[];
-  techSpecs: string;
-  contactEmail: string;
+  taxCode?: string;
+  description?: string;
+  location?: string;
+  capabilityTags?: string[];
+  techSpecs?: string;
+  contactEmail?: string;
   logoUrl?: string;
 }

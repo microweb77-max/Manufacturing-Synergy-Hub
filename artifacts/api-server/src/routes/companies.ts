@@ -37,6 +37,7 @@ const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 �
 {
   "name": "기업명 (문서에서 찾을 수 없으면 빈 문자열)",
   "type": "hardware 또는 software 중 하나. 장비/로봇/금형/물류 등 물리적 제조는 hardware, MES/ERP/자동화/머신비전 등 소프트웨어는 software",
+  "taxCode": "사업자세금코드 MST (베트남 Mã số thuế, Tax Code). 숫자로 된 코드. 찾을 수 없으면 빈 문자열",
   "description": "기업 소개 및 주요 사업 영역 요약 (한국어, 2~3문장)",
   "location": "본사 또는 주요 사업장 위치 (찾을 수 없으면 빈 문자열)",
   "capabilityTags": ["핵심 역량 키워드 배열 (예: CNC가공, MES구축, 머신비전). 3~8개"],
@@ -179,6 +180,7 @@ router.post("/companies", async (req, res): Promise<void> => {
     .insert(companiesTable)
     .values({
       ...parsed.data,
+      taxCode: parsed.data.taxCode?.trim() ? parsed.data.taxCode.trim() : null,
       logoUrl: parsed.data.logoUrl ?? null,
     })
     .returning();
@@ -219,9 +221,15 @@ router.patch("/companies/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  const { taxCode, ...rest } = parsed.data;
+  const updateValues = {
+    ...rest,
+    ...(taxCode !== undefined ? { taxCode: taxCode.trim() ? taxCode.trim() : null } : {}),
+  };
+
   const [company] = await db
     .update(companiesTable)
-    .set(parsed.data)
+    .set(updateValues)
     .where(eq(companiesTable.id, params.data.id))
     .returning();
 
