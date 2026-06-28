@@ -7,7 +7,7 @@ import {
   BarChart, 
   LayoutDashboard
 } from "lucide-react";
-import networkLogo from "@assets/image_1782637730787.png";
+import networkLogo from "@assets/image_1782638929542.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
