@@ -40,6 +40,8 @@ A B2B manufacturing collaboration network for Vietnam that matches hardware spec
 
 Company capability directory, demand-project posting with smart partner matching (synergy score + reasons), a co-selling matchboard, joint-solution packages, and a talent pool (인력 Pool) where companies post hiring openings (구인) and individuals post job-seeking profiles (구직). UI labels are in Korean.
 
+An ADMIN console (`/admin`, nav label 관리자) provides full create/edit/delete for all 6 entities (companies, projects, matches, solutions, performance, talent) via tabs. Built on a generic `src/pages/admin/AdminSection.tsx` (table + create/edit Dialog form + delete AlertDialog) with thin per-entity wrappers in `src/pages/admin/index.tsx` wiring the generated orval hooks. Note: matches "update" sends status only (MatchUpdate); project "create" omits status (ProjectInput); these per-entity body shapes are built explicitly in each wrapper. The app has NO auth, so `/admin` is publicly reachable.
+
 The talent pool replaced the former performance/trust-leaderboard board in the sidebar. Talent schema: `lib/db/src/schema/talent.ts` (`talent_posts`); API routes: `artifacts/api-server/src/routes/talent.ts` (GET `/talent` with `postType` filter, POST `/talent`, DELETE `/talent/{id}`); frontend page: `artifacts/synergy-hub/src/pages/talent/index.tsx`. The performance backend (schema/routes) remains but is no longer linked in the frontend nav.
 
 On the new-company page, users can upload an existing promotional material (image or PDF); Gemini (via Replit AI Integrations) reads the text/visuals and auto-fills the registration form. Endpoint: `POST /companies/analyze-material` in `artifacts/api-server/src/routes/companies.ts`; the Gemini client lives in `lib/integrations-gemini-ai`.

@@ -23,6 +23,8 @@ import NewSolution from "./pages/solutions/new";
 
 import TalentPool from "./pages/talent";
 
+import AdminPage from "./pages/admin";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -53,7 +55,9 @@ function Router() {
         <Route path="/solutions/:id" component={SolutionDetail} />
         
         <Route path="/talent" component={TalentPool} />
-        
+
+        <Route path="/admin" component={AdminPage} />
+
         <Route component={NotFound} />
       </Switch>
     </Layout>

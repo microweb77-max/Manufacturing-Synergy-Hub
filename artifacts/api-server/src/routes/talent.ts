@@ -7,6 +7,9 @@ import {
   ListTalentPostsResponse,
   CreateTalentPostBody,
   CreateTalentPostResponse,
+  UpdateTalentPostParams,
+  UpdateTalentPostBody,
+  UpdateTalentPostResponse,
   DeleteTalentPostParams,
 } from "@workspace/api-zod";
 
@@ -59,6 +62,38 @@ router.post("/talent", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(CreateTalentPostResponse.parse(toJson(post)));
+});
+
+router.patch("/talent/:id", async (req, res): Promise<void> => {
+  const params = UpdateTalentPostParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpdateTalentPostBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(talentPostsTable)
+    .where(eq(talentPostsTable.id, params.data.id));
+
+  if (!existing) {
+    res.status(404).json({ error: "Talent post not found" });
+    return;
+  }
+
+  const [post] = await db
+    .update(talentPostsTable)
+    .set(parsed.data)
+    .where(eq(talentPostsTable.id, params.data.id))
+    .returning();
+
+  res.json(UpdateTalentPostResponse.parse(toJson(post)));
 });
 
 router.delete("/talent/:id", async (req, res): Promise<void> => {

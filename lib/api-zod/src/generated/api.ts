@@ -572,6 +572,16 @@ export const UpdateMatchResponse = zod.object({
 
 
 /**
+ * @summary Delete a match
+ */
+export const DeleteMatchParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMatchResponse = zod.void()
+
+
+/**
  * @summary List joint solutions
  */
 export const ListSolutionsQueryParams = zod.object({
@@ -874,6 +884,75 @@ export const CreatePerformanceLogResponse = zod.object({
 
 
 /**
+ * @summary Update a performance log
+ */
+export const UpdatePerformanceLogParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePerformanceLogBody = zod.object({
+  "projectId": zod.number().optional(),
+  "companyId": zod.number().optional(),
+  "role": zod.string().optional(),
+  "contributionPercent": zod.number().optional(),
+  "revenue": zod.string().optional(),
+  "notes": zod.string().optional()
+})
+
+export const UpdatePerformanceLogResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "companyId": zod.number(),
+  "role": zod.string(),
+  "contributionPercent": zod.number(),
+  "revenue": zod.string().nullable(),
+  "notes": zod.string().nullable(),
+  "createdAt": zod.string(),
+  "company": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['hardware', 'software']),
+  "taxCode": zod.string().nullable(),
+  "phone": zod.string().nullable(),
+  "kakaoTalkId": zod.string().nullable(),
+  "description": zod.string(),
+  "location": zod.string(),
+  "capabilityTags": zod.array(zod.string()),
+  "techSpecs": zod.string(),
+  "contactEmail": zod.string(),
+  "logoUrl": zod.string().nullable(),
+  "trustScore": zod.number(),
+  "rating": zod.number(),
+  "projectsCompleted": zod.number(),
+  "collaborationCount": zod.number(),
+  "createdAt": zod.string()
+}).optional(),
+  "project": zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "demandCompany": zod.string(),
+  "category": zod.string(),
+  "requiredTags": zod.array(zod.string()),
+  "budget": zod.string().nullable(),
+  "status": zod.enum(['open', 'matching', 'in_progress', 'completed']),
+  "deadline": zod.string().nullable(),
+  "createdAt": zod.string()
+}).optional()
+})
+
+
+/**
+ * @summary Delete a performance log
+ */
+export const DeletePerformanceLogParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePerformanceLogResponse = zod.void()
+
+
+/**
  * @summary List talent pool posts
  */
 export const ListTalentPostsQueryParams = zod.object({
@@ -918,6 +997,46 @@ export const CreateTalentPostBody = zod.object({
 })
 
 export const CreateTalentPostResponse = zod.object({
+  "id": zod.number(),
+  "postType": zod.enum(['hiring', 'seeking']),
+  "title": zod.string(),
+  "authorName": zod.string(),
+  "position": zod.string(),
+  "location": zod.string(),
+  "employmentType": zod.string().nullable(),
+  "experienceLevel": zod.string().nullable(),
+  "headcount": zod.number().nullable(),
+  "skills": zod.array(zod.string()),
+  "description": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a talent pool post
+ */
+export const UpdateTalentPostParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTalentPostBody = zod.object({
+  "postType": zod.enum(['hiring', 'seeking']).optional(),
+  "title": zod.string().optional(),
+  "authorName": zod.string().optional(),
+  "position": zod.string().optional(),
+  "location": zod.string().optional(),
+  "employmentType": zod.string().optional(),
+  "experienceLevel": zod.string().optional(),
+  "headcount": zod.number().optional(),
+  "skills": zod.array(zod.string()).optional(),
+  "description": zod.string().optional(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional()
+})
+
+export const UpdateTalentPostResponse = zod.object({
   "id": zod.number(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),

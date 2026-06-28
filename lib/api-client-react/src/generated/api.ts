@@ -40,6 +40,7 @@ import type {
   MatchUpdate,
   PerformanceLog,
   PerformanceLogInput,
+  PerformanceLogUpdate,
   Project,
   ProjectInput,
   ProjectUpdate,
@@ -48,7 +49,8 @@ import type {
   SolutionInput,
   SolutionUpdate,
   TalentPost,
-  TalentPostInput
+  TalentPostInput,
+  TalentPostUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1426,6 +1428,76 @@ export const useUpdateMatch = <TError = ErrorType<unknown>,
       return useMutation(getUpdateMatchMutationOptions(options));
     }
 
+export const getDeleteMatchUrl = (id: number,) => {
+
+
+
+
+  return `/api/matches/${id}`
+}
+
+/**
+ * @summary Delete a match
+ */
+export const deleteMatch = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteMatchUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteMatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteMatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMatch>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMatch(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMatchMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMatch>>>
+
+    export type DeleteMatchMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a match
+ */
+export const useDeleteMatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMatch>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMatch>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteMatchMutationOptions(options));
+    }
+
 export const getListSolutionsUrl = (params?: ListSolutionsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -1952,6 +2024,147 @@ export const useCreatePerformanceLog = <TError = ErrorType<unknown>,
       return useMutation(getCreatePerformanceLogMutationOptions(options));
     }
 
+export const getUpdatePerformanceLogUrl = (id: number,) => {
+
+
+
+
+  return `/api/performance/${id}`
+}
+
+/**
+ * @summary Update a performance log
+ */
+export const updatePerformanceLog = async (id: number,
+    performanceLogUpdate: PerformanceLogUpdate, options?: RequestInit): Promise<PerformanceLog> => {
+
+  return customFetch<PerformanceLog>(getUpdatePerformanceLogUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(performanceLogUpdate)
+  }
+);}
+
+
+
+
+export const getUpdatePerformanceLogMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePerformanceLog>>, TError,{id: number;data: BodyType<PerformanceLogUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePerformanceLog>>, TError,{id: number;data: BodyType<PerformanceLogUpdate>}, TContext> => {
+
+const mutationKey = ['updatePerformanceLog'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePerformanceLog>>, {id: number;data: BodyType<PerformanceLogUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePerformanceLog(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePerformanceLogMutationResult = NonNullable<Awaited<ReturnType<typeof updatePerformanceLog>>>
+    export type UpdatePerformanceLogMutationBody = BodyType<PerformanceLogUpdate>
+    export type UpdatePerformanceLogMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update a performance log
+ */
+export const useUpdatePerformanceLog = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePerformanceLog>>, TError,{id: number;data: BodyType<PerformanceLogUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePerformanceLog>>,
+        TError,
+        {id: number;data: BodyType<PerformanceLogUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdatePerformanceLogMutationOptions(options));
+    }
+
+export const getDeletePerformanceLogUrl = (id: number,) => {
+
+
+
+
+  return `/api/performance/${id}`
+}
+
+/**
+ * @summary Delete a performance log
+ */
+export const deletePerformanceLog = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePerformanceLogUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePerformanceLogMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePerformanceLog>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePerformanceLog>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePerformanceLog'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePerformanceLog>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePerformanceLog(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePerformanceLogMutationResult = NonNullable<Awaited<ReturnType<typeof deletePerformanceLog>>>
+
+    export type DeletePerformanceLogMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a performance log
+ */
+export const useDeletePerformanceLog = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePerformanceLog>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePerformanceLog>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePerformanceLogMutationOptions(options));
+    }
+
 export const getListTalentPostsUrl = (params?: ListTalentPostsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -2104,6 +2317,77 @@ export const useCreateTalentPost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateTalentPostMutationOptions(options));
+    }
+
+export const getUpdateTalentPostUrl = (id: number,) => {
+
+
+
+
+  return `/api/talent/${id}`
+}
+
+/**
+ * @summary Update a talent pool post
+ */
+export const updateTalentPost = async (id: number,
+    talentPostUpdate: TalentPostUpdate, options?: RequestInit): Promise<TalentPost> => {
+
+  return customFetch<TalentPost>(getUpdateTalentPostUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(talentPostUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateTalentPostMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTalentPost>>, TError,{id: number;data: BodyType<TalentPostUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTalentPost>>, TError,{id: number;data: BodyType<TalentPostUpdate>}, TContext> => {
+
+const mutationKey = ['updateTalentPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTalentPost>>, {id: number;data: BodyType<TalentPostUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTalentPost(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTalentPostMutationResult = NonNullable<Awaited<ReturnType<typeof updateTalentPost>>>
+    export type UpdateTalentPostMutationBody = BodyType<TalentPostUpdate>
+    export type UpdateTalentPostMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update a talent pool post
+ */
+export const useUpdateTalentPost = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTalentPost>>, TError,{id: number;data: BodyType<TalentPostUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTalentPost>>,
+        TError,
+        {id: number;data: BodyType<TalentPostUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateTalentPostMutationOptions(options));
     }
 
 export const getDeleteTalentPostUrl = (id: number,) => {

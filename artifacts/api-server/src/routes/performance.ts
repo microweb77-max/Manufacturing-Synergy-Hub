@@ -12,6 +12,10 @@ import {
   ListPerformanceLogsResponse,
   CreatePerformanceLogBody,
   CreatePerformanceLogResponse,
+  UpdatePerformanceLogParams,
+  UpdatePerformanceLogBody,
+  UpdatePerformanceLogResponse,
+  DeletePerformanceLogParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -84,6 +88,52 @@ router.post("/performance", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(CreatePerformanceLogResponse.parse(toJson(log)));
+});
+
+router.patch("/performance/:id", async (req, res): Promise<void> => {
+  const params = UpdatePerformanceLogParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const parsed = UpdatePerformanceLogBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const [existing] = await db
+    .select()
+    .from(performanceLogsTable)
+    .where(eq(performanceLogsTable.id, params.data.id));
+
+  if (!existing) {
+    res.status(404).json({ error: "Performance log not found" });
+    return;
+  }
+
+  const [log] = await db
+    .update(performanceLogsTable)
+    .set(parsed.data)
+    .where(eq(performanceLogsTable.id, params.data.id))
+    .returning();
+
+  res.json(UpdatePerformanceLogResponse.parse(toJson(log)));
+});
+
+router.delete("/performance/:id", async (req, res): Promise<void> => {
+  const params = DeletePerformanceLogParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  await db
+    .delete(performanceLogsTable)
+    .where(eq(performanceLogsTable.id, params.data.id));
+
+  res.status(204).send();
 });
 
 export default router;

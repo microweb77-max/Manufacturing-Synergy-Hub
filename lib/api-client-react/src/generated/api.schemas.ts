@@ -287,6 +287,15 @@ export interface PerformanceLogInput {
   notes?: string;
 }
 
+export interface PerformanceLogUpdate {
+  projectId?: number;
+  companyId?: number;
+  role?: string;
+  contributionPercent?: number;
+  revenue?: string;
+  notes?: string;
+}
+
 export type TalentPostPostType = typeof TalentPostPostType[keyof typeof TalentPostPostType];
 
 
@@ -329,6 +338,29 @@ export interface TalentPostInput {
   postType: TalentPostInputPostType;
   title: string;
   authorName: string;
+  position?: string;
+  location?: string;
+  employmentType?: string;
+  experienceLevel?: string;
+  headcount?: number;
+  skills?: string[];
+  description?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+}
+
+export type TalentPostUpdatePostType = typeof TalentPostUpdatePostType[keyof typeof TalentPostUpdatePostType];
+
+
+export const TalentPostUpdatePostType = {
+  hiring: 'hiring',
+  seeking: 'seeking',
+} as const;
+
+export interface TalentPostUpdate {
+  postType?: TalentPostUpdatePostType;
+  title?: string;
+  authorName?: string;
   position?: string;
   location?: string;
   employmentType?: string;

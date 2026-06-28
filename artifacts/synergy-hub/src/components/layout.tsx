@@ -5,7 +5,8 @@ import {
   Network, 
   Server, 
   Users, 
-  LayoutDashboard
+  LayoutDashboard,
+  ShieldAlert
 } from "lucide-react";
 import networkLogo from "../assets/network-logo.png";
 
@@ -19,6 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/matches", label: "매칭 보드", icon: Network },
     { href: "/solutions", label: "솔루션 갤러리", icon: Server },
     { href: "/talent", label: "인력 Pool", icon: Users },
+    { href: "/admin", label: "관리자", icon: ShieldAlert },
   ];
 
   return (

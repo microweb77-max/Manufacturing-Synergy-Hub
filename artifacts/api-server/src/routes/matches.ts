@@ -15,6 +15,7 @@ import {
   UpdateMatchParams,
   UpdateMatchBody,
   UpdateMatchResponse,
+  DeleteMatchParams,
 } from "@workspace/api-zod";
 import { computeSynergyScore } from "../lib/synergy";
 
@@ -135,6 +136,18 @@ router.patch("/matches/:id", async (req, res): Promise<void> => {
   }
 
   res.json(UpdateMatchResponse.parse(toJson(match)));
+});
+
+router.delete("/matches/:id", async (req, res): Promise<void> => {
+  const params = DeleteMatchParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  await db.delete(matchesTable).where(eq(matchesTable.id, params.data.id));
+
+  res.status(204).send();
 });
 
 export default router;
