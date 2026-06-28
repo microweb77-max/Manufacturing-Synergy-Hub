@@ -87,7 +87,7 @@ router.post("/offer-matches", async (req, res): Promise<void> => {
     .insert(offerMatchesTable)
     .values({
       offerId: data.offerId,
-      clientCompanyNo: data.clientCompanyNo,
+      clientCompanyNo: data.clientCompanyNo ?? null,
       clientCompanyName: data.clientCompanyName,
       contactName: data.contactName ?? "",
       contactInfo: data.contactInfo ?? "",

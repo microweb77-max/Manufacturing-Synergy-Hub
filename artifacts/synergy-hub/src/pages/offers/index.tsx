@@ -433,7 +433,7 @@ function OfferCreateDialog({
 
 type MatchBody = {
   offerId: number;
-  clientCompanyNo: number;
+  clientCompanyNo: number | null;
   clientCompanyName: string;
   contactName: string;
   contactInfo: string;
@@ -455,12 +455,14 @@ function MatchRequestDialog({
 }) {
   const [clientSearch, setClientSearch] = useState("");
   const [selectedNo, setSelectedNo] = useState<number | null>(null);
+  const [manualName, setManualName] = useState<string | null>(null);
   const [contactName, setContactName] = useState("");
   const [contactInfo, setContactInfo] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   const selected = clientCompanies.find((c) => c.no === selectedNo) ?? null;
+  const hasSelection = selected !== null || manualName !== null;
 
   const matches = useMemo(() => {
     const q = clientSearch.trim().toLowerCase();
@@ -473,20 +475,28 @@ function MatchRequestDialog({
   const reset = () => {
     setClientSearch("");
     setSelectedNo(null);
+    setManualName(null);
     setContactName("");
     setContactInfo("");
     setMessage("");
     setError(null);
   };
 
+  const clearSelection = () => {
+    setSelectedNo(null);
+    setManualName(null);
+    setClientSearch("");
+  };
+
   const handleSubmit = () => {
     if (!offer) return;
-    if (!selected) return setError("고객사를 선택하세요.");
+    const companyName = selected ? selected.nameKo : manualName;
+    if (!companyName) return setError("고객사를 선택하거나 직접 입력하세요.");
     setError(null);
     onSubmit({
       offerId: offer.id,
-      clientCompanyNo: selected.no,
-      clientCompanyName: selected.nameKo,
+      clientCompanyNo: selected ? selected.no : null,
+      clientCompanyName: companyName,
       contactName: contactName.trim(),
       contactInfo: contactInfo.trim(),
       message: message.trim(),
@@ -522,22 +532,17 @@ function MatchRequestDialog({
             <Label>
               고객사 (귀사) 선택 <span className="text-destructive">*</span>
             </Label>
-            {selected ? (
+            {hasSelection ? (
               <div className="flex items-center justify-between border rounded-md px-3 py-2 bg-muted/40">
                 <div className="text-sm">
-                  <div className="font-medium">{selected.nameKo}</div>
+                  <div className="font-medium">
+                    {selected ? selected.nameKo : manualName}
+                  </div>
                   <div className="text-xs text-muted-foreground">
-                    {selected.region}
+                    {selected ? selected.region : "직접 입력"}
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedNo(null);
-                    setClientSearch("");
-                  }}
-                >
+                <Button variant="ghost" size="sm" onClick={clearSelection}>
                   변경
                 </Button>
               </div>
@@ -566,9 +571,21 @@ function MatchRequestDialog({
                   </div>
                 )}
                 {clientSearch.trim() && matches.length === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    검색 결과가 없습니다.
-                  </p>
+                  <div className="border rounded-md px-3 py-3 space-y-2 bg-muted/30">
+                    <p className="text-xs text-muted-foreground">
+                      검색 결과가 없습니다. 디렉토리에 없는 기업은 직접 입력할 수 있습니다.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setManualName(clientSearch.trim())}
+                    >
+                      <Plus className="h-4 w-4 mr-1.5" />'{clientSearch.trim()}'
+                      직접 입력
+                    </Button>
+                  </div>
                 )}
               </>
             )}

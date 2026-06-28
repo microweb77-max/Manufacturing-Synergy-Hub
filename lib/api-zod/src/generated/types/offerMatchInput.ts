@@ -8,7 +8,7 @@
 
 export interface OfferMatchInput {
   offerId: number;
-  clientCompanyNo: number;
+  clientCompanyNo?: number | null;
   clientCompanyName: string;
   contactName?: string;
   contactInfo?: string;

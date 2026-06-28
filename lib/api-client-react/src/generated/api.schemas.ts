@@ -438,7 +438,7 @@ export interface OfferMatch {
   itemName: string;
   supplierCompanyId: number;
   supplierCompanyName: string;
-  clientCompanyNo: number;
+  clientCompanyNo?: number | null;
   clientCompanyName: string;
   contactName: string;
   contactInfo: string;
@@ -450,7 +450,7 @@ export interface OfferMatch {
 
 export interface OfferMatchInput {
   offerId: number;
-  clientCompanyNo: number;
+  clientCompanyNo?: number | null;
   clientCompanyName: string;
   contactName?: string;
   contactInfo?: string;

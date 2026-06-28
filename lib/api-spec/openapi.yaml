@@ -1633,7 +1633,6 @@ components:
         - itemName
         - supplierCompanyId
         - supplierCompanyName
-        - clientCompanyNo
         - clientCompanyName
         - contactName
         - contactInfo
@@ -1654,6 +1653,7 @@ components:
           type: string
         clientCompanyNo:
           type: integer
+          nullable: true
         clientCompanyName:
           type: string
         contactName:
@@ -1673,13 +1673,13 @@ components:
       type: object
       required:
         - offerId
-        - clientCompanyNo
         - clientCompanyName
       properties:
         offerId:
           type: integer
         clientCompanyNo:
           type: integer
+          nullable: true
         clientCompanyName:
           type: string
         contactName:

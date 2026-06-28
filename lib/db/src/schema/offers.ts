@@ -24,7 +24,7 @@ export const supplyOffersTable = pgTable("supply_offers", {
 export const offerMatchesTable = pgTable("offer_matches", {
   id: serial("id").primaryKey(),
   offerId: integer("offer_id").notNull(),
-  clientCompanyNo: integer("client_company_no").notNull(),
+  clientCompanyNo: integer("client_company_no"),
   clientCompanyName: text("client_company_name").notNull(),
   contactName: text("contact_name").notNull().default(""),
   contactInfo: text("contact_info").notNull().default(""),
