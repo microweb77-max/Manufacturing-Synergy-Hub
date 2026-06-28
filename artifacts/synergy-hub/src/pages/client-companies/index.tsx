@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react";
 import { useListClientCompanies } from "@workspace/api-client-react";
+import type { ClientCompany } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -26,6 +33,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Briefcase,
+  Factory,
+  Network,
+  Landmark,
+  Mailbox,
+  Hash,
 } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -37,6 +49,7 @@ export default function ClientCompaniesPage() {
   const [region, setRegion] = useState(ALL);
   const [industry, setIndustry] = useState(ALL);
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<ClientCompany | null>(null);
 
   const companies = data ?? [];
 
@@ -191,7 +204,11 @@ export default function ClientCompaniesPage() {
               </TableRow>
             ) : (
               pageItems.map((c) => (
-                <TableRow key={c.no}>
+                <TableRow
+                  key={c.no}
+                  onClick={() => setSelected(c)}
+                  className="cursor-pointer"
+                >
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {c.no}
                   </TableCell>
@@ -266,6 +283,109 @@ export default function ClientCompaniesPage() {
           </Button>
         </div>
       )}
+
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => !open && setSelected(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          {selected && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start gap-2">
+                  <Building2 className="h-6 w-6 text-primary shrink-0 mt-1" />
+                  <div className="min-w-0">
+                    <DialogTitle className="text-xl">
+                      {selected.nameKo || "\u00A0"}
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground break-words">
+                      {selected.nameEn}
+                    </p>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {selected.industry && (
+                  <Badge variant="secondary">{selected.industry}</Badge>
+                )}
+                {selected.entryType && (
+                  <Badge variant="outline">{selected.entryType}</Badge>
+                )}
+                {selected.investmentType && (
+                  <Badge variant="outline">{selected.investmentType}</Badge>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+                <DetailRow icon={Hash} label="번호" value={String(selected.no)} />
+                <DetailRow
+                  icon={Briefcase}
+                  label="모기업"
+                  value={selected.parentCompany}
+                />
+                <DetailRow
+                  icon={Factory}
+                  label="진출형태"
+                  value={selected.entryType}
+                />
+                <DetailRow
+                  icon={Landmark}
+                  label="투자형태"
+                  value={selected.investmentType}
+                />
+                <DetailRow
+                  icon={Network}
+                  label="업종"
+                  value={selected.industry}
+                />
+                <DetailRow
+                  icon={Network}
+                  label="업종 상세"
+                  value={selected.industryDetail}
+                />
+                <DetailRow
+                  icon={MapPin}
+                  label="진출지역"
+                  value={selected.region}
+                />
+                <DetailRow
+                  icon={Mailbox}
+                  label="우편번호"
+                  value={selected.postalCode}
+                />
+                <div className="sm:col-span-2">
+                  <DetailRow
+                    icon={MapPin}
+                    label="주소"
+                    value={selected.address}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Hash;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </div>
+      <div className="text-sm break-words min-h-[1.25rem]">{value}</div>
     </div>
   );
 }
