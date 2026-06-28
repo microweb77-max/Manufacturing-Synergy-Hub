@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Layers, Factory, Monitor } from "lucide-react";
 
@@ -151,7 +152,7 @@ export default function NewSolution() {
                   />
 
                   <div className="space-y-3">
-                    <FormLabel>핵심 키워드 태그 (엔터로 추가)</FormLabel>
+                    <Label>핵심 키워드 태그 (엔터로 추가)</Label>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {tags.map(tag => (
                         <Badge key={tag} variant="secondary" className="px-2 py-1 text-sm">

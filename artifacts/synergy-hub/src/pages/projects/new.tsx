@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Bot } from "lucide-react";
 
@@ -173,8 +174,8 @@ export default function NewProject() {
               </div>
 
               <div className="space-y-3 p-4 bg-muted/30 rounded-lg border border-border">
-                <FormLabel className="text-base font-semibold">필요 역량 태그 <span className="text-destructive">*</span></FormLabel>
-                <FormDescription>이 프로젝트를 수행하는 데 필요한 핵심 기술과 장비를 입력하세요. AI 매칭의 핵심 기준이 됩니다.</FormDescription>
+                <Label className="text-base font-semibold">필요 역량 태그 <span className="text-destructive">*</span></Label>
+                <p className="text-sm text-muted-foreground">이 프로젝트를 수행하는 데 필요한 핵심 기술과 장비를 입력하세요. AI 매칭의 핵심 기준이 됩니다.</p>
                 
                 <div className="flex flex-wrap gap-2 my-3">
                   {tags.map(tag => (
