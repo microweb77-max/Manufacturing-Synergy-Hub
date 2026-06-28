@@ -386,6 +386,92 @@ export interface TalentPostUpdate {
   contactPhone?: string;
 }
 
+export interface SupplyOffer {
+  id: number;
+  companyId: number;
+  companyName: string;
+  category: string;
+  itemName: string;
+  unitPrice: string;
+  unit: string;
+  currency: string;
+  minOrderQty: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface SupplyOfferInput {
+  companyId: number;
+  category?: string;
+  itemName: string;
+  unitPrice?: string;
+  unit?: string;
+  currency?: string;
+  minOrderQty?: string;
+  description?: string;
+}
+
+export interface SupplyOfferUpdate {
+  companyId?: number;
+  category?: string;
+  itemName?: string;
+  unitPrice?: string;
+  unit?: string;
+  currency?: string;
+  minOrderQty?: string;
+  description?: string;
+}
+
+export type OfferMatchStatus = typeof OfferMatchStatus[keyof typeof OfferMatchStatus];
+
+
+export const OfferMatchStatus = {
+  pending: 'pending',
+  reviewing: 'reviewing',
+  matched: 'matched',
+  rejected: 'rejected',
+} as const;
+
+export interface OfferMatch {
+  id: number;
+  offerId: number;
+  itemName: string;
+  supplierCompanyId: number;
+  supplierCompanyName: string;
+  clientCompanyNo: number;
+  clientCompanyName: string;
+  contactName: string;
+  contactInfo: string;
+  message: string;
+  status: OfferMatchStatus;
+  adminNote: string;
+  createdAt: string;
+}
+
+export interface OfferMatchInput {
+  offerId: number;
+  clientCompanyNo: number;
+  clientCompanyName: string;
+  contactName?: string;
+  contactInfo?: string;
+  message?: string;
+}
+
+export type OfferMatchUpdateStatus = typeof OfferMatchUpdateStatus[keyof typeof OfferMatchUpdateStatus];
+
+
+export const OfferMatchUpdateStatus = {
+  pending: 'pending',
+  reviewing: 'reviewing',
+  matched: 'matched',
+  rejected: 'rejected',
+} as const;
+
+export interface OfferMatchUpdate {
+  status?: OfferMatchUpdateStatus;
+  adminNote?: string;
+}
+
 export interface TagCount {
   tag: string;
   count: number;
@@ -483,4 +569,9 @@ export const ListTalentPostsPostType = {
   hiring: 'hiring',
   seeking: 'seeking',
 } as const;
+
+export type ListSupplyOffersParams = {
+category?: string;
+search?: string;
+};
 

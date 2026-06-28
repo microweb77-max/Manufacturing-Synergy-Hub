@@ -6,6 +6,8 @@ import matchesRouter from "./matches";
 import solutionsRouter from "./solutions";
 import performanceRouter from "./performance";
 import talentRouter from "./talent";
+import supplyOffersRouter from "./supplyOffers";
+import offerMatchesRouter from "./offerMatches";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 
@@ -18,6 +20,8 @@ router.use(matchesRouter);
 router.use(solutionsRouter);
 router.use(performanceRouter);
 router.use(talentRouter);
+router.use(supplyOffersRouter);
+router.use(offerMatchesRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
 

@@ -1065,6 +1065,191 @@ export const DeleteTalentPostResponse = zod.void()
 
 
 /**
+ * @summary List supply offers (raw materials, parts) from partner companies
+ */
+export const ListSupplyOffersQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "search": zod.coerce.string().optional()
+})
+
+export const ListSupplyOffersResponseItem = zod.object({
+  "id": zod.number(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "category": zod.string(),
+  "itemName": zod.string(),
+  "unitPrice": zod.string(),
+  "unit": zod.string(),
+  "currency": zod.string(),
+  "minOrderQty": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListSupplyOffersResponse = zod.array(ListSupplyOffersResponseItem)
+
+
+/**
+ * @summary Create a supply offer
+ */
+export const CreateSupplyOfferBody = zod.object({
+  "companyId": zod.number(),
+  "category": zod.string().optional(),
+  "itemName": zod.string(),
+  "unitPrice": zod.string().optional(),
+  "unit": zod.string().optional(),
+  "currency": zod.string().optional(),
+  "minOrderQty": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const CreateSupplyOfferResponse = zod.object({
+  "id": zod.number(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "category": zod.string(),
+  "itemName": zod.string(),
+  "unitPrice": zod.string(),
+  "unit": zod.string(),
+  "currency": zod.string(),
+  "minOrderQty": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a supply offer
+ */
+export const UpdateSupplyOfferParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateSupplyOfferBody = zod.object({
+  "companyId": zod.number().optional(),
+  "category": zod.string().optional(),
+  "itemName": zod.string().optional(),
+  "unitPrice": zod.string().optional(),
+  "unit": zod.string().optional(),
+  "currency": zod.string().optional(),
+  "minOrderQty": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const UpdateSupplyOfferResponse = zod.object({
+  "id": zod.number(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "category": zod.string(),
+  "itemName": zod.string(),
+  "unitPrice": zod.string(),
+  "unit": zod.string(),
+  "currency": zod.string(),
+  "minOrderQty": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a supply offer
+ */
+export const DeleteSupplyOfferParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteSupplyOfferResponse = zod.void()
+
+
+/**
+ * @summary List offer match requests (admin only)
+ */
+export const ListOfferMatchesResponseItem = zod.object({
+  "id": zod.number(),
+  "offerId": zod.number(),
+  "itemName": zod.string(),
+  "supplierCompanyId": zod.number(),
+  "supplierCompanyName": zod.string(),
+  "clientCompanyNo": zod.number(),
+  "clientCompanyName": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'matched', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListOfferMatchesResponse = zod.array(ListOfferMatchesResponseItem)
+
+
+/**
+ * @summary Request a match against a supply offer
+ */
+export const CreateOfferMatchBody = zod.object({
+  "offerId": zod.number(),
+  "clientCompanyNo": zod.number(),
+  "clientCompanyName": zod.string(),
+  "contactName": zod.string().optional(),
+  "contactInfo": zod.string().optional(),
+  "message": zod.string().optional()
+})
+
+export const CreateOfferMatchResponse = zod.object({
+  "id": zod.number(),
+  "offerId": zod.number(),
+  "itemName": zod.string(),
+  "supplierCompanyId": zod.number(),
+  "supplierCompanyName": zod.string(),
+  "clientCompanyNo": zod.number(),
+  "clientCompanyName": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'matched', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update an offer match (admin only)
+ */
+export const UpdateOfferMatchParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateOfferMatchBody = zod.object({
+  "status": zod.enum(['pending', 'reviewing', 'matched', 'rejected']).optional(),
+  "adminNote": zod.string().optional()
+})
+
+export const UpdateOfferMatchResponse = zod.object({
+  "id": zod.number(),
+  "offerId": zod.number(),
+  "itemName": zod.string(),
+  "supplierCompanyId": zod.number(),
+  "supplierCompanyName": zod.string(),
+  "clientCompanyNo": zod.number(),
+  "clientCompanyName": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "message": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'matched', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an offer match (admin only)
+ */
+export const DeleteOfferMatchParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteOfferMatchResponse = zod.void()
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({

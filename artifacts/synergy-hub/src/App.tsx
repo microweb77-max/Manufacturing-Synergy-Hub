@@ -27,6 +27,8 @@ import AdminPage from "./pages/admin";
 
 import ClientCompaniesPage from "./pages/client-companies";
 
+import OffersPage from "./pages/offers";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -59,6 +61,8 @@ function Router() {
         <Route path="/talent" component={TalentPool} />
 
         <Route path="/client-companies" component={ClientCompaniesPage} />
+
+        <Route path="/offers" component={OffersPage} />
 
         <Route path="/admin" component={AdminPage} />
 

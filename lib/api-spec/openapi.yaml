@@ -680,6 +680,169 @@ paths:
         "204":
           description: Deleted
 
+  /supply-offers:
+    get:
+      operationId: listSupplyOffers
+      tags: [supplyOffers]
+      summary: List supply offers (raw materials, parts) from partner companies
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Supply offers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplyOffer"
+    post:
+      operationId: createSupplyOffer
+      tags: [supplyOffers]
+      summary: Create a supply offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplyOfferInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplyOffer"
+
+  /supply-offers/{id}:
+    patch:
+      operationId: updateSupplyOffer
+      tags: [supplyOffers]
+      summary: Update a supply offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SupplyOfferUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupplyOffer"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteSupplyOffer
+      tags: [supplyOffers]
+      summary: Delete a supply offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /offer-matches:
+    get:
+      operationId: listOfferMatches
+      tags: [offerMatches]
+      summary: List offer match requests (admin only)
+      responses:
+        "200":
+          description: Offer matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OfferMatch"
+    post:
+      operationId: createOfferMatch
+      tags: [offerMatches]
+      summary: Request a match against a supply offer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferMatchInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferMatch"
+
+  /offer-matches/{id}:
+    patch:
+      operationId: updateOfferMatch
+      tags: [offerMatches]
+      summary: Update an offer match (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferMatchUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferMatch"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteOfferMatch
+      tags: [offerMatches]
+      summary: Delete an offer match (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -1381,6 +1544,157 @@ components:
         contactEmail:
           type: string
         contactPhone:
+          type: string
+
+    SupplyOffer:
+      type: object
+      required:
+        - id
+        - companyId
+        - companyName
+        - category
+        - itemName
+        - unitPrice
+        - unit
+        - currency
+        - minOrderQty
+        - description
+        - createdAt
+      properties:
+        id:
+          type: integer
+        companyId:
+          type: integer
+        companyName:
+          type: string
+        category:
+          type: string
+        itemName:
+          type: string
+        unitPrice:
+          type: string
+        unit:
+          type: string
+        currency:
+          type: string
+        minOrderQty:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+    SupplyOfferInput:
+      type: object
+      required:
+        - companyId
+        - itemName
+      properties:
+        companyId:
+          type: integer
+        category:
+          type: string
+        itemName:
+          type: string
+        unitPrice:
+          type: string
+        unit:
+          type: string
+        currency:
+          type: string
+        minOrderQty:
+          type: string
+        description:
+          type: string
+    SupplyOfferUpdate:
+      type: object
+      properties:
+        companyId:
+          type: integer
+        category:
+          type: string
+        itemName:
+          type: string
+        unitPrice:
+          type: string
+        unit:
+          type: string
+        currency:
+          type: string
+        minOrderQty:
+          type: string
+        description:
+          type: string
+
+    OfferMatch:
+      type: object
+      required:
+        - id
+        - offerId
+        - itemName
+        - supplierCompanyId
+        - supplierCompanyName
+        - clientCompanyNo
+        - clientCompanyName
+        - contactName
+        - contactInfo
+        - message
+        - status
+        - adminNote
+        - createdAt
+      properties:
+        id:
+          type: integer
+        offerId:
+          type: integer
+        itemName:
+          type: string
+        supplierCompanyId:
+          type: integer
+        supplierCompanyName:
+          type: string
+        clientCompanyNo:
+          type: integer
+        clientCompanyName:
+          type: string
+        contactName:
+          type: string
+        contactInfo:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+          enum: [pending, reviewing, matched, rejected]
+        adminNote:
+          type: string
+        createdAt:
+          type: string
+    OfferMatchInput:
+      type: object
+      required:
+        - offerId
+        - clientCompanyNo
+        - clientCompanyName
+      properties:
+        offerId:
+          type: integer
+        clientCompanyNo:
+          type: integer
+        clientCompanyName:
+          type: string
+        contactName:
+          type: string
+        contactInfo:
+          type: string
+        message:
+          type: string
+    OfferMatchUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, reviewing, matched, rejected]
+        adminNote:
           type: string
 
     DashboardSummary:

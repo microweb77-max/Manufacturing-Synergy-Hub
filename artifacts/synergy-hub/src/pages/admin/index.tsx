@@ -30,6 +30,15 @@ import {
   useUpdateTalentPost,
   useDeleteTalentPost,
   getListTalentPostsQueryKey,
+  useListSupplyOffers,
+  useCreateSupplyOffer,
+  useUpdateSupplyOffer,
+  useDeleteSupplyOffer,
+  getListSupplyOffersQueryKey,
+  useListOfferMatches,
+  useUpdateOfferMatch,
+  useDeleteOfferMatch,
+  getListOfferMatchesQueryKey,
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -714,6 +723,202 @@ function TalentAdmin() {
   );
 }
 
+function SupplyOffersAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListSupplyOffers();
+  const create = useCreateSupplyOffer();
+  const update = useUpdateSupplyOffer();
+  const del = useDeleteSupplyOffer();
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListSupplyOffersQueryKey() });
+
+  const buildBody = (v: FormValues) => ({
+    companyId: toNum(v.companyId),
+    category: v.category,
+    itemName: v.itemName,
+    unitPrice: v.unitPrice,
+    unit: v.unit,
+    currency: v.currency,
+    minOrderQty: v.minOrderQty,
+    description: v.description,
+  });
+
+  const categoryOptions = [
+    { value: "원재료", label: "원재료" },
+    { value: "자재", label: "자재" },
+    { value: "부자재", label: "부자재" },
+    { value: "기타", label: "기타" },
+  ];
+
+  return (
+    <AdminSection
+      title="공급 오퍼"
+      description="협력사가 공급하는 원재료·자재·부자재 품목과 단가를 관리합니다."
+      items={data}
+      isLoading={isLoading}
+      getId={(o) => o.id}
+      getRowLabel={(o) => o.itemName}
+      columns={[
+        { key: "itemName", header: "품명", render: (o) => <span className="font-medium">{o.itemName}</span> },
+        { key: "companyName", header: "공급기업", render: (o) => o.companyName || "-" },
+        { key: "category", header: "분류", render: (o) => <Badge variant="secondary">{o.category}</Badge> },
+        {
+          key: "unitPrice",
+          header: "단가",
+          render: (o) => (
+            <span className="font-mono text-sm">
+              {o.unitPrice || "-"} {o.currency}
+              {o.unit ? `/${o.unit}` : ""}
+            </span>
+          ),
+        },
+      ]}
+      fields={[
+        { name: "companyId", label: "공급기업 ID", type: "number", required: true },
+        { name: "category", label: "분류", type: "select", options: categoryOptions },
+        { name: "itemName", label: "품명", type: "text", required: true, full: true },
+        { name: "unitPrice", label: "단가", type: "text" },
+        { name: "currency", label: "통화", type: "text" },
+        { name: "unit", label: "단위", type: "text" },
+        { name: "minOrderQty", label: "최소 주문 수량", type: "text" },
+        { name: "description", label: "설명", type: "textarea", full: true },
+      ]}
+      emptyValues={{
+        companyId: "",
+        category: "원재료",
+        itemName: "",
+        unitPrice: "",
+        currency: "USD",
+        unit: "",
+        minOrderQty: "",
+        description: "",
+      }}
+      toFormValues={(o) => ({
+        companyId: String(o.companyId),
+        category: o.category,
+        itemName: o.itemName,
+        unitPrice: o.unitPrice ?? "",
+        currency: o.currency ?? "USD",
+        unit: o.unit ?? "",
+        minOrderQty: o.minOrderQty ?? "",
+        description: o.description ?? "",
+      })}
+      onCreate={async (v) => {
+        try {
+          await create.mutateAsync({ data: buildBody(v) });
+          toast({ title: "추가 완료", description: "공급 오퍼가 등록되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({ id, data: buildBody(v) });
+          toast({ title: "수정 완료", description: "공급 오퍼가 수정되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "공급 오퍼가 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
+function OfferMatchesAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListOfferMatches();
+  const update = useUpdateOfferMatch();
+  const del = useDeleteOfferMatch();
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListOfferMatchesQueryKey() });
+
+  const statusOptions = [
+    { value: "pending", label: "대기 (pending)" },
+    { value: "reviewing", label: "검토중 (reviewing)" },
+    { value: "matched", label: "매칭완료 (matched)" },
+    { value: "rejected", label: "거절 (rejected)" },
+  ];
+
+  const statusLabel: Record<string, string> = {
+    pending: "대기",
+    reviewing: "검토중",
+    matched: "매칭완료",
+    rejected: "거절",
+  };
+
+  return (
+    <AdminSection
+      title="오퍼 매칭"
+      description="고객사가 요청한 매칭 내역입니다. (매칭 과정·결과는 관리자만 열람) 상태와 메모만 수정됩니다."
+      items={data}
+      isLoading={isLoading}
+      canCreate={false}
+      getId={(m) => m.id}
+      getRowLabel={(m) => `매칭 #${m.id}`}
+      columns={[
+        { key: "itemName", header: "품명", render: (m) => <span className="font-medium">{m.itemName}</span> },
+        { key: "supplier", header: "공급기업", render: (m) => m.supplierCompanyName || "-" },
+        { key: "client", header: "고객사(요청)", render: (m) => m.clientCompanyName },
+        { key: "contact", header: "담당자", render: (m) => m.contactName || "-" },
+        { key: "status", header: "상태", render: (m) => <Badge variant="outline">{statusLabel[m.status] ?? m.status}</Badge> },
+      ]}
+      fields={[
+        { name: "status", label: "상태", type: "select", options: statusOptions },
+        { name: "adminNote", label: "관리자 메모", type: "textarea", full: true },
+      ]}
+      emptyValues={{ status: "pending", adminNote: "" }}
+      toFormValues={(m) => ({
+        status: m.status,
+        adminNote: m.adminNote ?? "",
+      })}
+      onCreate={async () => {
+        throw new Error("not supported");
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({
+            id,
+            data: {
+              status: v.status as "pending" | "reviewing" | "matched" | "rejected",
+              adminNote: v.adminNote,
+            },
+          });
+          toast({ title: "수정 완료", description: "매칭 상태가 변경되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "매칭이 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
 export default function AdminPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
@@ -735,6 +940,8 @@ export default function AdminPage() {
           <TabsTrigger value="solutions">솔루션</TabsTrigger>
           <TabsTrigger value="performance">성과</TabsTrigger>
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
+          <TabsTrigger value="offers">공급 오퍼</TabsTrigger>
+          <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
         </TabsList>
         <TabsContent value="companies" className="mt-6">
           <CompaniesAdmin />
@@ -753,6 +960,12 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="talent" className="mt-6">
           <TalentAdmin />
+        </TabsContent>
+        <TabsContent value="offers" className="mt-6">
+          <SupplyOffersAdmin />
+        </TabsContent>
+        <TabsContent value="offer-matches" className="mt-6">
+          <OfferMatchesAdmin />
         </TabsContent>
       </Tabs>
     </div>

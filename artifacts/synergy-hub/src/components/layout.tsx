@@ -6,7 +6,8 @@ import {
   Server, 
   Users, 
   LayoutDashboard,
-  Building2
+  Building2,
+  Package
 } from "lucide-react";
 import networkLogo from "../assets/network-logo.png";
 
@@ -17,6 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "대시보드", icon: LayoutDashboard },
     { href: "/companies", label: "기업 디렉토리", icon: Factory },
     { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
+    { href: "/offers", label: "오퍼 리스트", icon: Package },
     { href: "/projects", label: "프로젝트", icon: Activity },
     { href: "/matches", label: "매칭 보드", icon: Network },
     { href: "/solutions", label: "솔루션 갤러리", icon: Server },
