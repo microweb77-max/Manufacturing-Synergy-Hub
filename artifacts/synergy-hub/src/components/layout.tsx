@@ -53,7 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <img
             src={networkLogo}
             alt="Vietnam Manufacturing Network"
-            className="w-full rounded-lg"
+            className="w-[70%] mx-auto rounded-lg"
           />
         </div>
       </aside>
