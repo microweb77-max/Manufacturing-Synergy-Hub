@@ -324,7 +324,7 @@ function OfferCreateDialog({
         <DialogHeader>
           <DialogTitle>공급 오퍼 등록</DialogTitle>
           <DialogDescription>
-            기업 디렉토리에 등록된 공급기업으로서 공급 가능한 품목과 단가를 등록합니다.
+            공급사 디렉토리에 등록된 공급기업으로서 공급 가능한 품목과 단가를 등록합니다.
           </DialogDescription>
         </DialogHeader>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
@@ -334,7 +334,7 @@ function OfferCreateDialog({
             </Label>
             <Select value={companyId} onValueChange={setCompanyId}>
               <SelectTrigger>
-                <SelectValue placeholder="기업 디렉토리에서 선택" />
+                <SelectValue placeholder="공급사 디렉토리에서 선택" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
                 {companies.map((c) => (

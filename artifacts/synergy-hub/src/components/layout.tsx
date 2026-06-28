@@ -16,7 +16,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", label: "대시보드", icon: LayoutDashboard },
-    { href: "/companies", label: "기업 디렉토리", icon: Factory },
+    { href: "/companies", label: "공급사 디렉토리", icon: Factory },
     { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
     { href: "/offers", label: "오퍼 리스트", icon: Package },
     { href: "/projects", label: "프로젝트", icon: Activity },

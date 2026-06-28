@@ -24,7 +24,7 @@ export default function CompaniesList() {
     <div className="p-8 max-w-7xl mx-auto space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">기업 디렉토리</h1>
+          <h1 className="text-3xl font-bold tracking-tight">공급사 디렉토리</h1>
           <p className="text-muted-foreground mt-1">시너지 허브에 등록된 협력사 목록을 확인하고 파트너를 찾으세요.</p>
         </div>
         <Link href="/companies/new">
