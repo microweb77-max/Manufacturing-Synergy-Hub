@@ -12,6 +12,8 @@ export const companiesTable = pgTable("companies", {
   name: text("name").notNull(),
   type: text("type").notNull(),
   taxCode: text("tax_code"),
+  phone: text("phone"),
+  kakaoTalkId: text("kakaotalk_id"),
   description: text("description").notNull().default(""),
   location: text("location").notNull().default(""),
   capabilityTags: text("capability_tags").array().notNull().default([]),

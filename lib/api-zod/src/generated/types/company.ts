@@ -13,6 +13,10 @@ export interface Company {
   type: CompanyType;
   /** @nullable */
   taxCode: string | null;
+  /** @nullable */
+  phone: string | null;
+  /** @nullable */
+  kakaoTalkId: string | null;
   description: string;
   location: string;
   capabilityTags: string[];

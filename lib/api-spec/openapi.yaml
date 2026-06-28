@@ -570,6 +570,8 @@ components:
         - name
         - type
         - taxCode
+        - phone
+        - kakaoTalkId
         - description
         - location
         - capabilityTags
@@ -590,6 +592,10 @@ components:
           type: string
           enum: [hardware, software]
         taxCode:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        kakaoTalkId:
           type: ["string", "null"]
         description:
           type: string
@@ -629,6 +635,10 @@ components:
           enum: [hardware, software]
         taxCode:
           type: string
+        phone:
+          type: string
+        kakaoTalkId:
+          type: string
         description:
           type: string
         location:
@@ -653,6 +663,10 @@ components:
           type: string
           enum: [hardware, software]
         taxCode:
+          type: string
+        phone:
+          type: string
+        kakaoTalkId:
           type: string
         description:
           type: string
@@ -688,6 +702,8 @@ components:
         - name
         - type
         - taxCode
+        - phone
+        - kakaoTalkId
         - description
         - location
         - capabilityTags
@@ -700,6 +716,10 @@ components:
           type: string
           enum: [hardware, software]
         taxCode:
+          type: string
+        phone:
+          type: string
+        kakaoTalkId:
           type: string
         description:
           type: string

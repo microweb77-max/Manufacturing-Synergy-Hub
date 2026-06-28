@@ -3,7 +3,7 @@ import { useGetCompany, useListPerformanceLogs, getGetCompanyQueryKey, getListPe
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Mail, Calendar, Star, ShieldCheck, Factory, Monitor, Briefcase, Activity, Target, Hash } from "lucide-react";
+import { MapPin, Mail, Calendar, Star, ShieldCheck, Factory, Monitor, Briefcase, Activity, Target, Hash, Phone, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CompanyDetail() {
@@ -50,6 +50,8 @@ export default function CompanyDetail() {
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             {company.location && <div className="flex items-center"><MapPin className="w-4 h-4 mr-2" /> {company.location}</div>}
             {company.contactEmail && <div className="flex items-center"><Mail className="w-4 h-4 mr-2" /> {company.contactEmail}</div>}
+            {company.phone && <div className="flex items-center"><Phone className="w-4 h-4 mr-2" /> {company.phone}</div>}
+            {company.kakaoTalkId && <div className="flex items-center"><MessageCircle className="w-4 h-4 mr-2" /> 카카오톡: {company.kakaoTalkId}</div>}
             {company.taxCode && <div className="flex items-center"><Hash className="w-4 h-4 mr-2" /> MST: {company.taxCode}</div>}
             <div className="flex items-center"><Calendar className="w-4 h-4 mr-2" /> 등록일: {new Date(company.createdAt).toLocaleDateString()}</div>
           </div>

@@ -12,6 +12,8 @@ export interface CompanyUpdate {
   name?: string;
   type?: CompanyUpdateType;
   taxCode?: string;
+  phone?: string;
+  kakaoTalkId?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];

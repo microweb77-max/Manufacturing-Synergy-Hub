@@ -42,6 +42,8 @@ const formSchema = z.object({
   name: z.string().min(2, "기업명을 입력해주세요"),
   type: z.enum(["hardware", "software"]),
   taxCode: z.string().optional(),
+  phone: z.string().optional(),
+  kakaoTalkId: z.string().optional(),
   description: z.string().optional(),
   location: z.string().optional(),
   contactEmail: z
@@ -71,6 +73,8 @@ export default function NewCompany() {
       name: "",
       type: "hardware",
       taxCode: "",
+      phone: "",
+      kakaoTalkId: "",
       description: "",
       location: "",
       contactEmail: "",
@@ -124,6 +128,8 @@ export default function NewCompany() {
             if (result.name) form.setValue("name", result.name, { shouldValidate: true });
             if (result.type) form.setValue("type", result.type, { shouldValidate: true });
             if (result.taxCode) form.setValue("taxCode", result.taxCode, { shouldValidate: true });
+            if (result.phone) form.setValue("phone", result.phone, { shouldValidate: true });
+            if (result.kakaoTalkId) form.setValue("kakaoTalkId", result.kakaoTalkId, { shouldValidate: true });
             if (result.description) form.setValue("description", result.description, { shouldValidate: true });
             if (result.location) form.setValue("location", result.location, { shouldValidate: true });
             if (result.contactEmail) form.setValue("contactEmail", result.contactEmail, { shouldValidate: true });
@@ -412,6 +418,34 @@ export default function NewCompany() {
                       <FormLabel>담당자 이메일 <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
                       <FormControl>
                         <Input placeholder="contact@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>전화번호 <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="예: +84 28 1234 5678" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="kakaoTalkId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>카카오톡 ID <span className="text-muted-foreground font-normal">(선택)</span></FormLabel>
+                      <FormControl>
+                        <Input placeholder="예: synergyhub_vn" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

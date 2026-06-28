@@ -12,6 +12,8 @@ export interface CompanyInput {
   name: string;
   type: CompanyInputType;
   taxCode?: string;
+  phone?: string;
+  kakaoTalkId?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];

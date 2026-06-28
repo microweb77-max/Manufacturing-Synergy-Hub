@@ -11,6 +11,8 @@ export interface AnalyzeMaterialResult {
   name: string;
   type: AnalyzeMaterialResultType;
   taxCode: string;
+  phone: string;
+  kakaoTalkId: string;
   description: string;
   location: string;
   capabilityTags: string[];

@@ -27,6 +27,10 @@ export interface Company {
   type: CompanyType;
   /** @nullable */
   taxCode: string | null;
+  /** @nullable */
+  phone: string | null;
+  /** @nullable */
+  kakaoTalkId: string | null;
   description: string;
   location: string;
   capabilityTags: string[];
@@ -54,6 +58,8 @@ export interface CompanyInput {
   name: string;
   type: CompanyInputType;
   taxCode?: string;
+  phone?: string;
+  kakaoTalkId?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];
@@ -75,6 +81,8 @@ export interface CompanyUpdate {
   name?: string;
   type?: CompanyUpdateType;
   taxCode?: string;
+  phone?: string;
+  kakaoTalkId?: string;
   description?: string;
   location?: string;
   capabilityTags?: string[];
@@ -102,6 +110,8 @@ export interface AnalyzeMaterialResult {
   name: string;
   type: AnalyzeMaterialResultType;
   taxCode: string;
+  phone: string;
+  kakaoTalkId: string;
   description: string;
   location: string;
   capabilityTags: string[];
