@@ -391,6 +391,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Match"
+    delete:
+      operationId: deleteMatch
+      tags: [matches]
+      summary: Delete a match
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /solutions:
     get:
@@ -538,6 +551,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PerformanceLog"
+  /performance/{id}:
+    patch:
+      operationId: updatePerformanceLog
+      tags: [performance]
+      summary: Update a performance log
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PerformanceLogUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PerformanceLog"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deletePerformanceLog
+      tags: [performance]
+      summary: Delete a performance log
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
 
   /talent:
     get:
@@ -579,6 +635,35 @@ paths:
                 $ref: "#/components/schemas/TalentPost"
 
   /talent/{id}:
+    patch:
+      operationId: updateTalentPost
+      tags: [talent]
+      summary: Update a talent pool post
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentPostUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentPost"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
       operationId: deleteTalentPost
       tags: [talent]
@@ -1113,6 +1198,21 @@ components:
           type: string
         notes:
           type: string
+    PerformanceLogUpdate:
+      type: object
+      properties:
+        projectId:
+          type: integer
+        companyId:
+          type: integer
+        role:
+          type: string
+        contributionPercent:
+          type: integer
+        revenue:
+          type: string
+        notes:
+          type: string
 
     TalentPost:
       type: object
@@ -1169,6 +1269,36 @@ components:
         - postType
         - title
         - authorName
+      properties:
+        postType:
+          type: string
+          enum: [hiring, seeking]
+        title:
+          type: string
+        authorName:
+          type: string
+        position:
+          type: string
+        location:
+          type: string
+        employmentType:
+          type: string
+        experienceLevel:
+          type: string
+        headcount:
+          type: integer
+        skills:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+    TalentPostUpdate:
+      type: object
       properties:
         postType:
           type: string
