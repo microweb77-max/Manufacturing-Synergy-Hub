@@ -684,7 +684,7 @@ paths:
     post:
       operationId: collectJobs
       tags: [talent]
-      summary: Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+      summary: Auto-collect Vietnam manufacturing talent posts via web search — hiring (구인) or seeking (구직) per postType
       requestBody:
         required: false
         content:
@@ -1518,6 +1518,10 @@ components:
         region:
           type: string
           description: Optional region/keyword focus (e.g. 호치민, 박닌, 자동화)
+        postType:
+          type: string
+          enum: [hiring, seeking]
+          description: Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring.
     CollectJobsResult:
       type: object
       required:

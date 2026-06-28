@@ -344,9 +344,22 @@ export interface TalentPost {
   createdAt: string;
 }
 
+/**
+ * Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring.
+ */
+export type CollectJobsRequestPostType = typeof CollectJobsRequestPostType[keyof typeof CollectJobsRequestPostType];
+
+
+export const CollectJobsRequestPostType = {
+  hiring: 'hiring',
+  seeking: 'seeking',
+} as const;
+
 export interface CollectJobsRequest {
   /** Optional region/keyword focus (e.g. 호치민, 박닌, 자동화) */
   region?: string;
+  /** Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring. */
+  postType?: CollectJobsRequestPostType;
 }
 
 export interface CollectJobsResult {

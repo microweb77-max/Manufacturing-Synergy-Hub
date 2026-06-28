@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { CollectJobsRequestPostType } from './collectJobsRequestPostType';
 
 export interface CollectJobsRequest {
   /** Optional region/keyword focus (e.g. 호치민, 박닌, 자동화) */
   region?: string;
+  /** Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring. */
+  postType?: CollectJobsRequestPostType;
 }

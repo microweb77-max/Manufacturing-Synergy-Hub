@@ -1071,10 +1071,11 @@ export const DeleteTalentPostResponse = zod.void()
 
 
 /**
- * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ * @summary Auto-collect Vietnam manufacturing talent posts via web search — hiring (구인) or seeking (구직) per postType
  */
 export const CollectJobsBody = zod.object({
-  "region": zod.string().optional().describe('Optional region\/keyword focus (e.g. 호치민, 박닌, 자동화)')
+  "region": zod.string().optional().describe('Optional region\/keyword focus (e.g. 호치민, 박닌, 자동화)'),
+  "postType": zod.enum(['hiring', 'seeking']).optional().describe('Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring.')
 })
 
 export const CollectJobsResponse = zod.object({

@@ -2479,7 +2479,7 @@ export const getCollectJobsUrl = () => {
 }
 
 /**
- * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ * @summary Auto-collect Vietnam manufacturing talent posts via web search — hiring (구인) or seeking (구직) per postType
  */
 export const collectJobs = async (collectJobsRequest?: CollectJobsRequest, options?: RequestInit): Promise<CollectJobsResult> => {
 
@@ -2527,7 +2527,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CollectJobsMutationError = ErrorType<Error>
 
     /**
- * @summary Auto-collect Vietnam manufacturing job postings via web search and register them as hiring posts
+ * @summary Auto-collect Vietnam manufacturing talent posts via web search — hiring (구인) or seeking (구직) per postType
  */
 export const useCollectJobs = <TError = ErrorType<Error>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectJobs>>, TError,{data?: BodyType<CollectJobsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}

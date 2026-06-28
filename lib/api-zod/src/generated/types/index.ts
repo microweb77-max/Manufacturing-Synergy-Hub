@@ -13,6 +13,7 @@ export * from './analyzeMaterialResult';
 export * from './analyzeMaterialResultType';
 export * from './clientCompany';
 export * from './collectJobsRequest';
+export * from './collectJobsRequestPostType';
 export * from './collectJobsResult';
 export * from './company';
 export * from './companyInput';
