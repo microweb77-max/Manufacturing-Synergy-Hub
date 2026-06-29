@@ -29,6 +29,34 @@ const router: IRouter = Router();
 const ALLOWED_MATERIAL_MIME = /^(image\/(png|jpeg|jpg|webp|gif)|application\/pdf)$/;
 const MAX_MATERIAL_BYTES = 7 * 1024 * 1024;
 
+const LOGO_DATA_URL_RE = /^data:image\/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/]+={0,2})$/;
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Validates a logo value. Accepts a raster image data URL (<= 2MB decoded) or a
+ * plain https URL. Returns the normalized value, or `{ error }` if invalid.
+ */
+function validateLogoUrl(value: string): { value: string } | { error: string } {
+  const trimmed = value.trim();
+  if (trimmed === "") return { value: "" };
+
+  const dataMatch = LOGO_DATA_URL_RE.exec(trimmed);
+  if (dataMatch) {
+    const base64 = dataMatch[2];
+    const decodedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
+    if (decodedBytes > MAX_LOGO_BYTES) {
+      return { error: "로고 이미지는 2MB 이하여야 합니다." };
+    }
+    return { value: trimmed };
+  }
+
+  if (/^https:\/\/\S+$/.test(trimmed)) {
+    return { value: trimmed };
+  }
+
+  return { error: "유효하지 않은 로고 이미지입니다. 이미지(PNG, JPG, WEBP, GIF) 파일을 업로드해주세요." };
+}
+
 const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 프로필 분석 전문가입니다.
 첨부된 기업 홍보자료(이미지 또는 PDF)를 읽고, 그 안의 텍스트와 시각 정보를 분석하여 아래 항목을 추출하세요.
 
@@ -178,6 +206,16 @@ router.post("/companies", async (req, res): Promise<void> => {
     return;
   }
 
+  let logoUrl: string | null = null;
+  if (parsed.data.logoUrl != null) {
+    const logoResult = validateLogoUrl(parsed.data.logoUrl);
+    if ("error" in logoResult) {
+      res.status(400).json({ error: logoResult.error });
+      return;
+    }
+    logoUrl = logoResult.value === "" ? null : logoResult.value;
+  }
+
   const [company] = await db
     .insert(companiesTable)
     .values({
@@ -185,7 +223,7 @@ router.post("/companies", async (req, res): Promise<void> => {
       taxCode: parsed.data.taxCode?.trim() ? parsed.data.taxCode.trim() : null,
       phone: parsed.data.phone?.trim() ? parsed.data.phone.trim() : null,
       kakaoTalkId: parsed.data.kakaoTalkId?.trim() ? parsed.data.kakaoTalkId.trim() : null,
-      logoUrl: parsed.data.logoUrl ?? null,
+      logoUrl,
     })
     .returning();
 
@@ -225,12 +263,24 @@ router.patch("/companies/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const { taxCode, phone, kakaoTalkId, ...rest } = parsed.data;
+  const { taxCode, phone, kakaoTalkId, logoUrl, ...rest } = parsed.data;
+
+  let normalizedLogoUrl: string | null | undefined;
+  if (logoUrl !== undefined) {
+    const logoResult = validateLogoUrl(logoUrl);
+    if ("error" in logoResult) {
+      res.status(400).json({ error: logoResult.error });
+      return;
+    }
+    normalizedLogoUrl = logoResult.value === "" ? null : logoResult.value;
+  }
+
   const updateValues = {
     ...rest,
     ...(taxCode !== undefined ? { taxCode: taxCode.trim() ? taxCode.trim() : null } : {}),
     ...(phone !== undefined ? { phone: phone.trim() ? phone.trim() : null } : {}),
     ...(kakaoTalkId !== undefined ? { kakaoTalkId: kakaoTalkId.trim() ? kakaoTalkId.trim() : null } : {}),
+    ...(logoUrl !== undefined ? { logoUrl: normalizedLogoUrl } : {}),
   };
 
   const [company] = await db

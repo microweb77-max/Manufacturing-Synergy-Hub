@@ -19,11 +19,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Plus, Factory, Sparkles, UploadCloud, Loader2, FileText, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react";
+import { X, Plus, Factory, Monitor, Sparkles, UploadCloud, Loader2, FileText, ZoomIn, ZoomOut, RotateCcw, Maximize2, ImagePlus } from "lucide-react";
 
 const ZOOM_STEPS = [1, 1.5, 2, 3, 4] as const;
 
 const MAX_FILE_BYTES = 7 * 1024 * 1024;
+
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -62,7 +64,9 @@ export default function NewCompany() {
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
+  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   const createCompany = useCreateCompany();
   const analyzeMaterial = useAnalyzeCompanyMaterial();
@@ -151,11 +155,35 @@ export default function NewCompany() {
     }
   };
 
+  const handleLogoSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    const allowed = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      toast({ title: "지원하지 않는 형식", description: "이미지(PNG, JPG, WEBP, GIF) 파일만 업로드할 수 있습니다.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      toast({ title: "파일이 너무 큽니다", description: "2MB 이하의 이미지를 업로드해주세요.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setLogoDataUrl(`data:${file.type};base64,${base64}`);
+    } catch {
+      toast({ title: "오류", description: "이미지를 읽는 중 문제가 발생했습니다.", variant: "destructive" });
+    }
+  };
+
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     createCompany.mutate({
       data: {
         ...values,
         capabilityTags: tags,
+        ...(logoDataUrl ? { logoUrl: logoDataUrl } : {}),
       }
     }, {
       onSuccess: (newCompany) => {
@@ -345,6 +373,44 @@ export default function NewCompany() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={handleLogoSelected}
+              />
+              <div className="space-y-3">
+                <label className="text-sm font-medium leading-none">회사 로고 <span className="text-muted-foreground font-normal">(선택)</span></label>
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                    {logoDataUrl ? (
+                      <img src={logoDataUrl} alt="회사 로고 미리보기" className="w-full h-full object-cover" />
+                    ) : form.watch("type") === "software" ? (
+                      <Monitor className="w-10 h-10 text-secondary" />
+                    ) : (
+                      <Factory className="w-10 h-10 text-secondary" />
+                    )}
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <p className="text-sm text-muted-foreground">로고 이미지를 업로드하면 기업 프로필에 표시됩니다. 업로드하지 않으면 기본 아이콘이 표시됩니다.</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => logoInputRef.current?.click()}>
+                        <ImagePlus className="h-4 w-4" />
+                        {logoDataUrl ? "로고 변경" : "로고 업로드"}
+                      </Button>
+                      {logoDataUrl && (
+                        <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setLogoDataUrl(null)}>
+                          <X className="h-4 w-4" />
+                          제거
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, WEBP, GIF · 최대 2MB</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
