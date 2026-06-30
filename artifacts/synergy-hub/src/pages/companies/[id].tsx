@@ -33,7 +33,7 @@ export default function CompanyDetail() {
             <img
               src={normalizeImageUrl(company.logoUrl)}
               alt={company.name}
-              className="w-full h-full object-cover rounded-lg"
+              className="w-full h-full object-contain rounded-lg p-1.5"
               onError={() => setLogoFailed(true)}
             />
           ) : company.type === "hardware" ? (
