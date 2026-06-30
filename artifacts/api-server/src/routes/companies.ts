@@ -51,10 +51,30 @@ function validateLogoUrl(value: string): { value: string } | { error: string } {
   }
 
   if (/^https:\/\/\S+$/.test(trimmed)) {
-    return { value: trimmed };
+    return { value: extractDirectImageUrl(trimmed) };
   }
 
   return { error: "유효하지 않은 로고 이미지입니다. 이미지(PNG, JPG, WEBP, GIF) 파일을 업로드해주세요." };
+}
+
+// Users sometimes paste a Google Images viewer-page link
+// (https://www.google.com/imgres?...&imgurl=<direct-url>) instead of the direct
+// image URL. That page returns HTML, not an image, so the <img> never renders.
+// Extract the embedded `imgurl` (the real image file) when present.
+function extractDirectImageUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const isGoogle = /(^|\.)google\.[a-z.]+$/i.test(parsed.hostname);
+    if (isGoogle && parsed.pathname.includes("/imgres")) {
+      const imgUrl = parsed.searchParams.get("imgurl");
+      if (imgUrl && /^https:\/\/\S+$/.test(imgUrl)) {
+        return imgUrl;
+      }
+    }
+  } catch {
+    // Not parseable; return original.
+  }
+  return url;
 }
 
 const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 프로필 분석 전문가입니다.

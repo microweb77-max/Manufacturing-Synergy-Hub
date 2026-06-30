@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRoute } from "wouter";
 import { useGetCompany, useListPerformanceLogs, getGetCompanyQueryKey, getListPerformanceLogsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,11 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Mail, Calendar, Star, ShieldCheck, Factory, Monitor, Briefcase, Activity, Target, Hash, Phone, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { normalizeImageUrl } from "@/lib/imageUrl";
 
 export default function CompanyDetail() {
   const [, params] = useRoute("/companies/:id");
   const id = params?.id ? parseInt(params.id, 10) : 0;
-  
+  const [logoFailed, setLogoFailed] = useState(false);
+
   const { data: company, isLoading } = useGetCompany(id, { query: { enabled: !!id, queryKey: getGetCompanyQueryKey(id) } });
   const { data: performanceLogs, isLoading: isLogsLoading } = useListPerformanceLogs({ companyId: id }, { query: { enabled: !!id, queryKey: getListPerformanceLogsQueryKey({ companyId: id }) } });
 
@@ -26,8 +29,13 @@ export default function CompanyDetail() {
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row gap-6 items-start">
         <div className="w-24 h-24 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0 shadow-sm">
-          {company.logoUrl ? (
-            <img src={company.logoUrl} alt={company.name} className="w-full h-full object-cover rounded-lg" />
+          {company.logoUrl && !logoFailed ? (
+            <img
+              src={normalizeImageUrl(company.logoUrl)}
+              alt={company.name}
+              className="w-full h-full object-cover rounded-lg"
+              onError={() => setLogoFailed(true)}
+            />
           ) : company.type === "hardware" ? (
             <Factory className="w-10 h-10 text-secondary" />
           ) : (
