@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useListTalentPosts,
   useCreateTalentPost,
   useDeleteTalentPost,
   getListTalentPostsQueryKey,
+  type TalentPost,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -61,6 +62,9 @@ import {
   Trash2,
   Sparkles,
   ExternalLink,
+  Search,
+  Filter,
+  RotateCcw,
 } from "lucide-react";
 
 const postSchema = z.object({
@@ -79,6 +83,20 @@ const postSchema = z.object({
 
 type PostForm = z.infer<typeof postSchema>;
 
+const ALL = "__all__";
+
+function distinctValues(
+  posts: TalentPost[] | undefined,
+  getter: (p: TalentPost) => string | null | undefined,
+): string[] {
+  const set = new Set<string>();
+  for (const p of posts ?? []) {
+    const v = getter(p)?.trim();
+    if (v) set.add(v);
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b, "ko"));
+}
+
 export default function TalentPool() {
   const [tab, setTab] = useState<"hiring" | "seeking">("hiring");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -90,6 +108,61 @@ export default function TalentPool() {
   const { data: posts, isLoading } = useListTalentPosts({ postType: tab });
   const createPost = useCreateTalentPost();
   const deletePost = useDeleteTalentPost();
+
+  const [keyword, setKeyword] = useState("");
+  const [fPosition, setFPosition] = useState(ALL);
+  const [fLocation, setFLocation] = useState(ALL);
+  const [fEmployment, setFEmployment] = useState(ALL);
+  const [fExperience, setFExperience] = useState(ALL);
+
+  const positionOptions = useMemo(() => distinctValues(posts, (p) => p.position), [posts]);
+  const locationOptions = useMemo(() => distinctValues(posts, (p) => p.location), [posts]);
+  const employmentOptions = useMemo(() => distinctValues(posts, (p) => p.employmentType), [posts]);
+  const experienceOptions = useMemo(() => distinctValues(posts, (p) => p.experienceLevel), [posts]);
+
+  const resetFilters = () => {
+    setKeyword("");
+    setFPosition(ALL);
+    setFLocation(ALL);
+    setFEmployment(ALL);
+    setFExperience(ALL);
+  };
+
+  useEffect(() => {
+    resetFilters();
+  }, [tab]);
+
+  const hasActiveFilters =
+    keyword.trim() !== "" ||
+    fPosition !== ALL ||
+    fLocation !== ALL ||
+    fEmployment !== ALL ||
+    fExperience !== ALL;
+
+  const filteredPosts = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return (posts ?? []).filter((p) => {
+      if (fPosition !== ALL && p.position?.trim() !== fPosition) return false;
+      if (fLocation !== ALL && p.location?.trim() !== fLocation) return false;
+      if (fEmployment !== ALL && p.employmentType?.trim() !== fEmployment) return false;
+      if (fExperience !== ALL && p.experienceLevel?.trim() !== fExperience) return false;
+      if (q) {
+        const hay = [
+          p.title,
+          p.authorName,
+          p.description,
+          p.position,
+          p.location,
+          ...(p.skills ?? []),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [posts, keyword, fPosition, fLocation, fEmployment, fExperience]);
 
   const form = useForm<PostForm>({
     resolver: zodResolver(postSchema),
@@ -534,7 +607,10 @@ export default function TalentPool() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "hiring" | "seeking")}>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as "hiring" | "seeking")}
+      >
         <TabsList>
           <TabsTrigger value="hiring" className="gap-2">
             <Briefcase className="h-4 w-4" />
@@ -570,8 +646,89 @@ export default function TalentPool() {
               </Button>
             </div>
           ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border bg-card p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                      placeholder="제목, 이름/회사, 역량, 내용 검색"
+                      className="pl-9"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex">
+                    <Select value={fPosition} onValueChange={setFPosition}>
+                      <SelectTrigger className="lg:w-[150px]">
+                        <SelectValue placeholder="직무" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>전체 직무</SelectItem>
+                        {positionOptions.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={fLocation} onValueChange={setFLocation}>
+                      <SelectTrigger className="lg:w-[150px]">
+                        <SelectValue placeholder="지역" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>전체 지역</SelectItem>
+                        {locationOptions.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={fEmployment} onValueChange={setFEmployment}>
+                      <SelectTrigger className="lg:w-[150px]">
+                        <SelectValue placeholder="고용 형태" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>전체 고용형태</SelectItem>
+                        {employmentOptions.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={fExperience} onValueChange={setFExperience}>
+                      <SelectTrigger className="lg:w-[150px]">
+                        <SelectValue placeholder="경력" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL}>전체 경력</SelectItem>
+                        {experienceOptions.map((o) => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" className="gap-1.5 shrink-0" onClick={resetFilters}>
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      초기화
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Filter className="h-3.5 w-3.5" />
+                  {filteredPosts.length}건 / 전체 {posts.length}건
+                </p>
+              </div>
+
+              {filteredPosts.length === 0 ? (
+                <div className="text-center py-16 text-muted-foreground border rounded-lg bg-card">
+                  <Filter className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="mb-4">검색 조건에 맞는 결과가 없습니다.</p>
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    필터 초기화
+                  </Button>
+                </div>
+              ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {posts.map((post) => (
+              {filteredPosts.map((post) => (
                 <Card key={post.id} className="flex flex-col">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
@@ -696,6 +853,8 @@ export default function TalentPool() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+              )}
             </div>
           )}
         </TabsContent>
