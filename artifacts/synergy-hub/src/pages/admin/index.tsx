@@ -270,7 +270,7 @@ function CompaniesAdmin() {
         { name: "phone", label: "전화번호", type: "text" },
         { name: "taxCode", label: "사업자번호", type: "text" },
         { name: "kakaoTalkId", label: "카카오톡 ID", type: "text" },
-        { name: "logoUrl", label: "로고 URL", type: "text" },
+        { name: "logoUrl", label: "로고 이미지", type: "image", full: true },
         { name: "capabilityTags", label: "역량 태그", type: "tags", full: true },
         { name: "description", label: "기업 소개", type: "textarea", full: true },
         { name: "techSpecs", label: "기술 사양", type: "textarea", full: true },
@@ -628,7 +628,7 @@ function SolutionsAdmin() {
         ] },
         { name: "companyIds", label: "참여기업 ID", type: "tags", full: true, placeholder: "예: 1, 2" },
         { name: "tags", label: "태그", type: "tags", full: true },
-        { name: "imageUrl", label: "이미지 URL", type: "text", full: true },
+        { name: "imageUrl", label: "이미지", type: "image", full: true },
         { name: "outcome", label: "성과", type: "textarea", full: true },
         { name: "description", label: "상세 설명", type: "textarea", full: true },
       ]}

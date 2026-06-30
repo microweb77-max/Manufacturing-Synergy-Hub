@@ -1,4 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,6 +56,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  ImagePlus,
 } from "lucide-react";
 
 export type FormValues = Record<string, string>;
@@ -57,12 +64,136 @@ export type FormValues = Record<string, string>;
 export type AdminField = {
   name: string;
   label: string;
-  type: "text" | "number" | "textarea" | "select" | "tags";
+  type: "text" | "number" | "textarea" | "select" | "tags" | "image";
   options?: { value: string; label: string }[];
   placeholder?: string;
   required?: boolean;
   full?: boolean;
 };
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+function AdminImageField({
+  id,
+  value,
+  placeholder,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  placeholder?: string;
+  onChange: (v: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [broken, setBroken] = useState(false);
+
+  const handleFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const allowed = [
+      "image/png",
+      "image/jpeg",
+      "image/jpg",
+      "image/webp",
+      "image/gif",
+    ];
+    if (!allowed.includes(file.type)) {
+      setErr("이미지(PNG, JPG, WEBP, GIF) 파일만 업로드할 수 있습니다.");
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setErr("2MB 이하의 이미지를 업로드해주세요.");
+      return;
+    }
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setErr(null);
+      setBroken(false);
+      onChange(dataUrl);
+    } catch {
+      setErr("이미지를 읽는 중 문제가 발생했습니다.");
+    }
+  };
+
+  const hasValue = Boolean(value);
+
+  return (
+    <div className="space-y-2">
+      <Input
+        id={id}
+        type="text"
+        value={value}
+        placeholder={placeholder ?? "이미지 URL 입력 또는 파일 업로드"}
+        onChange={(e) => {
+          setBroken(false);
+          setErr(null);
+          onChange(e.target.value);
+        }}
+      />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFile}
+      />
+      <div className="flex items-center gap-3">
+        {hasValue && !broken && (
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-md border bg-muted">
+            <img
+              src={value}
+              alt="미리보기"
+              className="h-full w-full object-contain"
+              onError={() => setBroken(true)}
+            />
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            onClick={() => inputRef.current?.click()}
+          >
+            <ImagePlus className="h-4 w-4" />
+            {hasValue ? "이미지 변경" : "이미지 업로드"}
+          </Button>
+          {hasValue && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground"
+              onClick={() => {
+                setBroken(false);
+                onChange("");
+              }}
+            >
+              <X className="h-4 w-4" />
+              제거
+            </Button>
+          )}
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        URL을 직접 입력하거나 이미지 파일을 업로드하세요. (PNG, JPG, WEBP, GIF · 최대 2MB)
+      </p>
+      {err && <p className="text-xs text-destructive">{err}</p>}
+    </div>
+  );
+}
 
 export type AdminColumn<T> = {
   key: string;
@@ -519,6 +650,13 @@ export function AdminSection<T>({
                       ))}
                     </SelectContent>
                   </Select>
+                ) : field.type === "image" ? (
+                  <AdminImageField
+                    id={`field-${field.name}`}
+                    value={values[field.name] ?? ""}
+                    placeholder={field.placeholder}
+                    onChange={(v) => setField(field.name, v)}
+                  />
                 ) : (
                   <Input
                     id={`field-${field.name}`}
