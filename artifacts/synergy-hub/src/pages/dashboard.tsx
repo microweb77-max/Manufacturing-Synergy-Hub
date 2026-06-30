@@ -65,9 +65,8 @@ export default function Dashboard() {
       <img
         src={heroBanner}
         alt="베트남 제조산업의 새로운 미래, 당신의 파트너십을 연결합니다"
-        className="w-full rounded-lg"
+        className="w-full rounded-lg border-l-[1px] border-t-[1px] border-b-[1px] border-r-[1px]"
       />
-
       {/* Promotion CTA banner */}
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-secondary/5">
         <CardContent className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
@@ -90,7 +89,6 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -168,7 +166,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-
       {/* Co-selling partner showcase */}
       <Card className="flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -223,7 +220,6 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4 flex flex-col">
           <CardHeader>
