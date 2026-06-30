@@ -979,6 +979,7 @@ function SupplyOffersAdmin() {
     { value: "원재료", label: "원재료" },
     { value: "자재", label: "자재" },
     { value: "부자재", label: "부자재" },
+    { value: "소비재", label: "소비재" },
     { value: "서비스", label: "서비스" },
     { value: "소프트웨어", label: "소프트웨어" },
     { value: "기타", label: "기타" },
