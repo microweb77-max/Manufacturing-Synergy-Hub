@@ -19,7 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Plus, Factory, Monitor, Sparkles, UploadCloud, Loader2, FileText, ZoomIn, ZoomOut, RotateCcw, Maximize2, ImagePlus } from "lucide-react";
+import { X, Plus, Sparkles, UploadCloud, Loader2, FileText, ZoomIn, ZoomOut, RotateCcw, Maximize2, ImagePlus } from "lucide-react";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 
 const ZOOM_STEPS = [1, 1.5, 2, 3, 4] as const;
 
@@ -42,7 +43,7 @@ function fileToBase64(file: File): Promise<string> {
 
 const formSchema = z.object({
   name: z.string().min(2, "기업명을 입력해주세요"),
-  type: z.enum(["hardware", "software"]),
+  type: z.enum(["hardware", "software", "service"]),
   taxCode: z.string().optional(),
   phone: z.string().optional(),
   kakaoTalkId: z.string().optional(),
@@ -386,10 +387,11 @@ export default function NewCompany() {
                   <div className="w-24 h-24 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
                     {logoDataUrl ? (
                       <img src={logoDataUrl} alt="회사 로고 미리보기" className="w-full h-full object-cover" />
-                    ) : form.watch("type") === "software" ? (
-                      <Monitor className="w-10 h-10 text-secondary" />
                     ) : (
-                      <Factory className="w-10 h-10 text-secondary" />
+                      (() => {
+                        const TypeIcon = getCompanyTypeMeta(form.watch("type")).icon;
+                        return <TypeIcon className="w-10 h-10 text-secondary" />;
+                      })()
                     )}
                   </div>
                   <div className="min-w-0 space-y-2">
@@ -441,6 +443,7 @@ export default function NewCompany() {
                         <SelectContent>
                           <SelectItem value="hardware">하드웨어 (장비, 로봇, 금형 등)</SelectItem>
                           <SelectItem value="software">소프트웨어 (MES, ERP, 비전 등)</SelectItem>
+                          <SelectItem value="service">서비스 (컨설팅, 유지보수 등)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

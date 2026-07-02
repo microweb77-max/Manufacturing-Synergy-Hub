@@ -12,4 +12,5 @@ export type CompanyType = typeof CompanyType[keyof typeof CompanyType];
 export const CompanyType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;

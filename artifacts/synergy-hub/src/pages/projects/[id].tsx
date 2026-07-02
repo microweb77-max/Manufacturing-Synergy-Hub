@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Cpu, Monitor, Zap, Bot, Network, Sparkles, ShieldCheck } from "lucide-react";
+import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Zap, Bot, Network, Sparkles, ShieldCheck } from "lucide-react";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProjectDetail() {
@@ -138,11 +139,15 @@ export default function ProjectDetail() {
                         <div>
                           <div className="flex justify-between items-start mb-2">
                             <h3 className="text-xl font-bold">{rec.company.name}</h3>
-                            {rec.company.type === "hardware" ? (
-                              <Badge variant="secondary" className="bg-amber-500/10 text-amber-600"><Cpu className="w-3 h-3 mr-1"/> HW</Badge>
-                            ) : (
-                              <Badge variant="secondary" className="bg-blue-500/10 text-blue-600"><Monitor className="w-3 h-3 mr-1"/> SW</Badge>
-                            )}
+                            {(() => {
+                              const meta = getCompanyTypeMeta(rec.company.type);
+                              const TypeIcon = meta.icon;
+                              return (
+                                <Badge variant="secondary" className={meta.badgeClass}>
+                                  <TypeIcon className="w-3 h-3 mr-1" /> {meta.label}
+                                </Badge>
+                              );
+                            })()}
                           </div>
                           
                           <div className="bg-muted/50 p-3 rounded-md text-sm text-muted-foreground mb-4 border border-border/50">

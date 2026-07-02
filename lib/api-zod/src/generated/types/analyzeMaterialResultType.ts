@@ -12,4 +12,5 @@ export type AnalyzeMaterialResultType = typeof AnalyzeMaterialResultType[keyof t
 export const AnalyzeMaterialResultType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;

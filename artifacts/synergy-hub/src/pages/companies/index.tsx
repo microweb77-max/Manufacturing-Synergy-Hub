@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, MapPin, Star, ShieldCheck, Factory, Monitor, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Plus, MapPin, Star, ShieldCheck, Factory, ChevronLeft, ChevronRight } from "lucide-react";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 
 const PAGE_SIZE = 9;
 
 export default function CompaniesList() {
   const [search, setSearch] = useState("");
-  const [type, setType] = useState<"hardware" | "software" | "all">("all");
+  const [type, setType] = useState<"hardware" | "software" | "service" | "all">("all");
   const [tag, setTag] = useState("");
   const [page, setPage] = useState(1);
 
@@ -70,6 +71,7 @@ export default function CompaniesList() {
               <SelectItem value="all">모든 유형</SelectItem>
               <SelectItem value="hardware">하드웨어 (Hardware)</SelectItem>
               <SelectItem value="software">소프트웨어 (Software)</SelectItem>
+              <SelectItem value="service">서비스 (Service)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -105,11 +107,15 @@ export default function CompaniesList() {
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl group-hover:text-primary transition-colors line-clamp-1">{company.name}</CardTitle>
-                    {company.type === "hardware" ? (
-                      <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"><Factory className="w-3 h-3 mr-1"/> 하드웨어</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"><Monitor className="w-3 h-3 mr-1"/> 소프트웨어</Badge>
-                    )}
+                    {(() => {
+                      const meta = getCompanyTypeMeta(company.type);
+                      const TypeIcon = meta.icon;
+                      return (
+                        <Badge variant="secondary" className={meta.badgeClass}>
+                          <TypeIcon className="w-3 h-3 mr-1" /> {meta.label}
+                        </Badge>
+                      );
+                    })()}
                   </div>
                   <div className="flex items-center text-xs text-muted-foreground mt-2 space-x-3">
                     <span className="flex items-center"><MapPin className="w-3 h-3 mr-1" /> {company.location}</span>

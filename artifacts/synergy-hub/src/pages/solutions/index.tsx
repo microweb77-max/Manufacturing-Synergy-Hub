@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Server, Plus, Star, Factory, Monitor, Layers, Trash2 } from "lucide-react";
+import { Server, Plus, Star, Layers, Trash2 } from "lucide-react";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -183,7 +184,11 @@ export default function SolutionsList() {
                   <div className="flex -space-x-2">
                     {solution.companies?.map((company, i) => (
                       <div key={company.id} className="w-8 h-8 rounded-full border-2 border-background bg-secondary flex items-center justify-center relative z-10" style={{ zIndex: 10 - i }} title={company.name}>
-                        {company.type === 'hardware' ? <Factory className="w-3.5 h-3.5 text-amber-500" /> : <Monitor className="w-3.5 h-3.5 text-blue-500" />}
+                        {(() => {
+                          const meta = getCompanyTypeMeta(company.type);
+                          const TypeIcon = meta.icon;
+                          return <TypeIcon className={`w-3.5 h-3.5 ${meta.iconColor}`} />;
+                        })()}
                       </div>
                     ))}
                   </div>

@@ -4,7 +4,8 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Layers, Star, Factory, Monitor, ChevronRight, CheckCircle2, Server } from "lucide-react";
+import { Layers, Star, ChevronRight, CheckCircle2, Server } from "lucide-react";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Separator } from "@/components/ui/separator";
 
 export default function SolutionDetail() {
@@ -101,12 +102,19 @@ export default function SolutionDetail() {
                 <Card className="hover:border-primary/50 transition-colors cursor-pointer group">
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center shrink-0">
-                      {company.type === "hardware" ? <Factory className="w-6 h-6 text-amber-600" /> : <Monitor className="w-6 h-6 text-blue-600" />}
+                      {(() => {
+                        const meta = getCompanyTypeMeta(company.type);
+                        const TypeIcon = meta.icon;
+                        return <TypeIcon className={`w-6 h-6 ${meta.iconColor}`} />;
+                      })()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-base truncate group-hover:text-primary transition-colors">{company.name}</div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                        {company.type === "hardware" ? <span className="text-amber-600">하드웨어 담당</span> : <span className="text-blue-600">소프트웨어 담당</span>}
+                        {(() => {
+                          const meta = getCompanyTypeMeta(company.type);
+                          return <span className={meta.iconColor}>{meta.label} 담당</span>;
+                        })()}
                       </div>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />

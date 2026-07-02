@@ -19,6 +19,7 @@ export type CompanyType = typeof CompanyType[keyof typeof CompanyType];
 export const CompanyType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
 
 export interface Company {
@@ -51,6 +52,7 @@ export type CompanyInputType = typeof CompanyInputType[keyof typeof CompanyInput
 export const CompanyInputType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
 
 export interface CompanyInput {
@@ -74,6 +76,7 @@ export type CompanyUpdateType = typeof CompanyUpdateType[keyof typeof CompanyUpd
 export const CompanyUpdateType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
 
 export interface CompanyUpdate {
@@ -118,6 +121,7 @@ export type AnalyzeMaterialResultType = typeof AnalyzeMaterialResultType[keyof t
 export const AnalyzeMaterialResultType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
 
 export interface AnalyzeMaterialResult {
@@ -548,6 +552,7 @@ export type ListCompaniesType = typeof ListCompaniesType[keyof typeof ListCompan
 export const ListCompaniesType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
 
 export type ListProjectsParams = {

@@ -12,4 +12,5 @@ export type CompanyUpdateType = typeof CompanyUpdateType[keyof typeof CompanyUpd
 export const CompanyUpdateType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;

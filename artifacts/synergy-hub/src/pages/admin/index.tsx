@@ -43,6 +43,7 @@ import {
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -194,7 +195,7 @@ function CompaniesAdmin() {
 
   const buildBody = (v: FormValues) => ({
     name: v.name,
-    type: v.type as "hardware" | "software",
+    type: v.type as "hardware" | "software" | "service",
     location: v.location,
     contactEmail: v.contactEmail,
     phone: v.phone,
@@ -226,6 +227,7 @@ function CompaniesAdmin() {
           options: [
             { value: "hardware", label: "하드웨어" },
             { value: "software", label: "소프트웨어" },
+            { value: "service", label: "서비스" },
           ],
         },
       ]}
@@ -235,9 +237,7 @@ function CompaniesAdmin() {
           key: "type",
           header: "유형",
           render: (c) => (
-            <Badge variant="secondary">
-              {c.type === "hardware" ? "하드웨어" : "소프트웨어"}
-            </Badge>
+            <Badge variant="secondary">{getCompanyTypeMeta(c.type).label}</Badge>
           ),
         },
         { key: "location", header: "지역", render: (c) => c.location || "-" },
@@ -263,6 +263,7 @@ function CompaniesAdmin() {
           options: [
             { value: "hardware", label: "하드웨어 (Hardware)" },
             { value: "software", label: "소프트웨어 (Software)" },
+            { value: "service", label: "서비스 (Service)" },
           ],
         },
         { name: "location", label: "지역", type: "text" },

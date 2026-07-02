@@ -12,4 +12,5 @@ export type ListCompaniesType = typeof ListCompaniesType[keyof typeof ListCompan
 export const ListCompaniesType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;

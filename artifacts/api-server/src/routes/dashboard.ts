@@ -110,7 +110,7 @@ router.get("/dashboard/activity", async (_req, res): Promise<void> => {
       id: `company-${c.id}`,
       type: "company" as const,
       title: c.name,
-      description: `${c.type === "hardware" ? "하드웨어" : "소프트웨어"} 업체 등록`,
+      description: `${c.type === "hardware" ? "하드웨어" : c.type === "service" ? "서비스" : "소프트웨어"} 업체 등록`,
       createdAt: c.createdAt.toISOString(),
     })),
   ]

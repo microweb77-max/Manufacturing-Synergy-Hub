@@ -35,7 +35,12 @@ export function buildReason(
   matchedTags: string[],
   score: number,
 ): string {
-  const typeLabel = company.type === "hardware" ? "하드웨어" : "소프트웨어";
+  const typeLabel =
+    company.type === "hardware"
+      ? "하드웨어"
+      : company.type === "service"
+        ? "서비스"
+        : "소프트웨어";
   if (matchedTags.length === 0) {
     return `${typeLabel} 역량 보유 업체로, 트러스트 스코어 ${company.trustScore}점을 기반으로 추천됩니다.`;
   }

@@ -4,9 +4,10 @@ import { useGetCompany, useListPerformanceLogs, getGetCompanyQueryKey, getListPe
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MapPin, Mail, Calendar, Star, ShieldCheck, Factory, Monitor, Briefcase, Activity, Target, Hash, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Mail, Calendar, Star, ShieldCheck, Briefcase, Activity, Target, Hash, Phone, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { normalizeImageUrl } from "@/lib/imageUrl";
+import { getCompanyTypeMeta } from "@/lib/companyType";
 
 export default function CompanyDetail() {
   const [, params] = useRoute("/companies/:id");
@@ -36,21 +37,26 @@ export default function CompanyDetail() {
               className="w-full h-full object-contain rounded-lg p-1.5"
               onError={() => setLogoFailed(true)}
             />
-          ) : company.type === "hardware" ? (
-            <Factory className="w-10 h-10 text-secondary" />
           ) : (
-            <Monitor className="w-10 h-10 text-secondary" />
+            (() => {
+              const TypeIcon = getCompanyTypeMeta(company.type).icon;
+              return <TypeIcon className="w-10 h-10 text-secondary" />;
+            })()
           )}
         </div>
         <div className="flex-1 space-y-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold tracking-tight">{company.name}</h1>
-              {company.type === "hardware" ? (
-                <Badge variant="secondary" className="bg-amber-500/10 text-amber-600"><Factory className="w-3 h-3 mr-1"/> 하드웨어</Badge>
-              ) : (
-                <Badge variant="secondary" className="bg-blue-500/10 text-blue-600"><Monitor className="w-3 h-3 mr-1"/> 소프트웨어</Badge>
-              )}
+              {(() => {
+                const meta = getCompanyTypeMeta(company.type);
+                const TypeIcon = meta.icon;
+                return (
+                  <Badge variant="secondary" className={meta.badgeClass}>
+                    <TypeIcon className="w-3 h-3 mr-1" /> {meta.label}
+                  </Badge>
+                );
+              })()}
             </div>
             <p className="text-lg text-muted-foreground">{company.description}</p>
           </div>

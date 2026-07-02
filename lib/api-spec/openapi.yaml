@@ -52,7 +52,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [hardware, software]
+            enum: [hardware, software, service]
         - name: tag
           in: query
           required: false
@@ -955,7 +955,7 @@ components:
           type: string
         type:
           type: string
-          enum: [hardware, software]
+          enum: [hardware, software, service]
         taxCode:
           type: ["string", "null"]
         phone:
@@ -997,7 +997,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software]
+          enum: [hardware, software, service]
         taxCode:
           type: string
         phone:
@@ -1026,7 +1026,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software]
+          enum: [hardware, software, service]
         taxCode:
           type: string
         phone:
@@ -1117,7 +1117,7 @@ components:
           type: string
         type:
           type: string
-          enum: [hardware, software]
+          enum: [hardware, software, service]
         taxCode:
           type: string
         phone:

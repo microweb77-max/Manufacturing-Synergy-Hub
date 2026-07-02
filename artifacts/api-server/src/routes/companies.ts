@@ -84,7 +84,7 @@ const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 �
 
 {
   "name": "기업명 (문서에서 찾을 수 없으면 빈 문자열)",
-  "type": "hardware 또는 software 중 하나. 장비/로봇/금형/물류 등 물리적 제조는 hardware, MES/ERP/자동화/머신비전 등 소프트웨어는 software",
+  "type": "hardware, software, service 중 하나. 장비/로봇/금형/물류 등 물리적 제조는 hardware, MES/ERP/자동화/머신비전 등 소프트웨어는 software, 컨설팅/유지보수/엔지니어링 서비스 등은 service",
   "taxCode": "사업자세금코드 MST (베트남 Mã số thuế, Tax Code). 숫자로 된 코드. 찾을 수 없으면 빈 문자열",
   "phone": "대표 전화번호 또는 담당자 연락처 (찾을 수 없으면 빈 문자열)",
   "kakaoTalkId": "카카오톡 ID (KakaoTalk ID). 찾을 수 없으면 빈 문자열",

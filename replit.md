@@ -2,6 +2,8 @@
 
 A B2B manufacturing collaboration network for Vietnam that matches hardware specialists (equipment, logistics, molding, robotics) with software specialists (MES, automation, ERP, machine-vision) via a synergy-score matching engine so they can co-sell joint solutions. UI is in Korean.
 
+Companies have a `type` of `hardware` | `software` | `service` (서비스: 컨설팅/유지보수/엔지니어링). The `type` enum is defined in `lib/api-spec/openapi.yaml` (5 occurrences — regenerate codegen after edits) and is plain `text` in the DB (no migration needed to add a value). Frontend rendering of a company type (label/icon/badge color/icon color) is centralized in `artifacts/synergy-hub/src/lib/companyType.ts` (`getCompanyTypeMeta()` with a hardware fallback) — use it instead of `type === "hardware" ? ... : ...` ternaries. Backend type-label strings (synergy reason, dashboard activity, the analyze-material Gemini prompt) are separate inline 3-way maps in api-server.
+
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)

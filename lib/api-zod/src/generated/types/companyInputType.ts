@@ -12,4 +12,5 @@ export type CompanyInputType = typeof CompanyInputType[keyof typeof CompanyInput
 export const CompanyInputType = {
   hardware: 'hardware',
   software: 'software',
+  service: 'service',
 } as const;
