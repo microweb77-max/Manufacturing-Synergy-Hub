@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useListCompanies } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -7,18 +7,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Plus, MapPin, Star, ShieldCheck, Factory, Monitor } from "lucide-react";
+import { Search, Plus, MapPin, Star, ShieldCheck, Factory, Monitor, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PAGE_SIZE = 9;
 
 export default function CompaniesList() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState<"hardware" | "software" | "all">("all");
   const [tag, setTag] = useState("");
+  const [page, setPage] = useState(1);
 
   const { data: companies, isLoading } = useListCompanies({
     search: search || undefined,
     type: type !== "all" ? type : undefined,
     tag: tag || undefined,
   });
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, type, tag]);
+
+  const total = companies?.length ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = useMemo(
+    () => companies?.slice(pageStart, pageStart + PAGE_SIZE) ?? [],
+    [companies, pageStart],
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -83,7 +99,7 @@ export default function CompaniesList() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {companies?.map(company => (
+          {pageItems.map(company => (
             <Link key={company.id} href={`/companies/${company.id}`}>
               <Card className="h-full hover:shadow-md transition-all hover:border-primary/50 cursor-pointer group flex flex-col">
                 <CardHeader className="pb-3">
@@ -131,6 +147,39 @@ export default function CompaniesList() {
               </Card>
             </Link>
           ))}
+        </div>
+      )}
+
+      {!isLoading && total > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            총 {total}개 중 {pageStart + 1}–{pageStart + pageItems.length}개 표시
+          </span>
+          {pageCount > 1 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                이전
+              </Button>
+              <span className="px-1">
+                {currentPage} / {pageCount}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= pageCount}
+                onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              >
+                다음
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
