@@ -114,6 +114,27 @@ export default function ProjectDetail() {
     }
   };
 
+  const getMatchStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending': return <Badge variant="outline" className="bg-amber-500/10 text-amber-600">대기중</Badge>;
+      case 'accepted': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600">수락됨</Badge>;
+      case 'declined': return <Badge variant="outline" className="bg-destructive/10 text-destructive">거절됨</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  type FeedItem =
+    | { kind: "invite"; id: number; createdAt: string; sortKey: number; match: NonNullable<typeof matches>[number] }
+    | { kind: "apply"; id: number; createdAt: string; sortKey: number; app: NonNullable<typeof applications>[number] };
+
+  const feedItems: FeedItem[] = [
+    ...(matches ?? []).map((m): FeedItem => ({ kind: "invite", id: m.id, createdAt: m.createdAt, sortKey: new Date(m.createdAt).getTime(), match: m })),
+    ...(applications ?? []).map((a): FeedItem => ({ kind: "apply", id: a.id, createdAt: a.createdAt, sortKey: new Date(a.createdAt).getTime(), app: a })),
+  ].sort((a, b) => b.sortKey - a.sortKey);
+
+  const participantCount = (matches?.length ?? 0) + (applications?.length ?? 0);
+  const isFeedLoading = isMatchesLoading || isApplicationsLoading;
+
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-8">
       {/* Project Header */}
@@ -159,10 +180,9 @@ export default function ProjectDetail() {
       </div>
 
       <Tabs defaultValue="recommendations" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[560px]">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[440px]">
           <TabsTrigger value="recommendations">AI 추천 파트너</TabsTrigger>
-          <TabsTrigger value="matches">현재 매칭 현황 {matches && matches.length > 0 && `(${matches.length})`}</TabsTrigger>
-          <TabsTrigger value="applications">지원 현황 {applications && applications.length > 0 && `(${applications.length})`}</TabsTrigger>
+          <TabsTrigger value="participants">매칭 · 지원 현황 {participantCount > 0 && `(${participantCount})`}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="recommendations" className="pt-6 space-y-6">
@@ -246,49 +266,12 @@ export default function ProjectDetail() {
           )}
         </TabsContent>
 
-        <TabsContent value="matches" className="pt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>매칭 진행 현황</CardTitle>
-              <CardDescription>이 프로젝트에 대해 진행 중인 매칭 목록입니다.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isMatchesLoading ? (
-                <div className="space-y-4"><Skeleton className="h-16 w-full" /></div>
-              ) : matches?.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">아직 진행 중인 매칭이 없습니다. AI 추천 탭에서 파트너를 초대해보세요.</div>
-              ) : (
-                <div className="space-y-4">
-                  {matches?.map(match => (
-                    <div key={match.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center font-mono font-bold text-primary">
-                          {match.synergyScore}
-                        </div>
-                        <div>
-                          <div className="font-medium text-base">{match.company?.name || `기업 #${match.companyId}`}</div>
-                          <div className="text-sm text-muted-foreground">{new Date(match.createdAt).toLocaleDateString()} 제안됨</div>
-                        </div>
-                      </div>
-                      <div>
-                        {match.status === 'pending' && <Badge variant="outline" className="bg-amber-500/10 text-amber-600">대기중</Badge>}
-                        {match.status === 'accepted' && <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600">수락됨</Badge>}
-                        {match.status === 'declined' && <Badge variant="outline" className="bg-destructive/10 text-destructive">거절됨</Badge>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="applications" className="pt-6">
+        <TabsContent value="participants" className="pt-6">
           <Card>
             <CardHeader className="flex flex-row items-start justify-between gap-4">
               <div>
-                <CardTitle>프로젝트 지원 현황</CardTitle>
-                <CardDescription>이 프로젝트 의뢰에 지원한 파트너 기업 목록입니다.</CardDescription>
+                <CardTitle>매칭 · 지원 현황</CardTitle>
+                <CardDescription>이 프로젝트에 연결된 파트너 기업입니다. 주최자가 보낸 <span className="font-medium text-foreground">제안 초대</span>와 기업이 직접 낸 <span className="font-medium text-foreground">지원</span>이 함께 표시됩니다.</CardDescription>
               </div>
               <Dialog open={applyOpen} onOpenChange={(o) => { setApplyOpen(o); if (!o) resetApplyForm(); }}>
                 <DialogTrigger asChild>
@@ -341,28 +324,52 @@ export default function ProjectDetail() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              {isApplicationsLoading ? (
+              {isFeedLoading ? (
                 <div className="space-y-4"><Skeleton className="h-16 w-full" /></div>
-              ) : applications?.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">아직 지원한 기업이 없습니다. 지원하기 버튼으로 첫 지원을 등록해보세요.</div>
+              ) : feedItems.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">아직 매칭·지원 내역이 없습니다. AI 추천 탭에서 파트너를 초대하거나, 지원하기 버튼으로 지원을 등록해보세요.</div>
               ) : (
                 <div className="space-y-4">
-                  {applications?.map(app => {
+                  {feedItems.map(item => {
+                    if (item.kind === "invite") {
+                      const match = item.match;
+                      return (
+                        <div key={`m-${match.id}`} className="p-4 border rounded-lg space-y-3">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-mono font-bold text-primary shrink-0">
+                                {match.synergyScore}
+                              </div>
+                              <div>
+                                <div className="font-medium text-base flex items-center gap-2 flex-wrap">
+                                  {match.company?.name || `기업 #${match.companyId}`}
+                                  <Badge variant="outline" className="border-primary/40 text-primary bg-primary/5">제안 초대</Badge>
+                                </div>
+                                <div className="text-sm text-muted-foreground">{new Date(match.createdAt).toLocaleDateString()} · 주최자 제안 · 시너지 {match.synergyScore}%</div>
+                              </div>
+                            </div>
+                            {getMatchStatusBadge(match.status)}
+                          </div>
+                        </div>
+                      );
+                    }
+                    const app = item.app;
                     const meta = getCompanyTypeMeta(app.companyType);
                     const TypeIcon = meta.icon;
                     return (
-                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
+                      <div key={`a-${app.id}`} className="p-4 border rounded-lg space-y-3">
                         <div className="flex items-center justify-between gap-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
                               <TypeIcon className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                              <div className="font-medium text-base flex items-center gap-2">
+                              <div className="font-medium text-base flex items-center gap-2 flex-wrap">
                                 {app.companyName || `기업 #${app.companyId}`}
                                 <Badge variant="secondary" className={meta.badgeClass}>{meta.label}</Badge>
+                                <Badge variant="outline" className="border-emerald-400/50 text-emerald-600 bg-emerald-500/5">지원</Badge>
                               </div>
-                              <div className="text-sm text-muted-foreground">{new Date(app.createdAt).toLocaleDateString()} 지원</div>
+                              <div className="text-sm text-muted-foreground">{new Date(app.createdAt).toLocaleDateString()} · 기업 지원</div>
                             </div>
                           </div>
                           {getApplicationStatusBadge(app.status)}
