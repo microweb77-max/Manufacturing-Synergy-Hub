@@ -35,6 +35,7 @@ import type {
   ListCompaniesParams,
   ListMatchesParams,
   ListPerformanceLogsParams,
+  ListProjectApplicationsParams,
   ListProjectsParams,
   ListSolutionsParams,
   ListSupplyOffersParams,
@@ -49,6 +50,9 @@ import type {
   PerformanceLogInput,
   PerformanceLogUpdate,
   Project,
+  ProjectApplication,
+  ProjectApplicationInput,
+  ProjectApplicationUpdate,
   ProjectInput,
   ProjectUpdate,
   Recommendation,
@@ -3121,6 +3125,301 @@ export const useDeleteOfferMatch = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteOfferMatchMutationOptions(options));
+    }
+
+export const getListProjectApplicationsUrl = (params?: ListProjectApplicationsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/project-applications?${stringifiedParams}` : `/api/project-applications`
+}
+
+/**
+ * @summary List project applications (admin only)
+ */
+export const listProjectApplications = async (params?: ListProjectApplicationsParams, options?: RequestInit): Promise<ProjectApplication[]> => {
+
+  return customFetch<ProjectApplication[]>(getListProjectApplicationsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListProjectApplicationsQueryKey = (params?: ListProjectApplicationsParams,) => {
+    return [
+    `/api/project-applications`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListProjectApplicationsQueryOptions = <TData = Awaited<ReturnType<typeof listProjectApplications>>, TError = ErrorType<unknown>>(params?: ListProjectApplicationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectApplications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListProjectApplicationsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listProjectApplications>>> = ({ signal }) => listProjectApplications(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listProjectApplications>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListProjectApplicationsQueryResult = NonNullable<Awaited<ReturnType<typeof listProjectApplications>>>
+export type ListProjectApplicationsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List project applications (admin only)
+ */
+
+export function useListProjectApplications<TData = Awaited<ReturnType<typeof listProjectApplications>>, TError = ErrorType<unknown>>(
+ params?: ListProjectApplicationsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listProjectApplications>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListProjectApplicationsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateProjectApplicationUrl = () => {
+
+
+
+
+  return `/api/project-applications`
+}
+
+/**
+ * @summary Apply to a project (지원)
+ */
+export const createProjectApplication = async (projectApplicationInput: ProjectApplicationInput, options?: RequestInit): Promise<ProjectApplication> => {
+
+  return customFetch<ProjectApplication>(getCreateProjectApplicationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(projectApplicationInput)
+  }
+);}
+
+
+
+
+export const getCreateProjectApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectApplication>>, TError,{data: BodyType<ProjectApplicationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProjectApplication>>, TError,{data: BodyType<ProjectApplicationInput>}, TContext> => {
+
+const mutationKey = ['createProjectApplication'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProjectApplication>>, {data: BodyType<ProjectApplicationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProjectApplication(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProjectApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof createProjectApplication>>>
+    export type CreateProjectApplicationMutationBody = BodyType<ProjectApplicationInput>
+    export type CreateProjectApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Apply to a project (지원)
+ */
+export const useCreateProjectApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProjectApplication>>, TError,{data: BodyType<ProjectApplicationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProjectApplication>>,
+        TError,
+        {data: BodyType<ProjectApplicationInput>},
+        TContext
+      > => {
+      return useMutation(getCreateProjectApplicationMutationOptions(options));
+    }
+
+export const getUpdateProjectApplicationUrl = (id: number,) => {
+
+
+
+
+  return `/api/project-applications/${id}`
+}
+
+/**
+ * @summary Update a project application (admin only)
+ */
+export const updateProjectApplication = async (id: number,
+    projectApplicationUpdate: ProjectApplicationUpdate, options?: RequestInit): Promise<ProjectApplication> => {
+
+  return customFetch<ProjectApplication>(getUpdateProjectApplicationUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(projectApplicationUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateProjectApplicationMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectApplication>>, TError,{id: number;data: BodyType<ProjectApplicationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateProjectApplication>>, TError,{id: number;data: BodyType<ProjectApplicationUpdate>}, TContext> => {
+
+const mutationKey = ['updateProjectApplication'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateProjectApplication>>, {id: number;data: BodyType<ProjectApplicationUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateProjectApplication(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateProjectApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof updateProjectApplication>>>
+    export type UpdateProjectApplicationMutationBody = BodyType<ProjectApplicationUpdate>
+    export type UpdateProjectApplicationMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update a project application (admin only)
+ */
+export const useUpdateProjectApplication = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateProjectApplication>>, TError,{id: number;data: BodyType<ProjectApplicationUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateProjectApplication>>,
+        TError,
+        {id: number;data: BodyType<ProjectApplicationUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateProjectApplicationMutationOptions(options));
+    }
+
+export const getDeleteProjectApplicationUrl = (id: number,) => {
+
+
+
+
+  return `/api/project-applications/${id}`
+}
+
+/**
+ * @summary Delete a project application (admin only)
+ */
+export const deleteProjectApplication = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteProjectApplicationUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteProjectApplicationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectApplication>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProjectApplication>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteProjectApplication'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProjectApplication>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteProjectApplication(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProjectApplicationMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProjectApplication>>>
+
+    export type DeleteProjectApplicationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a project application (admin only)
+ */
+export const useDeleteProjectApplication = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProjectApplication>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProjectApplication>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteProjectApplicationMutationOptions(options));
     }
 
 export const getListClientCompaniesUrl = () => {

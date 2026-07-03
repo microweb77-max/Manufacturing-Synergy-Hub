@@ -504,6 +504,54 @@ export interface OfferMatchUpdate {
   adminNote?: string;
 }
 
+export type ProjectApplicationStatus = typeof ProjectApplicationStatus[keyof typeof ProjectApplicationStatus];
+
+
+export const ProjectApplicationStatus = {
+  pending: 'pending',
+  reviewing: 'reviewing',
+  accepted: 'accepted',
+  rejected: 'rejected',
+} as const;
+
+export interface ProjectApplication {
+  id: number;
+  projectId: number;
+  projectTitle: string;
+  companyId: number;
+  companyName: string;
+  companyType: string;
+  message: string;
+  contactName: string;
+  contactInfo: string;
+  status: ProjectApplicationStatus;
+  adminNote: string;
+  createdAt: string;
+}
+
+export interface ProjectApplicationInput {
+  projectId: number;
+  companyId: number;
+  message?: string;
+  contactName?: string;
+  contactInfo?: string;
+}
+
+export type ProjectApplicationUpdateStatus = typeof ProjectApplicationUpdateStatus[keyof typeof ProjectApplicationUpdateStatus];
+
+
+export const ProjectApplicationUpdateStatus = {
+  pending: 'pending',
+  reviewing: 'reviewing',
+  accepted: 'accepted',
+  rejected: 'rejected',
+} as const;
+
+export interface ProjectApplicationUpdate {
+  status?: ProjectApplicationUpdateStatus;
+  adminNote?: string;
+}
+
 export interface TagCount {
   tag: string;
   count: number;
@@ -606,5 +654,9 @@ export const ListTalentPostsPostType = {
 export type ListSupplyOffersParams = {
 category?: string;
 search?: string;
+};
+
+export type ListProjectApplicationsParams = {
+projectId?: number;
 };
 

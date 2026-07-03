@@ -868,6 +868,88 @@ paths:
         "204":
           description: Deleted
 
+  /project-applications:
+    get:
+      operationId: listProjectApplications
+      tags: [projectApplications]
+      summary: List project applications (admin only)
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Project applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectApplication"
+    post:
+      operationId: createProjectApplication
+      tags: [projectApplications]
+      summary: Apply to a project (지원)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectApplicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectApplication"
+
+  /project-applications/{id}:
+    patch:
+      operationId: updateProjectApplication
+      tags: [projectApplications]
+      summary: Update a project application (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectApplicationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectApplication"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteProjectApplication
+      tags: [projectApplications]
+      summary: Delete a project application (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -1750,6 +1832,72 @@ components:
         status:
           type: string
           enum: [pending, reviewing, matched, rejected]
+        adminNote:
+          type: string
+
+    ProjectApplication:
+      type: object
+      required:
+        - id
+        - projectId
+        - projectTitle
+        - companyId
+        - companyName
+        - companyType
+        - message
+        - contactName
+        - contactInfo
+        - status
+        - adminNote
+        - createdAt
+      properties:
+        id:
+          type: integer
+        projectId:
+          type: integer
+        projectTitle:
+          type: string
+        companyId:
+          type: integer
+        companyName:
+          type: string
+        companyType:
+          type: string
+        message:
+          type: string
+        contactName:
+          type: string
+        contactInfo:
+          type: string
+        status:
+          type: string
+          enum: [pending, reviewing, accepted, rejected]
+        adminNote:
+          type: string
+        createdAt:
+          type: string
+    ProjectApplicationInput:
+      type: object
+      required:
+        - projectId
+        - companyId
+      properties:
+        projectId:
+          type: integer
+        companyId:
+          type: integer
+        message:
+          type: string
+        contactName:
+          type: string
+        contactInfo:
+          type: string
+    ProjectApplicationUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, reviewing, accepted, rejected]
         adminNote:
           type: string
 

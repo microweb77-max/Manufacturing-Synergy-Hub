@@ -39,6 +39,10 @@ import {
   useUpdateOfferMatch,
   useDeleteOfferMatch,
   getListOfferMatchesQueryKey,
+  useListProjectApplications,
+  useUpdateProjectApplication,
+  useDeleteProjectApplication,
+  getListProjectApplicationsQueryKey,
   useCollectJobs,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
@@ -69,6 +73,7 @@ import {
   Users,
   PackageSearch,
   Handshake,
+  UserPlus,
 } from "lucide-react";
 import {
   AdminSection,
@@ -1208,6 +1213,122 @@ function OfferMatchesAdmin() {
   );
 }
 
+function ProjectApplicationsAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListProjectApplications({});
+  const update = useUpdateProjectApplication();
+  const del = useDeleteProjectApplication();
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListProjectApplicationsQueryKey() });
+
+  const statusOptions = [
+    { value: "pending", label: "접수됨 (pending)" },
+    { value: "reviewing", label: "검토중 (reviewing)" },
+    { value: "accepted", label: "수락 (accepted)" },
+    { value: "rejected", label: "거절 (rejected)" },
+  ];
+
+  const statusLabel: Record<string, string> = {
+    pending: "접수됨",
+    reviewing: "검토중",
+    accepted: "수락",
+    rejected: "거절",
+  };
+
+  return (
+    <AdminSection
+      title="프로젝트 지원"
+      description="파트너 기업이 프로젝트 의뢰에 지원한 내역입니다. (열람은 관리자만) 상태와 메모만 수정됩니다."
+      items={data}
+      isLoading={isLoading}
+      canCreate={false}
+      getId={(a) => a.id}
+      getRowLabel={(a) => `지원 #${a.id}`}
+      getSearchText={(a) =>
+        [a.projectTitle ?? "", a.companyName ?? "", a.contactName ?? ""].join(" ")
+      }
+      searchPlaceholder="프로젝트 · 기업 · 담당자 검색"
+      filters={[
+        {
+          key: "status",
+          label: "상태",
+          getValue: (a) => a.status,
+          options: statusOptions.map((o) => ({ value: o.value, label: statusLabel[o.value] ?? o.label })),
+        },
+      ]}
+      columns={[
+        { key: "project", header: "프로젝트", render: (a) => <span className="font-medium">{a.projectTitle || `#${a.projectId}`}</span>, sortValue: (a) => a.projectTitle ?? "" },
+        { key: "company", header: "지원사", render: (a) => a.companyName || `#${a.companyId}`, sortValue: (a) => a.companyName ?? "" },
+        { key: "contact", header: "담당자", render: (a) => a.contactName || "-" },
+        { key: "contactInfo", header: "연락처", render: (a) => a.contactInfo || "-" },
+        { key: "message", header: "지원 내용", render: (a) => <span className="text-xs text-muted-foreground line-clamp-2 max-w-[240px]">{a.message || "-"}</span> },
+        { key: "status", header: "상태", render: (a) => <Badge variant="outline">{statusLabel[a.status] ?? a.status}</Badge>, sortValue: (a) => a.status },
+        { key: "createdAt", header: "지원일", render: (a) => formatDateTime(a.createdAt), sortValue: (a) => a.createdAt },
+      ]}
+      fields={[
+        { name: "projectTitle", label: "프로젝트", type: "readonly" },
+        { name: "companyName", label: "지원사", type: "readonly" },
+        { name: "contactName", label: "담당자", type: "readonly" },
+        { name: "contactInfo", label: "연락처", type: "readonly" },
+        { name: "createdAt", label: "지원일", type: "readonly" },
+        { name: "message", label: "지원 내용", type: "readonly", full: true },
+        { name: "status", label: "상태", type: "select", options: statusOptions },
+        { name: "adminNote", label: "관리자 메모", type: "textarea", full: true },
+      ]}
+      emptyValues={{
+        projectTitle: "",
+        companyName: "",
+        contactName: "",
+        contactInfo: "",
+        createdAt: "",
+        message: "",
+        status: "pending",
+        adminNote: "",
+      }}
+      toFormValues={(a) => ({
+        projectTitle: a.projectTitle,
+        companyName: a.companyName,
+        contactName: a.contactName ?? "",
+        contactInfo: a.contactInfo ?? "",
+        createdAt: formatDateTime(a.createdAt),
+        message: a.message ?? "",
+        status: a.status,
+        adminNote: a.adminNote ?? "",
+      })}
+      onCreate={async () => {
+        throw new Error("not supported");
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({
+            id,
+            data: {
+              status: v.status as "pending" | "reviewing" | "accepted" | "rejected",
+              adminNote: v.adminNote,
+            },
+          });
+          toast({ title: "수정 완료", description: "지원 상태가 변경되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "지원이 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
 function StatCard({
   icon,
   label,
@@ -1244,6 +1365,7 @@ function AdminDashboard() {
   const talent = useListTalentPosts({});
   const offers = useListSupplyOffers();
   const offerMatches = useListOfferMatches();
+  const applications = useListProjectApplications({});
 
   const talentPosts = talent.data ?? [];
   const hiring = talentPosts.filter((t) => t.postType === "hiring").length;
@@ -1267,6 +1389,12 @@ function AdminDashboard() {
       label: "매칭",
       value: matches.data?.length ?? 0,
       isLoading: matches.isLoading,
+    },
+    {
+      icon: <UserPlus className="h-5 w-5" />,
+      label: "프로젝트 지원",
+      value: applications.data?.length ?? 0,
+      isLoading: applications.isLoading,
     },
     {
       icon: <Package className="h-5 w-5" />,
@@ -1329,6 +1457,7 @@ export default function AdminPage() {
           <TabsTrigger value="companies">기업</TabsTrigger>
           <TabsTrigger value="projects">프로젝트</TabsTrigger>
           <TabsTrigger value="matches">매칭</TabsTrigger>
+          <TabsTrigger value="applications">프로젝트 지원</TabsTrigger>
           <TabsTrigger value="solutions">솔루션</TabsTrigger>
           <TabsTrigger value="performance">성과</TabsTrigger>
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
@@ -1343,6 +1472,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="matches" className="mt-6">
           <MatchesAdmin />
+        </TabsContent>
+        <TabsContent value="applications" className="mt-6">
+          <ProjectApplicationsAdmin />
         </TabsContent>
         <TabsContent value="solutions" className="mt-6">
           <SolutionsAdmin />

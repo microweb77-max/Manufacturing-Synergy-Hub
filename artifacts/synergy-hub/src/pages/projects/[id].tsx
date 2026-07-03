@@ -1,13 +1,19 @@
 import { useRoute } from "wouter";
-import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, getListProjectMatchesQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
+import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, useListProjectApplications, useCreateProjectApplication, useListCompanies, getListProjectMatchesQueryKey, getListProjectApplicationsQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Zap, Bot, Network, Sparkles, ShieldCheck } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Zap, Bot, Network, Sparkles, ShieldCheck, Send, UserPlus } from "lucide-react";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -20,7 +26,49 @@ export default function ProjectDetail() {
   const { data: project, isLoading: isProjectLoading } = useGetProject(id, { query: { enabled: !!id, queryKey: getGetProjectQueryKey(id) } });
   const { data: recommendations, isLoading: isRecsLoading } = useGetProjectRecommendations(id, { query: { enabled: !!id, queryKey: getGetProjectRecommendationsQueryKey(id) } });
   const { data: matches, isLoading: isMatchesLoading } = useListProjectMatches(id, { query: { enabled: !!id, queryKey: getListProjectMatchesQueryKey(id) } });
+  const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
+  const { data: companies } = useListCompanies({});
   const createMatch = useCreateMatch();
+  const createApplication = useCreateProjectApplication();
+
+  const [applyOpen, setApplyOpen] = useState(false);
+  const [applyCompanyId, setApplyCompanyId] = useState("");
+  const [applyContactName, setApplyContactName] = useState("");
+  const [applyContactInfo, setApplyContactInfo] = useState("");
+  const [applyMessage, setApplyMessage] = useState("");
+
+  const resetApplyForm = () => {
+    setApplyCompanyId("");
+    setApplyContactName("");
+    setApplyContactInfo("");
+    setApplyMessage("");
+  };
+
+  const handleApply = () => {
+    if (!applyCompanyId) {
+      toast({ title: "지원사를 선택해주세요", description: "기업 디렉토리에서 지원할 기업을 선택해야 합니다.", variant: "destructive" });
+      return;
+    }
+    createApplication.mutate({
+      data: {
+        projectId: id,
+        companyId: parseInt(applyCompanyId, 10),
+        message: applyMessage,
+        contactName: applyContactName,
+        contactInfo: applyContactInfo,
+      },
+    }, {
+      onSuccess: () => {
+        toast({ title: "지원 완료", description: "프로젝트 지원이 접수되었습니다. 관리자 검토 후 연락드립니다." });
+        queryClient.invalidateQueries({ queryKey: getListProjectApplicationsQueryKey({ projectId: id }) });
+        resetApplyForm();
+        setApplyOpen(false);
+      },
+      onError: () => {
+        toast({ title: "오류", description: "지원 접수 중 문제가 발생했습니다.", variant: "destructive" });
+      },
+    });
+  };
 
   const handleInvite = (companyId: number, synergyScore: number) => {
     createMatch.mutate({
@@ -52,6 +100,16 @@ export default function ProjectDetail() {
       case 'matching': return <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-200 text-sm py-1">매칭 진행중</Badge>;
       case 'in_progress': return <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-200 text-sm py-1">프로젝트 진행중</Badge>;
       case 'completed': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-200 text-sm py-1">완료</Badge>;
+      default: return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const getApplicationStatusBadge = (status: string) => {
+    switch(status) {
+      case 'pending': return <Badge variant="outline" className="bg-amber-500/10 text-amber-600">접수됨</Badge>;
+      case 'reviewing': return <Badge variant="outline" className="bg-blue-500/10 text-blue-600">검토중</Badge>;
+      case 'accepted': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600">수락됨</Badge>;
+      case 'rejected': return <Badge variant="outline" className="bg-destructive/10 text-destructive">거절됨</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
@@ -101,9 +159,10 @@ export default function ProjectDetail() {
       </div>
 
       <Tabs defaultValue="recommendations" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[560px]">
           <TabsTrigger value="recommendations">AI 추천 파트너</TabsTrigger>
           <TabsTrigger value="matches">현재 매칭 현황 {matches && matches.length > 0 && `(${matches.length})`}</TabsTrigger>
+          <TabsTrigger value="applications">지원 현황 {applications && applications.length > 0 && `(${applications.length})`}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="recommendations" className="pt-6 space-y-6">
@@ -218,6 +277,107 @@ export default function ProjectDetail() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="applications" className="pt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between gap-4">
+              <div>
+                <CardTitle>프로젝트 지원 현황</CardTitle>
+                <CardDescription>이 프로젝트 의뢰에 지원한 파트너 기업 목록입니다.</CardDescription>
+              </div>
+              <Dialog open={applyOpen} onOpenChange={(o) => { setApplyOpen(o); if (!o) resetApplyForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>프로젝트 지원</DialogTitle>
+                    <DialogDescription>「{project.title}」 의뢰에 지원합니다. 기업 디렉토리에서 지원사를 선택하고 제안 내용을 작성해주세요.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                      <Label>지원사 (기업 디렉토리)</Label>
+                      <Select value={applyCompanyId} onValueChange={setApplyCompanyId}>
+                        <SelectTrigger><SelectValue placeholder="지원할 기업을 선택하세요" /></SelectTrigger>
+                        <SelectContent>
+                          {companies?.map((c) => {
+                            const meta = getCompanyTypeMeta(c.type);
+                            return (
+                              <SelectItem key={c.id} value={String(c.id)}>
+                                {c.name} · {meta.label}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>담당자</Label>
+                        <Input value={applyContactName} onChange={(e) => setApplyContactName(e.target.value)} placeholder="예: 홍길동 부장" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>연락처</Label>
+                        <Input value={applyContactInfo} onChange={(e) => setApplyContactInfo(e.target.value)} placeholder="이메일 / 전화번호" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>지원(제안) 내용</Label>
+                      <Textarea value={applyMessage} onChange={(e) => setApplyMessage(e.target.value)} placeholder="보유 역량, 유사 프로젝트 경험, 협업 제안 등을 작성해주세요." rows={5} />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setApplyOpen(false)}>취소</Button>
+                    <Button onClick={handleApply} disabled={createApplication.isPending}>
+                      <Send className="w-4 h-4 mr-2" /> {createApplication.isPending ? "제출 중..." : "지원 제출"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              {isApplicationsLoading ? (
+                <div className="space-y-4"><Skeleton className="h-16 w-full" /></div>
+              ) : applications?.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">아직 지원한 기업이 없습니다. 지원하기 버튼으로 첫 지원을 등록해보세요.</div>
+              ) : (
+                <div className="space-y-4">
+                  {applications?.map(app => {
+                    const meta = getCompanyTypeMeta(app.companyType);
+                    const TypeIcon = meta.icon;
+                    return (
+                      <div key={app.id} className="p-4 border rounded-lg space-y-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center">
+                              <TypeIcon className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-base flex items-center gap-2">
+                                {app.companyName || `기업 #${app.companyId}`}
+                                <Badge variant="secondary" className={meta.badgeClass}>{meta.label}</Badge>
+                              </div>
+                              <div className="text-sm text-muted-foreground">{new Date(app.createdAt).toLocaleDateString()} 지원</div>
+                            </div>
+                          </div>
+                          {getApplicationStatusBadge(app.status)}
+                        </div>
+                        {app.message && (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/40 border border-border/50 rounded-md p-3">{app.message}</p>
+                        )}
+                        {(app.contactName || app.contactInfo) && (
+                          <div className="text-xs text-muted-foreground">
+                            담당자: {app.contactName || "-"} · 연락처: {app.contactInfo || "-"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

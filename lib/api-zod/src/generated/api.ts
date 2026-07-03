@@ -1288,6 +1288,95 @@ export const DeleteOfferMatchResponse = zod.void()
 
 
 /**
+ * @summary List project applications (admin only)
+ */
+export const ListProjectApplicationsQueryParams = zod.object({
+  "projectId": zod.coerce.number().optional()
+})
+
+export const ListProjectApplicationsResponseItem = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectTitle": zod.string(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "companyType": zod.string(),
+  "message": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListProjectApplicationsResponse = zod.array(ListProjectApplicationsResponseItem)
+
+
+/**
+ * @summary Apply to a project (지원)
+ */
+export const CreateProjectApplicationBody = zod.object({
+  "projectId": zod.number(),
+  "companyId": zod.number(),
+  "message": zod.string().optional(),
+  "contactName": zod.string().optional(),
+  "contactInfo": zod.string().optional()
+})
+
+export const CreateProjectApplicationResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectTitle": zod.string(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "companyType": zod.string(),
+  "message": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a project application (admin only)
+ */
+export const UpdateProjectApplicationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateProjectApplicationBody = zod.object({
+  "status": zod.enum(['pending', 'reviewing', 'accepted', 'rejected']).optional(),
+  "adminNote": zod.string().optional()
+})
+
+export const UpdateProjectApplicationResponse = zod.object({
+  "id": zod.number(),
+  "projectId": zod.number(),
+  "projectTitle": zod.string(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "companyType": zod.string(),
+  "message": zod.string(),
+  "contactName": zod.string(),
+  "contactInfo": zod.string(),
+  "status": zod.enum(['pending', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a project application (admin only)
+ */
+export const DeleteProjectApplicationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteProjectApplicationResponse = zod.void()
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({
