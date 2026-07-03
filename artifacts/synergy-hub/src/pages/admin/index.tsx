@@ -78,6 +78,18 @@ import {
   type FormValues,
 } from "./AdminSection";
 
+function formatDateTime(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function CollectJobsControl({
   postType,
 }: {
@@ -1132,14 +1144,35 @@ function OfferMatchesAdmin() {
         { key: "supplier", header: "공급기업", render: (m) => m.supplierCompanyName || "-" },
         { key: "client", header: "고객사(요청)", render: (m) => m.clientCompanyName, sortValue: (m) => m.clientCompanyName },
         { key: "contact", header: "담당자", render: (m) => m.contactName || "-" },
+        { key: "contactInfo", header: "연락처", render: (m) => m.contactInfo || "-" },
+        { key: "message", header: "요청 메시지", render: (m) => <span className="text-xs text-muted-foreground line-clamp-2 max-w-[240px]">{m.message || "-"}</span> },
         { key: "status", header: "상태", render: (m) => <Badge variant="outline">{statusLabel[m.status] ?? m.status}</Badge>, sortValue: (m) => m.status },
+        { key: "createdAt", header: "요청일", render: (m) => formatDateTime(m.createdAt), sortValue: (m) => m.createdAt },
       ]}
       fields={[
+        { name: "clientCompanyName", label: "고객사 (요청)", type: "readonly" },
+        { name: "contactName", label: "담당자", type: "readonly" },
+        { name: "contactInfo", label: "연락처", type: "readonly" },
+        { name: "createdAt", label: "요청일", type: "readonly" },
+        { name: "message", label: "요청 메시지", type: "readonly", full: true },
         { name: "status", label: "상태", type: "select", options: statusOptions },
         { name: "adminNote", label: "관리자 메모", type: "textarea", full: true },
       ]}
-      emptyValues={{ status: "pending", adminNote: "" }}
+      emptyValues={{
+        clientCompanyName: "",
+        contactName: "",
+        contactInfo: "",
+        createdAt: "",
+        message: "",
+        status: "pending",
+        adminNote: "",
+      }}
       toFormValues={(m) => ({
+        clientCompanyName: m.clientCompanyName,
+        contactName: m.contactName ?? "",
+        contactInfo: m.contactInfo ?? "",
+        createdAt: formatDateTime(m.createdAt),
+        message: m.message ?? "",
         status: m.status,
         adminNote: m.adminNote ?? "",
       })}

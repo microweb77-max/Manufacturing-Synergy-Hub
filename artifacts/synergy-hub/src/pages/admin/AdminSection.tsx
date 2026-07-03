@@ -64,7 +64,7 @@ export type FormValues = Record<string, string>;
 export type AdminField = {
   name: string;
   label: string;
-  type: "text" | "number" | "textarea" | "select" | "tags" | "image";
+  type: "text" | "number" | "textarea" | "select" | "tags" | "image" | "readonly";
   options?: { value: string; label: string }[];
   placeholder?: string;
   required?: boolean;
@@ -657,6 +657,15 @@ export function AdminSection<T>({
                     placeholder={field.placeholder}
                     onChange={(v) => setField(field.name, v)}
                   />
+                ) : field.type === "readonly" ? (
+                  <div
+                    id={`field-${field.name}`}
+                    className="min-h-9 rounded-md border border-input bg-muted/40 px-3 py-2 text-sm whitespace-pre-wrap break-words"
+                  >
+                    {values[field.name]?.trim()
+                      ? values[field.name]
+                      : "-"}
+                  </div>
                 ) : (
                   <Input
                     id={`field-${field.name}`}
