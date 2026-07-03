@@ -950,6 +950,88 @@ paths:
         "204":
           description: Deleted
 
+  /resume-submissions:
+    get:
+      operationId: listResumeSubmissions
+      tags: [resumeSubmissions]
+      summary: List resume submissions for hiring posts (admin only)
+      parameters:
+        - name: talentPostId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Resume submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResumeSubmission"
+    post:
+      operationId: createResumeSubmission
+      tags: [resumeSubmissions]
+      summary: Submit a resume to a hiring post (이력서 접수)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeSubmissionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeSubmission"
+
+  /resume-submissions/{id}:
+    patch:
+      operationId: updateResumeSubmission
+      tags: [resumeSubmissions]
+      summary: Update a resume submission (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeSubmissionUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeSubmission"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteResumeSubmission
+      tags: [resumeSubmissions]
+      summary: Delete a resume submission (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -1898,6 +1980,79 @@ components:
         status:
           type: string
           enum: [pending, reviewing, accepted, rejected]
+        adminNote:
+          type: string
+
+    ResumeSubmission:
+      type: object
+      required:
+        - id
+        - talentPostId
+        - jobTitle
+        - jobAuthorName
+        - applicantName
+        - contactEmail
+        - contactPhone
+        - message
+        - resumeFileName
+        - resumeFileData
+        - status
+        - adminNote
+        - createdAt
+      properties:
+        id:
+          type: integer
+        talentPostId:
+          type: integer
+        jobTitle:
+          type: string
+        jobAuthorName:
+          type: string
+        applicantName:
+          type: string
+        contactEmail:
+          type: ["string", "null"]
+        contactPhone:
+          type: ["string", "null"]
+        message:
+          type: string
+        resumeFileName:
+          type: string
+        resumeFileData:
+          type: string
+        status:
+          type: string
+          enum: [received, reviewing, accepted, rejected]
+        adminNote:
+          type: string
+        createdAt:
+          type: string
+    ResumeSubmissionInput:
+      type: object
+      required:
+        - talentPostId
+        - applicantName
+      properties:
+        talentPostId:
+          type: integer
+        applicantName:
+          type: string
+        contactEmail:
+          type: string
+        contactPhone:
+          type: string
+        message:
+          type: string
+        resumeFileName:
+          type: string
+        resumeFileData:
+          type: string
+    ResumeSubmissionUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [received, reviewing, accepted, rejected]
         adminNote:
           type: string
 

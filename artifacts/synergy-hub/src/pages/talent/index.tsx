@@ -3,6 +3,7 @@ import {
   useListTalentPosts,
   useCreateTalentPost,
   useDeleteTalentPost,
+  useCreateResumeSubmission,
   getListTalentPostsQueryKey,
   type TalentPost,
 } from "@workspace/api-client-react";
@@ -65,6 +66,9 @@ import {
   Search,
   Filter,
   RotateCcw,
+  FileUp,
+  Link2,
+  ArrowRight,
 } from "lucide-react";
 
 const postSchema = z.object({
@@ -97,6 +101,245 @@ function distinctValues(
   return Array.from(set).sort((a, b) => a.localeCompare(b, "ko"));
 }
 
+const norm = (v: string | null | undefined) => (v ?? "").trim().toLowerCase();
+
+// Given a 구직(seeking) post, find matching 구인(hiring) posts.
+// Scores by shared 직무(position, strong), overlapping 역량(skills), and 지역(location).
+function findMatchingHiring(
+  seeking: TalentPost,
+  hiring: TalentPost[],
+): TalentPost[] {
+  const seekPos = norm(seeking.position);
+  const seekLoc = norm(seeking.location);
+  const seekSkills = new Set(seeking.skills.map(norm).filter(Boolean));
+
+  return hiring
+    .map((h) => {
+      let score = 0;
+      if (seekPos && norm(h.position) === seekPos) score += 3;
+      const overlap = h.skills.filter((s) => seekSkills.has(norm(s))).length;
+      score += overlap;
+      if (seekLoc && norm(h.location) === seekLoc) score += 1;
+      return { post: h, score };
+    })
+    .filter((m) => m.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((m) => m.post);
+}
+
+const RESUME_ACCEPT =
+  ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg,image/webp";
+const MAX_RESUME_BYTES = 5 * 1024 * 1024;
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("파일을 읽지 못했습니다."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function ResumeDialog({
+  post,
+  onClose,
+}: {
+  post: TalentPost | null;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const createResume = useCreateResumeSubmission();
+
+  const [applicantName, setApplicantName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileData, setFileData] = useState("");
+
+  useEffect(() => {
+    if (post) {
+      setApplicantName("");
+      setContactEmail("");
+      setContactPhone("");
+      setMessage("");
+      setFileName("");
+      setFileData("");
+    }
+  }, [post]);
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > MAX_RESUME_BYTES) {
+      toast({
+        title: "파일이 너무 큽니다",
+        description: "이력서 파일은 5MB 이하여야 합니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      setFileName(file.name);
+      setFileData(dataUrl);
+    } catch {
+      toast({
+        title: "오류",
+        description: "파일을 읽는 중 문제가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) return;
+    if (applicantName.trim().length < 1) {
+      toast({
+        title: "이름을 입력해주세요",
+        description: "지원자 이름은 필수입니다.",
+        variant: "destructive",
+      });
+      return;
+    }
+    createResume.mutate(
+      {
+        data: {
+          talentPostId: post.id,
+          applicantName: applicantName.trim(),
+          contactEmail: contactEmail.trim() || undefined,
+          contactPhone: contactPhone.trim() || undefined,
+          message: message.trim() || undefined,
+          resumeFileName: fileName || undefined,
+          resumeFileData: fileData || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "이력서 접수 완료",
+            description: "이력서가 정상적으로 접수되었습니다.",
+          });
+          onClose();
+        },
+        onError: () => {
+          toast({
+            title: "오류",
+            description: "이력서 접수 중 문제가 발생했습니다.",
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  return (
+    <Dialog open={post !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>이력서 접수</DialogTitle>
+          <DialogDescription>
+            {post ? `"${post.title}" 구인 공고에 이력서를 접수합니다.` : ""}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={onSubmit} className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>
+              이름 <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={applicantName}
+              onChange={(e) => setApplicantName(e.target.value)}
+              placeholder="예: 홍길동"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>
+                이메일{" "}
+                <span className="text-muted-foreground font-normal">(선택)</span>
+              </Label>
+              <Input
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="name@example.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                연락처{" "}
+                <span className="text-muted-foreground font-normal">(선택)</span>
+              </Label>
+              <Input
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="예: +84 ..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              자기소개 / 지원 메시지{" "}
+              <span className="text-muted-foreground font-normal">(선택)</span>
+            </Label>
+            <Textarea
+              rows={3}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="간단한 자기소개나 지원 동기를 남겨주세요."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              이력서 파일{" "}
+              <span className="text-muted-foreground font-normal">
+                (PDF, Word, 이미지 · 5MB 이하)
+              </span>
+            </Label>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  document.getElementById("resume-file-input")?.click()
+                }
+              >
+                <FileUp className="mr-2 h-4 w-4" />
+                파일 선택
+              </Button>
+              {fileName && (
+                <span className="text-sm text-muted-foreground truncate">
+                  {fileName}
+                </span>
+              )}
+            </div>
+            <input
+              id="resume-file-input"
+              type="file"
+              accept={RESUME_ACCEPT}
+              className="hidden"
+              onChange={onPickFile}
+            />
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <Button type="submit" disabled={createResume.isPending}>
+              {createResume.isPending ? "접수 중..." : "이력서 접수하기"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function TalentPool() {
   const [tab, setTab] = useState<"hiring" | "seeking">("hiring");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -106,8 +349,12 @@ export default function TalentPool() {
   const queryClient = useQueryClient();
 
   const { data: posts, isLoading } = useListTalentPosts({ postType: tab });
+  const { data: hiringPosts } = useListTalentPosts({ postType: "hiring" });
   const createPost = useCreateTalentPost();
   const deletePost = useDeleteTalentPost();
+
+  const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [resumeTarget, setResumeTarget] = useState<TalentPost | null>(null);
 
   const [keyword, setKeyword] = useState("");
   const [fPosition, setFPosition] = useState(ALL);
@@ -131,6 +378,25 @@ export default function TalentPool() {
   useEffect(() => {
     resetFilters();
   }, [tab]);
+
+  const goToHiring = (id: number) => {
+    setTab("hiring");
+    setHighlightId(id);
+  };
+
+  useEffect(() => {
+    if (highlightId == null) return;
+    const scroll = setTimeout(() => {
+      document
+        .getElementById(`talent-card-${highlightId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    const clear = setTimeout(() => setHighlightId(null), 2600);
+    return () => {
+      clearTimeout(scroll);
+      clearTimeout(clear);
+    };
+  }, [highlightId, tab]);
 
   const hasActiveFilters =
     keyword.trim() !== "" ||
@@ -729,7 +995,16 @@ export default function TalentPool() {
               ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {filteredPosts.map((post) => (
-                <Card key={post.id} className="flex flex-col">
+                <Card
+                  key={post.id}
+                  id={`talent-card-${post.id}`}
+                  className={
+                    "flex flex-col scroll-mt-24 transition-shadow" +
+                    (highlightId === post.id
+                      ? " ring-2 ring-primary shadow-lg"
+                      : "")
+                  }
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
                       <div className="space-y-1">
@@ -850,6 +1125,58 @@ export default function TalentPool() {
                         )}
                       </div>
                     )}
+
+                    {post.postType === "hiring" && (
+                      <div className="pt-3 mt-auto border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-1.5"
+                          onClick={() => setResumeTarget(post)}
+                        >
+                          <FileUp className="h-4 w-4" />
+                          이력서 접수
+                        </Button>
+                      </div>
+                    )}
+
+                    {post.postType === "seeking" &&
+                      (() => {
+                        const matches = findMatchingHiring(
+                          post,
+                          hiringPosts ?? [],
+                        );
+                        if (matches.length === 0) return null;
+                        return (
+                          <div className="pt-3 mt-auto border-t space-y-1.5">
+                            <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                              <Link2 className="h-3.5 w-3.5" />
+                              매칭되는 구인 정보
+                            </p>
+                            <div className="flex flex-col gap-1">
+                              {matches.map((h) => (
+                                <button
+                                  key={h.id}
+                                  type="button"
+                                  onClick={() => goToHiring(h.id)}
+                                  className="group flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm hover:border-primary/50 hover:bg-primary/5"
+                                >
+                                  <span className="truncate">
+                                    <span className="font-medium">{h.title}</span>
+                                    {h.authorName && (
+                                      <span className="text-muted-foreground">
+                                        {" "}
+                                        · {h.authorName}
+                                      </span>
+                                    )}
+                                  </span>
+                                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
                   </CardContent>
                 </Card>
               ))}
@@ -859,6 +1186,8 @@ export default function TalentPool() {
           )}
         </TabsContent>
       </Tabs>
+
+      <ResumeDialog post={resumeTarget} onClose={() => setResumeTarget(null)} />
     </div>
   );
 }

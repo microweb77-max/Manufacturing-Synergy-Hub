@@ -1377,6 +1377,100 @@ export const DeleteProjectApplicationResponse = zod.void()
 
 
 /**
+ * @summary List resume submissions for hiring posts (admin only)
+ */
+export const ListResumeSubmissionsQueryParams = zod.object({
+  "talentPostId": zod.coerce.number().optional()
+})
+
+export const ListResumeSubmissionsResponseItem = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "jobTitle": zod.string(),
+  "jobAuthorName": zod.string(),
+  "applicantName": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "message": zod.string(),
+  "resumeFileName": zod.string(),
+  "resumeFileData": zod.string(),
+  "status": zod.enum(['received', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListResumeSubmissionsResponse = zod.array(ListResumeSubmissionsResponseItem)
+
+
+/**
+ * @summary Submit a resume to a hiring post (이력서 접수)
+ */
+export const CreateResumeSubmissionBody = zod.object({
+  "talentPostId": zod.number(),
+  "applicantName": zod.string(),
+  "contactEmail": zod.string().optional(),
+  "contactPhone": zod.string().optional(),
+  "message": zod.string().optional(),
+  "resumeFileName": zod.string().optional(),
+  "resumeFileData": zod.string().optional()
+})
+
+export const CreateResumeSubmissionResponse = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "jobTitle": zod.string(),
+  "jobAuthorName": zod.string(),
+  "applicantName": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "message": zod.string(),
+  "resumeFileName": zod.string(),
+  "resumeFileData": zod.string(),
+  "status": zod.enum(['received', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a resume submission (admin only)
+ */
+export const UpdateResumeSubmissionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateResumeSubmissionBody = zod.object({
+  "status": zod.enum(['received', 'reviewing', 'accepted', 'rejected']).optional(),
+  "adminNote": zod.string().optional()
+})
+
+export const UpdateResumeSubmissionResponse = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "jobTitle": zod.string(),
+  "jobAuthorName": zod.string(),
+  "applicantName": zod.string(),
+  "contactEmail": zod.string().nullable(),
+  "contactPhone": zod.string().nullable(),
+  "message": zod.string(),
+  "resumeFileName": zod.string(),
+  "resumeFileData": zod.string(),
+  "status": zod.enum(['received', 'reviewing', 'accepted', 'rejected']),
+  "adminNote": zod.string(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a resume submission (admin only)
+ */
+export const DeleteResumeSubmissionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteResumeSubmissionResponse = zod.void()
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({

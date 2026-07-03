@@ -9,6 +9,7 @@ import talentRouter from "./talent";
 import supplyOffersRouter from "./supplyOffers";
 import offerMatchesRouter from "./offerMatches";
 import projectApplicationsRouter from "./applications";
+import resumeSubmissionsRouter from "./resumeSubmissions";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 
@@ -24,6 +25,7 @@ router.use(talentRouter);
 router.use(supplyOffersRouter);
 router.use(offerMatchesRouter);
 router.use(projectApplicationsRouter);
+router.use(resumeSubmissionsRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
 

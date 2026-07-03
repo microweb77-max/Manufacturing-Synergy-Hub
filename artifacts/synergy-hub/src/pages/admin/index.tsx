@@ -43,6 +43,10 @@ import {
   useUpdateProjectApplication,
   useDeleteProjectApplication,
   getListProjectApplicationsQueryKey,
+  useListResumeSubmissions,
+  useUpdateResumeSubmission,
+  useDeleteResumeSubmission,
+  getListResumeSubmissionsQueryKey,
   useCollectJobs,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
@@ -74,6 +78,8 @@ import {
   PackageSearch,
   Handshake,
   UserPlus,
+  FileText,
+  Download,
 } from "lucide-react";
 import {
   AdminSection,
@@ -1213,6 +1219,179 @@ function OfferMatchesAdmin() {
   );
 }
 
+function ResumeSubmissionsAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListResumeSubmissions({});
+  const update = useUpdateResumeSubmission();
+  const del = useDeleteResumeSubmission();
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListResumeSubmissionsQueryKey() });
+
+  const statusOptions = [
+    { value: "received", label: "접수됨 (received)" },
+    { value: "reviewing", label: "검토중 (reviewing)" },
+    { value: "accepted", label: "합격 (accepted)" },
+    { value: "rejected", label: "불합격 (rejected)" },
+  ];
+
+  const statusLabel: Record<string, string> = {
+    received: "접수됨",
+    reviewing: "검토중",
+    accepted: "합격",
+    rejected: "불합격",
+  };
+
+  return (
+    <AdminSection
+      title="이력서 접수"
+      description="구인 공고에 접수된 이력서 내역입니다. (열람은 관리자만) 상태와 메모만 수정됩니다."
+      items={data}
+      isLoading={isLoading}
+      canCreate={false}
+      getId={(a) => a.id}
+      getRowLabel={(a) => `이력서 #${a.id}`}
+      getSearchText={(a) =>
+        [a.jobTitle ?? "", a.applicantName ?? "", a.contactEmail ?? ""].join(" ")
+      }
+      searchPlaceholder="공고 · 지원자 · 이메일 검색"
+      filters={[
+        {
+          key: "status",
+          label: "상태",
+          getValue: (a) => a.status,
+          options: statusOptions.map((o) => ({
+            value: o.value,
+            label: statusLabel[o.value] ?? o.label,
+          })),
+        },
+      ]}
+      columns={[
+        {
+          key: "job",
+          header: "구인 공고",
+          render: (a) => (
+            <span className="font-medium">
+              {a.jobTitle || `#${a.talentPostId}`}
+            </span>
+          ),
+          sortValue: (a) => a.jobTitle ?? "",
+        },
+        {
+          key: "applicant",
+          header: "지원자",
+          render: (a) => a.applicantName || "-",
+          sortValue: (a) => a.applicantName ?? "",
+        },
+        {
+          key: "contact",
+          header: "연락처",
+          render: (a) => (
+            <span className="text-xs text-muted-foreground">
+              {[a.contactEmail, a.contactPhone].filter(Boolean).join(" / ") ||
+                "-"}
+            </span>
+          ),
+        },
+        {
+          key: "resume",
+          header: "이력서",
+          render: (a) =>
+            a.resumeFileData ? (
+              <a
+                href={a.resumeFileData}
+                download={a.resumeFileName || `resume-${a.id}`}
+                className="inline-flex items-center gap-1 text-primary hover:underline"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {a.resumeFileName || "다운로드"}
+              </a>
+            ) : (
+              <span className="text-xs text-muted-foreground">파일 없음</span>
+            ),
+        },
+        {
+          key: "status",
+          header: "상태",
+          render: (a) => (
+            <Badge variant="outline">{statusLabel[a.status] ?? a.status}</Badge>
+          ),
+          sortValue: (a) => a.status,
+        },
+        {
+          key: "createdAt",
+          header: "접수일",
+          render: (a) => formatDateTime(a.createdAt),
+          sortValue: (a) => a.createdAt,
+        },
+      ]}
+      fields={[
+        { name: "jobTitle", label: "구인 공고", type: "readonly" },
+        { name: "applicantName", label: "지원자", type: "readonly" },
+        { name: "contactEmail", label: "이메일", type: "readonly" },
+        { name: "contactPhone", label: "연락처", type: "readonly" },
+        { name: "createdAt", label: "접수일", type: "readonly" },
+        { name: "message", label: "자기소개 / 지원 메시지", type: "readonly", full: true },
+        { name: "status", label: "상태", type: "select", options: statusOptions },
+        { name: "adminNote", label: "관리자 메모", type: "textarea", full: true },
+      ]}
+      emptyValues={{
+        jobTitle: "",
+        applicantName: "",
+        contactEmail: "",
+        contactPhone: "",
+        createdAt: "",
+        message: "",
+        status: "received",
+        adminNote: "",
+      }}
+      toFormValues={(a) => ({
+        jobTitle: a.jobTitle,
+        applicantName: a.applicantName,
+        contactEmail: a.contactEmail ?? "",
+        contactPhone: a.contactPhone ?? "",
+        createdAt: formatDateTime(a.createdAt),
+        message: a.message ?? "",
+        status: a.status,
+        adminNote: a.adminNote ?? "",
+      })}
+      onCreate={async () => {
+        throw new Error("not supported");
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({
+            id,
+            data: {
+              status: v.status as
+                | "received"
+                | "reviewing"
+                | "accepted"
+                | "rejected",
+              adminNote: v.adminNote,
+            },
+          });
+          toast({ title: "수정 완료", description: "이력서 상태가 변경되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "이력서가 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
 function ProjectApplicationsAdmin() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -1366,6 +1545,7 @@ function AdminDashboard() {
   const offers = useListSupplyOffers();
   const offerMatches = useListOfferMatches();
   const applications = useListProjectApplications({});
+  const resumes = useListResumeSubmissions({});
 
   const talentPosts = talent.data ?? [];
   const hiring = talentPosts.filter((t) => t.postType === "hiring").length;
@@ -1395,6 +1575,12 @@ function AdminDashboard() {
       label: "프로젝트 지원",
       value: applications.data?.length ?? 0,
       isLoading: applications.isLoading,
+    },
+    {
+      icon: <FileText className="h-5 w-5" />,
+      label: "이력서 접수",
+      value: resumes.data?.length ?? 0,
+      isLoading: resumes.isLoading,
     },
     {
       icon: <Package className="h-5 w-5" />,
@@ -1458,6 +1644,7 @@ export default function AdminPage() {
           <TabsTrigger value="projects">프로젝트</TabsTrigger>
           <TabsTrigger value="matches">매칭</TabsTrigger>
           <TabsTrigger value="applications">프로젝트 지원</TabsTrigger>
+          <TabsTrigger value="resumes">이력서 접수</TabsTrigger>
           <TabsTrigger value="solutions">솔루션</TabsTrigger>
           <TabsTrigger value="performance">성과</TabsTrigger>
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
@@ -1475,6 +1662,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="applications" className="mt-6">
           <ProjectApplicationsAdmin />
+        </TabsContent>
+        <TabsContent value="resumes" className="mt-6">
+          <ResumeSubmissionsAdmin />
         </TabsContent>
         <TabsContent value="solutions" className="mt-6">
           <SolutionsAdmin />

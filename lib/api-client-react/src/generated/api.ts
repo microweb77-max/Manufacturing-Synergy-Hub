@@ -37,6 +37,7 @@ import type {
   ListPerformanceLogsParams,
   ListProjectApplicationsParams,
   ListProjectsParams,
+  ListResumeSubmissionsParams,
   ListSolutionsParams,
   ListSupplyOffersParams,
   ListTalentPostsParams,
@@ -56,6 +57,9 @@ import type {
   ProjectInput,
   ProjectUpdate,
   Recommendation,
+  ResumeSubmission,
+  ResumeSubmissionInput,
+  ResumeSubmissionUpdate,
   Solution,
   SolutionInput,
   SolutionUpdate,
@@ -3420,6 +3424,301 @@ export const useDeleteProjectApplication = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteProjectApplicationMutationOptions(options));
+    }
+
+export const getListResumeSubmissionsUrl = (params?: ListResumeSubmissionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/resume-submissions?${stringifiedParams}` : `/api/resume-submissions`
+}
+
+/**
+ * @summary List resume submissions for hiring posts (admin only)
+ */
+export const listResumeSubmissions = async (params?: ListResumeSubmissionsParams, options?: RequestInit): Promise<ResumeSubmission[]> => {
+
+  return customFetch<ResumeSubmission[]>(getListResumeSubmissionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListResumeSubmissionsQueryKey = (params?: ListResumeSubmissionsParams,) => {
+    return [
+    `/api/resume-submissions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListResumeSubmissionsQueryOptions = <TData = Awaited<ReturnType<typeof listResumeSubmissions>>, TError = ErrorType<unknown>>(params?: ListResumeSubmissionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listResumeSubmissions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListResumeSubmissionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listResumeSubmissions>>> = ({ signal }) => listResumeSubmissions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listResumeSubmissions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListResumeSubmissionsQueryResult = NonNullable<Awaited<ReturnType<typeof listResumeSubmissions>>>
+export type ListResumeSubmissionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List resume submissions for hiring posts (admin only)
+ */
+
+export function useListResumeSubmissions<TData = Awaited<ReturnType<typeof listResumeSubmissions>>, TError = ErrorType<unknown>>(
+ params?: ListResumeSubmissionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listResumeSubmissions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListResumeSubmissionsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateResumeSubmissionUrl = () => {
+
+
+
+
+  return `/api/resume-submissions`
+}
+
+/**
+ * @summary Submit a resume to a hiring post (이력서 접수)
+ */
+export const createResumeSubmission = async (resumeSubmissionInput: ResumeSubmissionInput, options?: RequestInit): Promise<ResumeSubmission> => {
+
+  return customFetch<ResumeSubmission>(getCreateResumeSubmissionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(resumeSubmissionInput)
+  }
+);}
+
+
+
+
+export const getCreateResumeSubmissionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createResumeSubmission>>, TError,{data: BodyType<ResumeSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createResumeSubmission>>, TError,{data: BodyType<ResumeSubmissionInput>}, TContext> => {
+
+const mutationKey = ['createResumeSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createResumeSubmission>>, {data: BodyType<ResumeSubmissionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createResumeSubmission(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateResumeSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof createResumeSubmission>>>
+    export type CreateResumeSubmissionMutationBody = BodyType<ResumeSubmissionInput>
+    export type CreateResumeSubmissionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Submit a resume to a hiring post (이력서 접수)
+ */
+export const useCreateResumeSubmission = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createResumeSubmission>>, TError,{data: BodyType<ResumeSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createResumeSubmission>>,
+        TError,
+        {data: BodyType<ResumeSubmissionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateResumeSubmissionMutationOptions(options));
+    }
+
+export const getUpdateResumeSubmissionUrl = (id: number,) => {
+
+
+
+
+  return `/api/resume-submissions/${id}`
+}
+
+/**
+ * @summary Update a resume submission (admin only)
+ */
+export const updateResumeSubmission = async (id: number,
+    resumeSubmissionUpdate: ResumeSubmissionUpdate, options?: RequestInit): Promise<ResumeSubmission> => {
+
+  return customFetch<ResumeSubmission>(getUpdateResumeSubmissionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(resumeSubmissionUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateResumeSubmissionMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateResumeSubmission>>, TError,{id: number;data: BodyType<ResumeSubmissionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateResumeSubmission>>, TError,{id: number;data: BodyType<ResumeSubmissionUpdate>}, TContext> => {
+
+const mutationKey = ['updateResumeSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateResumeSubmission>>, {id: number;data: BodyType<ResumeSubmissionUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateResumeSubmission(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateResumeSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof updateResumeSubmission>>>
+    export type UpdateResumeSubmissionMutationBody = BodyType<ResumeSubmissionUpdate>
+    export type UpdateResumeSubmissionMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update a resume submission (admin only)
+ */
+export const useUpdateResumeSubmission = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateResumeSubmission>>, TError,{id: number;data: BodyType<ResumeSubmissionUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateResumeSubmission>>,
+        TError,
+        {id: number;data: BodyType<ResumeSubmissionUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateResumeSubmissionMutationOptions(options));
+    }
+
+export const getDeleteResumeSubmissionUrl = (id: number,) => {
+
+
+
+
+  return `/api/resume-submissions/${id}`
+}
+
+/**
+ * @summary Delete a resume submission (admin only)
+ */
+export const deleteResumeSubmission = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteResumeSubmissionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteResumeSubmissionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteResumeSubmission>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteResumeSubmission>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteResumeSubmission'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteResumeSubmission>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteResumeSubmission(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteResumeSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteResumeSubmission>>>
+
+    export type DeleteResumeSubmissionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a resume submission (admin only)
+ */
+export const useDeleteResumeSubmission = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteResumeSubmission>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteResumeSubmission>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteResumeSubmissionMutationOptions(options));
     }
 
 export const getListClientCompaniesUrl = () => {

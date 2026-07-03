@@ -552,6 +552,59 @@ export interface ProjectApplicationUpdate {
   adminNote?: string;
 }
 
+export type ResumeSubmissionStatus = typeof ResumeSubmissionStatus[keyof typeof ResumeSubmissionStatus];
+
+
+export const ResumeSubmissionStatus = {
+  received: 'received',
+  reviewing: 'reviewing',
+  accepted: 'accepted',
+  rejected: 'rejected',
+} as const;
+
+export interface ResumeSubmission {
+  id: number;
+  talentPostId: number;
+  jobTitle: string;
+  jobAuthorName: string;
+  applicantName: string;
+  /** @nullable */
+  contactEmail: string | null;
+  /** @nullable */
+  contactPhone: string | null;
+  message: string;
+  resumeFileName: string;
+  resumeFileData: string;
+  status: ResumeSubmissionStatus;
+  adminNote: string;
+  createdAt: string;
+}
+
+export interface ResumeSubmissionInput {
+  talentPostId: number;
+  applicantName: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  message?: string;
+  resumeFileName?: string;
+  resumeFileData?: string;
+}
+
+export type ResumeSubmissionUpdateStatus = typeof ResumeSubmissionUpdateStatus[keyof typeof ResumeSubmissionUpdateStatus];
+
+
+export const ResumeSubmissionUpdateStatus = {
+  received: 'received',
+  reviewing: 'reviewing',
+  accepted: 'accepted',
+  rejected: 'rejected',
+} as const;
+
+export interface ResumeSubmissionUpdate {
+  status?: ResumeSubmissionUpdateStatus;
+  adminNote?: string;
+}
+
 export interface TagCount {
   tag: string;
   count: number;
@@ -658,5 +711,9 @@ search?: string;
 
 export type ListProjectApplicationsParams = {
 projectId?: number;
+};
+
+export type ListResumeSubmissionsParams = {
+talentPostId?: number;
 };
 

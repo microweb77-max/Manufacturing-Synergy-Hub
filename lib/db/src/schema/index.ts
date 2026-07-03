@@ -6,3 +6,4 @@ export * from "./performance";
 export * from "./talent";
 export * from "./offers";
 export * from "./applications";
+export * from "./resumes";
