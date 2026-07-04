@@ -42,6 +42,8 @@ export * from './matchInput';
 export * from './matchStatus';
 export * from './matchUpdate';
 export * from './matchUpdateStatus';
+export * from './navSetting';
+export * from './navSettingUpdate';
 export * from './offerMatch';
 export * from './offerMatchInput';
 export * from './offerMatchStatus';

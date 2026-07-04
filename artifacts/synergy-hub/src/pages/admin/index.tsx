@@ -47,6 +47,9 @@ import {
   useUpdateResumeSubmission,
   useDeleteResumeSubmission,
   getListResumeSubmissionsQueryKey,
+  useListNavSettings,
+  useUpsertNavSetting,
+  getListNavSettingsQueryKey,
   useCollectJobs,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
@@ -57,6 +60,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { NAV_ITEMS, isNavItemHidden } from "@/lib/navItems";
 import {
   Dialog,
   DialogContent,
@@ -1394,6 +1399,91 @@ function ResumeSubmissionsAdmin() {
   );
 }
 
+function MenuManagementAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data: navSettings, isLoading } = useListNavSettings();
+  const upsert = useUpsertNavSetting();
+
+  const overrides: Record<string, boolean> = {};
+  for (const s of navSettings ?? []) overrides[s.key] = s.hidden;
+
+  const toggle = async (key: string, nextVisible: boolean) => {
+    try {
+      await upsert.mutateAsync({ key, data: { hidden: !nextVisible } });
+      await qc.invalidateQueries({ queryKey: getListNavSettingsQueryKey() });
+      toast({
+        title: "메뉴 설정 저장됨",
+        description: nextVisible
+          ? "메뉴가 표시됩니다."
+          : "메뉴가 숨겨집니다.",
+      });
+    } catch {
+      toast({
+        title: "오류",
+        description: "메뉴 설정 저장에 실패했습니다.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-xl font-semibold">메뉴 관리</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          사이드바에 표시할 메뉴를 켜고 끕니다. 숨겨진 메뉴는 사이드바에서만
+          보이지 않으며, 기능과 페이지는 그대로 유지됩니다 (직접 URL 접근 가능).
+        </p>
+      </div>
+
+      <Card>
+        <CardContent className="p-0 divide-y">
+          {isLoading ? (
+            <div className="p-6 flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              불러오는 중...
+            </div>
+          ) : (
+            NAV_ITEMS.map((item) => {
+              const hidden = isNavItemHidden(item, overrides);
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between gap-4 p-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted shrink-0">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{item.label}</div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {item.href}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Badge variant={hidden ? "outline" : "secondary"}>
+                      {hidden ? "숨김" : "표시"}
+                    </Badge>
+                    <Switch
+                      checked={!hidden}
+                      onCheckedChange={(checked) => toggle(item.key, checked)}
+                      disabled={upsert.isPending}
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function ProjectApplicationsAdmin() {
   const { toast } = useToast();
   const qc = useQueryClient();
@@ -1652,6 +1742,7 @@ export default function AdminPage() {
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
           <TabsTrigger value="offers">공급 오퍼</TabsTrigger>
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
+          <TabsTrigger value="menu">메뉴 관리</TabsTrigger>
         </TabsList>
         <TabsContent value="companies" className="mt-6">
           <CompaniesAdmin />
@@ -1682,6 +1773,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="offer-matches" className="mt-6">
           <OfferMatchesAdmin />
+        </TabsContent>
+        <TabsContent value="menu" className="mt-6">
+          <MenuManagementAdmin />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,29 +1,19 @@
 import { Link, useLocation } from "wouter";
-import { 
-  Factory, 
-  Activity, 
-  Network, 
-  Server, 
-  Users, 
-  LayoutDashboard,
-  Building2,
-  Package
-} from "lucide-react";
+import { Factory } from "lucide-react";
+import { useListNavSettings } from "@workspace/api-client-react";
+import { NAV_ITEMS, isNavItemHidden } from "@/lib/navItems";
 import networkLogo from "../assets/network-logo.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { data: navSettings } = useListNavSettings();
 
-  const navItems = [
-    { href: "/", label: "대시보드", icon: LayoutDashboard },
-    { href: "/companies", label: "공급사 디렉토리", icon: Factory },
-    { href: "/client-companies", label: "고객사 디렉토리", icon: Building2 },
-    { href: "/offers", label: "오퍼 리스트", icon: Package },
-    { href: "/projects", label: "프로젝트 의뢰", icon: Activity },
-    { href: "/matches", label: "매칭 보드", icon: Network },
-    { href: "/solutions", label: "솔루션 갤러리", icon: Server },
-    { href: "/talent", label: "인력 Pool", icon: Users },
-  ];
+  const overrides: Record<string, boolean> = {};
+  for (const s of navSettings ?? []) overrides[s.key] = s.hidden;
+
+  const navItems = NAV_ITEMS.filter(
+    (item) => !isNavItemHidden(item, overrides),
+  );
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

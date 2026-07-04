@@ -1032,6 +1032,45 @@ paths:
         "204":
           description: Deleted
 
+  /nav-settings:
+    get:
+      operationId: listNavSettings
+      tags: [navSettings]
+      summary: List sidebar menu visibility overrides
+      responses:
+        "200":
+          description: Menu visibility overrides
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NavSetting"
+  /nav-settings/{key}:
+    put:
+      operationId: upsertNavSetting
+      tags: [navSettings]
+      summary: Set a sidebar menu item's visibility (admin only)
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NavSettingUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NavSetting"
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -2055,6 +2094,28 @@ components:
           enum: [received, reviewing, accepted, rejected]
         adminNote:
           type: string
+
+    NavSetting:
+      type: object
+      required:
+        - key
+        - hidden
+        - updatedAt
+      properties:
+        key:
+          type: string
+        hidden:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+    NavSettingUpdate:
+      type: object
+      required:
+        - hidden
+      properties:
+        hidden:
+          type: boolean
 
     DashboardSummary:
       type: object

@@ -605,6 +605,16 @@ export interface ResumeSubmissionUpdate {
   adminNote?: string;
 }
 
+export interface NavSetting {
+  key: string;
+  hidden: boolean;
+  updatedAt: string;
+}
+
+export interface NavSettingUpdate {
+  hidden: boolean;
+}
+
 export interface TagCount {
   tag: string;
   count: number;

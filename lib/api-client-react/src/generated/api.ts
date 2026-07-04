@@ -44,6 +44,8 @@ import type {
   Match,
   MatchInput,
   MatchUpdate,
+  NavSetting,
+  NavSettingUpdate,
   OfferMatch,
   OfferMatchInput,
   OfferMatchUpdate,
@@ -3719,6 +3721,154 @@ export const useDeleteResumeSubmission = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteResumeSubmissionMutationOptions(options));
+    }
+
+export const getListNavSettingsUrl = () => {
+
+
+
+
+  return `/api/nav-settings`
+}
+
+/**
+ * @summary List sidebar menu visibility overrides
+ */
+export const listNavSettings = async ( options?: RequestInit): Promise<NavSetting[]> => {
+
+  return customFetch<NavSetting[]>(getListNavSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNavSettingsQueryKey = () => {
+    return [
+    `/api/nav-settings`
+    ] as const;
+    }
+
+
+export const getListNavSettingsQueryOptions = <TData = Awaited<ReturnType<typeof listNavSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNavSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNavSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNavSettings>>> = ({ signal }) => listNavSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNavSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNavSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof listNavSettings>>>
+export type ListNavSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List sidebar menu visibility overrides
+ */
+
+export function useListNavSettings<TData = Awaited<ReturnType<typeof listNavSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNavSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNavSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpsertNavSettingUrl = (key: string,) => {
+
+
+
+
+  return `/api/nav-settings/${key}`
+}
+
+/**
+ * @summary Set a sidebar menu item's visibility (admin only)
+ */
+export const upsertNavSetting = async (key: string,
+    navSettingUpdate: NavSettingUpdate, options?: RequestInit): Promise<NavSetting> => {
+
+  return customFetch<NavSetting>(getUpsertNavSettingUrl(key),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(navSettingUpdate)
+  }
+);}
+
+
+
+
+export const getUpsertNavSettingMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertNavSetting>>, TError,{key: string;data: BodyType<NavSettingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof upsertNavSetting>>, TError,{key: string;data: BodyType<NavSettingUpdate>}, TContext> => {
+
+const mutationKey = ['upsertNavSetting'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof upsertNavSetting>>, {key: string;data: BodyType<NavSettingUpdate>}> = (props) => {
+          const {key,data} = props ?? {};
+
+          return  upsertNavSetting(key,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpsertNavSettingMutationResult = NonNullable<Awaited<ReturnType<typeof upsertNavSetting>>>
+    export type UpsertNavSettingMutationBody = BodyType<NavSettingUpdate>
+    export type UpsertNavSettingMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Set a sidebar menu item's visibility (admin only)
+ */
+export const useUpsertNavSetting = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof upsertNavSetting>>, TError,{key: string;data: BodyType<NavSettingUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof upsertNavSetting>>,
+        TError,
+        {key: string;data: BodyType<NavSettingUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpsertNavSettingMutationOptions(options));
     }
 
 export const getListClientCompaniesUrl = () => {

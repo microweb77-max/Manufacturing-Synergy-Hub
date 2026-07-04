@@ -1471,6 +1471,35 @@ export const DeleteResumeSubmissionResponse = zod.void()
 
 
 /**
+ * @summary List sidebar menu visibility overrides
+ */
+export const ListNavSettingsResponseItem = zod.object({
+  "key": zod.string(),
+  "hidden": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListNavSettingsResponse = zod.array(ListNavSettingsResponseItem)
+
+
+/**
+ * @summary Set a sidebar menu item's visibility (admin only)
+ */
+export const UpsertNavSettingParams = zod.object({
+  "key": zod.coerce.string()
+})
+
+export const UpsertNavSettingBody = zod.object({
+  "hidden": zod.boolean()
+})
+
+export const UpsertNavSettingResponse = zod.object({
+  "key": zod.string(),
+  "hidden": zod.boolean(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({
