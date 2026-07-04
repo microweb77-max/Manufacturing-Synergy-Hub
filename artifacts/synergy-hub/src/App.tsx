@@ -23,6 +23,8 @@ import NewSolution from "./pages/solutions/new";
 
 import TalentPool from "./pages/talent";
 
+import NewsPage from "./pages/news";
+
 import AdminPage from "./pages/admin";
 
 import ClientCompaniesPage from "./pages/client-companies";
@@ -59,6 +61,8 @@ function Router() {
         <Route path="/solutions/:id" component={SolutionDetail} />
         
         <Route path="/talent" component={TalentPool} />
+
+        <Route path="/news" component={NewsPage} />
 
         <Route path="/client-companies" component={ClientCompaniesPage} />
 

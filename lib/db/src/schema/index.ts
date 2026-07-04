@@ -8,3 +8,4 @@ export * from "./offers";
 export * from "./applications";
 export * from "./resumes";
 export * from "./nav";
+export * from "./news";

@@ -348,6 +348,33 @@ export interface TalentPost {
   createdAt: string;
 }
 
+export interface NewsArticle {
+  id: number;
+  title: string;
+  summary: string;
+  category: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  /** @nullable */
+  source?: string | null;
+  /** @nullable */
+  sourceUrl?: string | null;
+  /** @nullable */
+  publishedAt?: string | null;
+  createdAt: string;
+}
+
+export interface CollectNewsRequest {
+  /** Optional topic/keyword focus (e.g. 반도체, 물류, FDI, 자동화) */
+  topic?: string;
+}
+
+export interface CollectNewsResult {
+  inserted: number;
+  skipped: number;
+  articles: NewsArticle[];
+}
+
 /**
  * Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring.
  */

@@ -12,6 +12,7 @@ import {
 const router: IRouter = Router();
 
 const VALID_NAV_KEYS = new Set([
+  "news",
   "dashboard",
   "companies",
   "client-companies",

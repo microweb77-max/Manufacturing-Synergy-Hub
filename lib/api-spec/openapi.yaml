@@ -24,6 +24,8 @@ tags:
     description: Talent pool job postings and seekers
   - name: clientCompanies
     description: Korean FDI manufacturing client directory (KOTRA)
+  - name: news
+    description: Vietnam manufacturing news (crawled and translated to Korean)
   - name: dashboard
     description: Aggregated dashboard data
 paths:
@@ -1071,6 +1073,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/NavSetting"
 
+  /news:
+    get:
+      operationId: listNews
+      tags: [news]
+      summary: List collected Vietnam manufacturing news (translated to Korean)
+      responses:
+        "200":
+          description: News articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NewsArticle"
+  /news/collect:
+    post:
+      operationId: collectNews
+      tags: [news]
+      summary: Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectNewsRequest"
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectNewsResult"
+        "502":
+          description: Collection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -1715,6 +1756,54 @@ components:
           type: ["string", "null"]
         createdAt:
           type: string
+    NewsArticle:
+      type: object
+      required:
+        - id
+        - title
+        - summary
+        - category
+        - createdAt
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        summary:
+          type: string
+        category:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        source:
+          type: ["string", "null"]
+        sourceUrl:
+          type: ["string", "null"]
+        publishedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+    CollectNewsRequest:
+      type: object
+      properties:
+        topic:
+          type: string
+          description: Optional topic/keyword focus (e.g. 반도체, 물류, FDI, 자동화)
+    CollectNewsResult:
+      type: object
+      required:
+        - inserted
+        - skipped
+        - articles
+      properties:
+        inserted:
+          type: integer
+        skipped:
+          type: integer
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsArticle"
     CollectJobsRequest:
       type: object
       properties:

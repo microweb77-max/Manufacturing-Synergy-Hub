@@ -26,6 +26,8 @@ import type {
   ClientCompany,
   CollectJobsRequest,
   CollectJobsResult,
+  CollectNewsRequest,
+  CollectNewsResult,
   Company,
   CompanyInput,
   CompanyUpdate,
@@ -46,6 +48,7 @@ import type {
   MatchUpdate,
   NavSetting,
   NavSettingUpdate,
+  NewsArticle,
   OfferMatch,
   OfferMatchInput,
   OfferMatchUpdate,
@@ -3869,6 +3872,153 @@ export const useUpsertNavSetting = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpsertNavSettingMutationOptions(options));
+    }
+
+export const getListNewsUrl = () => {
+
+
+
+
+  return `/api/news`
+}
+
+/**
+ * @summary List collected Vietnam manufacturing news (translated to Korean)
+ */
+export const listNews = async ( options?: RequestInit): Promise<NewsArticle[]> => {
+
+  return customFetch<NewsArticle[]>(getListNewsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNewsQueryKey = () => {
+    return [
+    `/api/news`
+    ] as const;
+    }
+
+
+export const getListNewsQueryOptions = <TData = Awaited<ReturnType<typeof listNews>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNewsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNews>>> = ({ signal }) => listNews({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNewsQueryResult = NonNullable<Awaited<ReturnType<typeof listNews>>>
+export type ListNewsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List collected Vietnam manufacturing news (translated to Korean)
+ */
+
+export function useListNews<TData = Awaited<ReturnType<typeof listNews>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNewsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCollectNewsUrl = () => {
+
+
+
+
+  return `/api/news/collect`
+}
+
+/**
+ * @summary Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
+ */
+export const collectNews = async (collectNewsRequest?: CollectNewsRequest, options?: RequestInit): Promise<CollectNewsResult> => {
+
+  return customFetch<CollectNewsResult>(getCollectNewsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(collectNewsRequest)
+  }
+);}
+
+
+
+
+export const getCollectNewsMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectNews>>, TError,{data?: BodyType<CollectNewsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof collectNews>>, TError,{data?: BodyType<CollectNewsRequest>}, TContext> => {
+
+const mutationKey = ['collectNews'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectNews>>, {data?: BodyType<CollectNewsRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  collectNews(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CollectNewsMutationResult = NonNullable<Awaited<ReturnType<typeof collectNews>>>
+    export type CollectNewsMutationBody = BodyType<CollectNewsRequest> | undefined
+    export type CollectNewsMutationError = ErrorType<Error>
+
+    /**
+ * @summary Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
+ */
+export const useCollectNews = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectNews>>, TError,{data?: BodyType<CollectNewsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof collectNews>>,
+        TError,
+        {data?: BodyType<CollectNewsRequest>},
+        TContext
+      > => {
+      return useMutation(getCollectNewsMutationOptions(options));
     }
 
 export const getListClientCompaniesUrl = () => {

@@ -1500,6 +1500,47 @@ export const UpsertNavSettingResponse = zod.object({
 
 
 /**
+ * @summary List collected Vietnam manufacturing news (translated to Korean)
+ */
+export const ListNewsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "category": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "source": zod.string().nullish(),
+  "sourceUrl": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListNewsResponse = zod.array(ListNewsResponseItem)
+
+
+/**
+ * @summary Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
+ */
+export const CollectNewsBody = zod.object({
+  "topic": zod.string().optional().describe('Optional topic\/keyword focus (e.g. 반도체, 물류, FDI, 자동화)')
+})
+
+export const CollectNewsResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "articles": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "summary": zod.string(),
+  "category": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "source": zod.string().nullish(),
+  "sourceUrl": zod.string().nullish(),
+  "publishedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+}))
+})
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({
