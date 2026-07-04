@@ -51,6 +51,11 @@ import {
   useUpsertNavSetting,
   getListNavSettingsQueryKey,
   useCollectJobs,
+  useListBanners,
+  useCreateBanner,
+  useUpdateBanner,
+  useDeleteBanner,
+  getListBannersQueryKey,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -85,6 +90,7 @@ import {
   UserPlus,
   FileText,
   Download,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   AdminSection,
@@ -1628,6 +1634,141 @@ function StatCard({
   );
 }
 
+function BannersAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListBanners();
+  const create = useCreateBanner();
+  const update = useUpdateBanner();
+  const del = useDeleteBanner();
+
+  const invalidate = () =>
+    qc.invalidateQueries({ queryKey: getListBannersQueryKey() });
+
+  const buildBody = (v: FormValues) => ({
+    title: v.title,
+    imageUrl: v.imageUrl,
+    linkUrl: v.linkUrl.trim() === "" ? null : v.linkUrl.trim(),
+    durationSeconds: Math.max(1, toNum(v.durationSeconds) || 5),
+    displayOrder: toNum(v.displayOrder) || 0,
+    active: v.active === "true",
+  });
+
+  return (
+    <AdminSection
+      title="배너"
+      description="대시보드 상단에 순환 표시되는 배너를 관리합니다. 각 배너는 지정한 표시 시간(초)만큼 노출된 뒤 다음 배너로 전환됩니다."
+      items={data}
+      isLoading={isLoading}
+      getId={(b) => b.id}
+      getRowLabel={(b) => b.title || `배너 #${b.id}`}
+      columns={[
+        {
+          key: "preview",
+          header: "미리보기",
+          render: (b) =>
+            b.imageUrl ? (
+              <img
+                src={b.imageUrl}
+                alt={b.title || "배너"}
+                className="h-10 w-28 rounded border object-cover"
+              />
+            ) : (
+              <span className="text-muted-foreground text-xs">-</span>
+            ),
+        },
+        {
+          key: "title",
+          header: "제목",
+          render: (b) => (
+            <span className="font-medium">{b.title || "-"}</span>
+          ),
+          sortValue: (b) => b.title,
+        },
+        {
+          key: "durationSeconds",
+          header: "표시 시간",
+          render: (b) => `${b.durationSeconds}초`,
+          sortValue: (b) => b.durationSeconds,
+        },
+        {
+          key: "displayOrder",
+          header: "순서",
+          render: (b) => b.displayOrder,
+          sortValue: (b) => b.displayOrder,
+        },
+        {
+          key: "active",
+          header: "상태",
+          render: (b) =>
+            b.active ? (
+              <Badge>표시</Badge>
+            ) : (
+              <span className="text-muted-foreground text-xs">숨김</span>
+            ),
+          sortValue: (b) => (b.active ? "1" : "0"),
+        },
+      ]}
+      fields={[
+        { name: "title", label: "제목", type: "text", full: true, placeholder: "배너 제목 (관리용 · 이미지 대체 텍스트)" },
+        { name: "imageUrl", label: "배너 이미지", type: "image", required: true, full: true },
+        { name: "linkUrl", label: "연결 링크", type: "text", full: true, placeholder: "클릭 시 이동할 URL (선택, https://...)" },
+        { name: "durationSeconds", label: "표시 시간(초)", type: "number", placeholder: "예: 5" },
+        { name: "displayOrder", label: "표시 순서", type: "number", placeholder: "숫자가 작을수록 먼저" },
+        { name: "active", label: "상태", type: "select", options: [
+          { value: "true", label: "표시" },
+          { value: "false", label: "숨김" },
+        ] },
+      ]}
+      emptyValues={{
+        title: "",
+        imageUrl: "",
+        linkUrl: "",
+        durationSeconds: "5",
+        displayOrder: "0",
+        active: "true",
+      }}
+      toFormValues={(b) => ({
+        title: b.title,
+        imageUrl: b.imageUrl,
+        linkUrl: b.linkUrl ?? "",
+        durationSeconds: String(b.durationSeconds),
+        displayOrder: String(b.displayOrder),
+        active: b.active ? "true" : "false",
+      })}
+      onCreate={async (v) => {
+        try {
+          await create.mutateAsync({ data: buildBody(v) });
+          toast({ title: "추가 완료", description: "배너가 등록되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({ id, data: buildBody(v) });
+          toast({ title: "수정 완료", description: "배너가 수정되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "배너가 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
 function AdminDashboard() {
   const companies = useListCompanies({});
   const projects = useListProjects({});
@@ -1638,6 +1779,7 @@ function AdminDashboard() {
   const offerMatches = useListOfferMatches();
   const applications = useListProjectApplications({});
   const resumes = useListResumeSubmissions({});
+  const banners = useListBanners();
 
   const talentPosts = talent.data ?? [];
   const hiring = talentPosts.filter((t) => t.postType === "hiring").length;
@@ -1704,6 +1846,12 @@ function AdminDashboard() {
       value: offerMatches.data?.length ?? 0,
       isLoading: offerMatches.isLoading,
     },
+    {
+      icon: <ImageIcon className="h-5 w-5" />,
+      label: "배너",
+      value: banners.data?.length ?? 0,
+      isLoading: banners.isLoading,
+    },
   ];
 
   return (
@@ -1742,6 +1890,7 @@ export default function AdminPage() {
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
           <TabsTrigger value="offers">공급 오퍼</TabsTrigger>
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
+          <TabsTrigger value="banners">배너 관리</TabsTrigger>
           <TabsTrigger value="menu">메뉴 관리</TabsTrigger>
         </TabsList>
         <TabsContent value="companies" className="mt-6">
@@ -1773,6 +1922,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="offer-matches" className="mt-6">
           <OfferMatchesAdmin />
+        </TabsContent>
+        <TabsContent value="banners" className="mt-6">
+          <BannersAdmin />
         </TabsContent>
         <TabsContent value="menu" className="mt-6">
           <MenuManagementAdmin />

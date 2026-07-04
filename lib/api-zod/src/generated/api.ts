@@ -1541,6 +1541,90 @@ export const CollectNewsResponse = zod.object({
 
 
 /**
+ * @summary List dashboard banners (ordered by displayOrder)
+ */
+export const ListBannersResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "durationSeconds": zod.number(),
+  "displayOrder": zod.number(),
+  "active": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListBannersResponse = zod.array(ListBannersResponseItem)
+
+
+/**
+ * @summary Create a dashboard banner
+ */
+
+
+
+export const CreateBannerBody = zod.object({
+  "title": zod.string().optional(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "durationSeconds": zod.number().min(1).optional(),
+  "displayOrder": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const CreateBannerResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "durationSeconds": zod.number(),
+  "displayOrder": zod.number(),
+  "active": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a dashboard banner
+ */
+export const UpdateBannerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateBannerBody = zod.object({
+  "title": zod.string().optional(),
+  "imageUrl": zod.string().optional(),
+  "linkUrl": zod.string().nullish(),
+  "durationSeconds": zod.number().min(1).optional(),
+  "displayOrder": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateBannerResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "imageUrl": zod.string(),
+  "linkUrl": zod.string().nullish(),
+  "durationSeconds": zod.number(),
+  "displayOrder": zod.number(),
+  "active": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a dashboard banner
+ */
+export const DeleteBannerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteBannerResponse = zod.void()
+
+
+/**
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const ListClientCompaniesResponseItem = zod.object({

@@ -12,6 +12,7 @@ import projectApplicationsRouter from "./applications";
 import resumeSubmissionsRouter from "./resumeSubmissions";
 import navRouter from "./nav";
 import newsRouter from "./news";
+import bannersRouter from "./banners";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 
@@ -30,6 +31,7 @@ router.use(projectApplicationsRouter);
 router.use(resumeSubmissionsRouter);
 router.use(navRouter);
 router.use(newsRouter);
+router.use(bannersRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
 

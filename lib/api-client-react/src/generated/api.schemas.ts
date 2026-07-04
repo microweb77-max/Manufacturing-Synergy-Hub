@@ -375,6 +375,40 @@ export interface CollectNewsResult {
   articles: NewsArticle[];
 }
 
+export interface Banner {
+  id: number;
+  title: string;
+  imageUrl: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  durationSeconds: number;
+  displayOrder: number;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface BannerInput {
+  title?: string;
+  imageUrl: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  /** @minimum 1 */
+  durationSeconds?: number;
+  displayOrder?: number;
+  active?: boolean;
+}
+
+export interface BannerUpdate {
+  title?: string;
+  imageUrl?: string;
+  /** @nullable */
+  linkUrl?: string | null;
+  /** @minimum 1 */
+  durationSeconds?: number;
+  displayOrder?: number;
+  active?: boolean;
+}
+
 /**
  * Which kind of posts to collect — hiring (구인) or seeking (구직). Defaults to hiring.
  */

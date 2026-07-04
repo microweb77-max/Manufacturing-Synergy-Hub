@@ -26,6 +26,8 @@ tags:
     description: Korean FDI manufacturing client directory (KOTRA)
   - name: news
     description: Vietnam manufacturing news (crawled and translated to Korean)
+  - name: banners
+    description: Dashboard promotional banners (rotating carousel)
   - name: dashboard
     description: Aggregated dashboard data
 paths:
@@ -1112,6 +1114,99 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /banners:
+    get:
+      operationId: listBanners
+      tags: [banners]
+      summary: List dashboard banners (ordered by displayOrder)
+      responses:
+        "200":
+          description: Banners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Banner"
+    post:
+      operationId: createBanner
+      tags: [banners]
+      summary: Create a dashboard banner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /banners/{id}:
+    patch:
+      operationId: updateBanner
+      tags: [banners]
+      summary: Update a dashboard banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BannerUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Banner"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteBanner
+      tags: [banners]
+      summary: Delete a dashboard banner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /client-companies:
     get:
       operationId: listClientCompanies
@@ -1804,6 +1899,67 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NewsArticle"
+    Banner:
+      type: object
+      required:
+        - id
+        - title
+        - imageUrl
+        - durationSeconds
+        - displayOrder
+        - active
+        - createdAt
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: ["string", "null"]
+        durationSeconds:
+          type: integer
+        displayOrder:
+          type: integer
+        active:
+          type: boolean
+        createdAt:
+          type: string
+    BannerInput:
+      type: object
+      required:
+        - imageUrl
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: ["string", "null"]
+        durationSeconds:
+          type: integer
+          minimum: 1
+        displayOrder:
+          type: integer
+        active:
+          type: boolean
+    BannerUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        imageUrl:
+          type: string
+        linkUrl:
+          type: ["string", "null"]
+        durationSeconds:
+          type: integer
+          minimum: 1
+        displayOrder:
+          type: integer
+        active:
+          type: boolean
     CollectJobsRequest:
       type: object
       properties:

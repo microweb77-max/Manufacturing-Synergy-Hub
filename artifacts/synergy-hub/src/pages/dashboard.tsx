@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import heroBanner from "@assets/image_1782676670194.png";
+import { BannerCarousel } from "@/components/BannerCarousel";
 
 type ShowcaseCompany = {
   id: number;
@@ -62,11 +63,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 p-8 pt-6 space-y-8 max-w-7xl mx-auto w-full">
-      <img
-        src={heroBanner}
-        alt="베트남 제조산업의 새로운 미래, 당신의 파트너십을 연결합니다"
-        className="w-full rounded-lg border-l-[1px] border-t-[1px] border-b-[1px] border-r-[1px]"
-      />
+      <BannerCarousel fallbackSrc={heroBanner} />
       {/* Promotion CTA banner */}
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-secondary/5">
         <CardContent className="flex flex-col gap-4 py-6 md:flex-row md:items-center md:justify-between">
