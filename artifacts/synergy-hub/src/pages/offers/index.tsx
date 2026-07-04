@@ -42,13 +42,15 @@ import {
   Boxes,
 } from "lucide-react";
 
-const CATEGORIES = ["원재료", "자재", "부자재", "소비재", "서비스", "소프트웨어", "기타"];
+const CATEGORIES = ["원재료", "자재", "부자재", "설비 및 장비", "네트워크", "소비재", "서비스", "소프트웨어", "기타"];
 const ALL = "__all__";
 
 const categoryColor: Record<string, string> = {
   원재료: "bg-amber-500/10 text-amber-600",
   자재: "bg-blue-500/10 text-blue-600",
   부자재: "bg-purple-500/10 text-purple-600",
+  "설비 및 장비": "bg-orange-500/10 text-orange-600",
+  네트워크: "bg-indigo-500/10 text-indigo-600",
   소비재: "bg-pink-500/10 text-pink-600",
   서비스: "bg-emerald-500/10 text-emerald-600",
   소프트웨어: "bg-cyan-500/10 text-cyan-600",
