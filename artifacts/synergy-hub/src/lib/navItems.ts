@@ -21,8 +21,8 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { key: "news", href: "/news", label: "최근 소식", icon: Newspaper },
   { key: "dashboard", href: "/", label: "대시보드", icon: LayoutDashboard },
+  { key: "news", href: "/news", label: "최근 소식", icon: Newspaper },
   { key: "companies", href: "/companies", label: "공급사 디렉토리", icon: Factory },
   {
     key: "client-companies",
