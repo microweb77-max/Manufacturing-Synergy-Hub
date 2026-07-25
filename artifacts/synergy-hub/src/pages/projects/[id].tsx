@@ -287,7 +287,7 @@ export default function ProjectDetail() {
                       <Label>지원사 (기업 디렉토리)</Label>
                       <Select value={applyCompanyId} onValueChange={setApplyCompanyId}>
                         <SelectTrigger><SelectValue placeholder="지원할 기업을 선택하세요" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-60 overflow-y-auto">
                           {companies?.map((c) => {
                             const meta = getCompanyTypeMeta(c.type);
                             return (
