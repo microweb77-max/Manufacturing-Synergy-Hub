@@ -47,6 +47,10 @@ import {
   useUpdateResumeSubmission,
   useDeleteResumeSubmission,
   getListResumeSubmissionsQueryKey,
+  useListTalentContactRequests,
+  useUpdateTalentContactRequest,
+  useDeleteTalentContactRequest,
+  getListTalentContactRequestsQueryKey,
   useListNavSettings,
   useUpsertNavSetting,
   getListNavSettingsQueryKey,
@@ -1769,6 +1773,86 @@ function BannersAdmin() {
   );
 }
 
+function TalentContactRequestsAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data: requests, isLoading } = useListTalentContactRequests();
+  const updateReq = useUpdateTalentContactRequest();
+  const deleteReq = useDeleteTalentContactRequest();
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: getListTalentContactRequestsQueryKey() });
+
+  const toggleStatus = (id: number, current: string) => {
+    const next = current === "pending" ? "completed" : "pending";
+    updateReq.mutate(
+      { id, data: { status: next as "pending" | "completed" } },
+      {
+        onSuccess: () => { toast({ title: "상태 변경 완료" }); invalidate(); },
+        onError: () => toast({ title: "오류", description: "상태 변경에 실패했습니다.", variant: "destructive" }),
+      },
+    );
+  };
+
+  const handleDelete = (id: number) => {
+    deleteReq.mutate(
+      { id },
+      {
+        onSuccess: () => { toast({ title: "삭제 완료" }); invalidate(); },
+        onError: () => toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" }),
+      },
+    );
+  };
+
+  if (isLoading) return <div className="py-8 text-center text-muted-foreground">로딩 중...</div>;
+  if (!requests || requests.length === 0)
+    return <div className="py-8 text-center text-muted-foreground border rounded-lg bg-card">연락 요청이 없습니다.</div>;
+
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50">
+          <tr>
+            {["구직자", "포스트", "업체명", "담당자", "연락처", "이메일", "상태", "접수일", ""].map((h) => (
+              <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((r) => (
+            <tr key={r.id} className="border-t hover:bg-muted/30">
+              <td className="px-3 py-2 font-medium">{r.seekerName}</td>
+              <td className="px-3 py-2 max-w-[180px] truncate text-muted-foreground">{r.postTitle}</td>
+              <td className="px-3 py-2">{r.companyName}</td>
+              <td className="px-3 py-2">{r.contactPerson}</td>
+              <td className="px-3 py-2">{r.phone || "-"}</td>
+              <td className="px-3 py-2">{r.email || "-"}</td>
+              <td className="px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => toggleStatus(r.id, r.status)}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors ${
+                    r.status === "completed"
+                      ? "bg-green-100 text-green-800 border-green-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200"
+                  }`}
+                >
+                  {r.status === "completed" ? "처리완료" : "대기중"}
+                </button>
+              </td>
+              <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{formatDateTime(r.createdAt)}</td>
+              <td className="px-3 py-2">
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-7 px-2" onClick={() => handleDelete(r.id)}>
+                  삭제
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function AdminDashboard() {
   const companies = useListCompanies({});
   const projects = useListProjects({});
@@ -1892,6 +1976,7 @@ export default function AdminPage() {
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
           <TabsTrigger value="banners">배너 관리</TabsTrigger>
           <TabsTrigger value="menu">메뉴 관리</TabsTrigger>
+          <TabsTrigger value="contact-requests">구직 연락 요청</TabsTrigger>
         </TabsList>
         <TabsContent value="companies" className="mt-6">
           <CompaniesAdmin />
@@ -1928,6 +2013,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="menu" className="mt-6">
           <MenuManagementAdmin />
+        </TabsContent>
+        <TabsContent value="contact-requests" className="mt-6">
+          <TalentContactRequestsAdmin />
         </TabsContent>
       </Tabs>
     </div>

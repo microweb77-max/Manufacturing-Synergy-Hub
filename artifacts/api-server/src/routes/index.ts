@@ -15,6 +15,7 @@ import newsRouter from "./news";
 import bannersRouter from "./banners";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
+import talentContactRequestsRouter from "./talentContactRequests";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(newsRouter);
 router.use(bannersRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
+router.use(talentContactRequestsRouter);
 
 export default router;

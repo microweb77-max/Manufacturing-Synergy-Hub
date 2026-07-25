@@ -1676,3 +1676,82 @@ export const GetRecentActivityResponseItem = zod.object({
 export const GetRecentActivityResponse = zod.array(GetRecentActivityResponseItem)
 
 
+/**
+ * @summary List talent contact requests (admin only)
+ */
+export const ListTalentContactRequestsQueryParams = zod.object({})
+
+export const ListTalentContactRequestsResponseItem = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "seekerName": zod.string(),
+  "postTitle": zod.string(),
+  "companyName": zod.string(),
+  "contactPerson": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "status": zod.enum(['pending', 'completed']),
+  "createdAt": zod.string()
+})
+export const ListTalentContactRequestsResponse = zod.array(ListTalentContactRequestsResponseItem)
+
+
+/**
+ * @summary Create a contact request for a seeking post (구직자 연락 요청)
+ */
+export const CreateTalentContactRequestBody = zod.object({
+  "talentPostId": zod.number(),
+  "companyName": zod.string().min(1),
+  "contactPerson": zod.string().min(1),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional()
+})
+
+export const CreateTalentContactRequestResponse = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "seekerName": zod.string(),
+  "postTitle": zod.string(),
+  "companyName": zod.string(),
+  "contactPerson": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "status": zod.enum(['pending', 'completed']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a contact request status (admin only)
+ */
+export const UpdateTalentContactRequestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTalentContactRequestBody = zod.object({
+  "status": zod.enum(['pending', 'completed']).optional()
+})
+
+export const UpdateTalentContactRequestResponse = zod.object({
+  "id": zod.number(),
+  "talentPostId": zod.number(),
+  "seekerName": zod.string(),
+  "postTitle": zod.string(),
+  "companyName": zod.string(),
+  "contactPerson": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "status": zod.enum(['pending', 'completed']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a contact request (admin only)
+ */
+export const DeleteTalentContactRequestParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteTalentContactRequestResponse = zod.void()
+

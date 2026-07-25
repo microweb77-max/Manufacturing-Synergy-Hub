@@ -10,3 +10,4 @@ export * from "./resumes";
 export * from "./nav";
 export * from "./news";
 export * from "./banners";
+export * from "./contactRequests";
