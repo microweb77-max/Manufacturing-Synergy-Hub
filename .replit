@@ -26,7 +26,7 @@ args = "Manufacturing Synergy Hub"
 
 [workflows.workflow.metadata]
 outputType = "webview"
-waitForPort = 5173
+waitForPort = 25071
 
 [[workflows.workflow]]
 name = "API Server"
@@ -46,8 +46,8 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "PORT=5173 BASE_PATH=/ pnpm --filter @workspace/synergy-hub run dev"
-waitForPort = 5173
+args = "PORT=25071 BASE_PATH=/ pnpm --filter @workspace/synergy-hub run dev"
+waitForPort = 25071
 
 [workflows.workflow.metadata]
 outputType = "webview"
