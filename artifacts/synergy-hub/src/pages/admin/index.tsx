@@ -1,4 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { useAdminAuth } from "@/lib/adminAuth";
 import {
   useListCompanies,
   useCreateCompany,
@@ -1948,16 +1950,30 @@ function AdminDashboard() {
 }
 
 export default function AdminPage() {
+  const { logout } = useAdminAuth();
+  const [, navigate] = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <ShieldAlert className="h-7 w-7 text-primary" />
-          관리자 (ADMIN)
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <ShieldAlert className="h-7 w-7 text-primary" />
+            관리자 (ADMIN)
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 shrink-0">
+          <ShieldAlert className="h-4 w-4" />
+          관리자 로그아웃
+        </Button>
       </div>
 
       <AdminDashboard />

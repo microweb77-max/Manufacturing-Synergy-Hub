@@ -1,12 +1,31 @@
 import { Link, useLocation } from "wouter";
-import { Factory } from "lucide-react";
+import { Factory, ShieldCheck } from "lucide-react";
 import { useListNavSettings } from "@workspace/api-client-react";
 import { NAV_ITEMS, isNavItemHidden } from "@/lib/navItems";
 import networkLogo from "../assets/network-logo.png";
+import { useState } from "react";
+import { useAdminAuth } from "@/lib/adminAuth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { data: navSettings } = useListNavSettings();
+  const { checkPassword } = useAdminAuth();
+  const [, navigate] = useLocation();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const overrides: Record<string, boolean> = {};
   for (const s of navSettings ?? []) overrides[s.key] = s.hidden;
@@ -14,6 +33,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const navItems = NAV_ITEMS.filter(
     (item) => !isNavItemHidden(item, overrides),
   );
+
+  const openDialog = () => {
+    setPassword("");
+    setError("");
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const ok = checkPassword(password);
+    setSubmitting(false);
+    if (ok) {
+      setDialogOpen(false);
+      navigate("/admin");
+    } else {
+      setError("비밀번호가 올바르지 않습니다.");
+      setPassword("");
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -49,14 +88,56 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <img
             src={networkLogo}
             alt="Vietnam Manufacturing Network"
-            className="w-[70%] mx-auto rounded-lg"
+            className="w-[70%] mx-auto rounded-lg cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+            onClick={openDialog}
+            title="관리자 로그인"
           />
         </div>
       </aside>
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+
+      {/* Admin Password Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) setDialogOpen(false); }}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              관리자 인증
+            </DialogTitle>
+            <DialogDescription>
+              관리자 페이지에 접근하려면 비밀번호를 입력하세요.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+            <div className="space-y-2">
+              <Label htmlFor="admin-pw">비밀번호</Label>
+              <Input
+                id="admin-pw"
+                type="password"
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                placeholder="비밀번호 입력"
+                autoFocus
+              />
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                취소
+              </Button>
+              <Button type="submit" disabled={submitting || !password}>
+                확인
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
