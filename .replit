@@ -1,13 +1,5 @@
 modules = ["nodejs-20", "web", "bash"]
 
-[[ports]]
-localPort = 5173
-externalPort = 80
-
-[[ports]]
-localPort = 8080
-externalPort = 3000
-
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
@@ -31,6 +23,10 @@ args = "API Server"
 [[workflows.workflow.tasks]]
 task = "workflow.run"
 args = "Manufacturing Synergy Hub"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+waitForPort = 5173
 
 [[workflows.workflow]]
 name = "API Server"
