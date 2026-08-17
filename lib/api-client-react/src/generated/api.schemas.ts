@@ -20,6 +20,8 @@ export const CompanyType = {
   hardware: 'hardware',
   software: 'software',
   service: 'service',
+  customer: 'customer',
+  supplier: 'supplier',
 } as const;
 
 export interface Company {
@@ -53,6 +55,8 @@ export const CompanyInputType = {
   hardware: 'hardware',
   software: 'software',
   service: 'service',
+  customer: 'customer',
+  supplier: 'supplier',
 } as const;
 
 export interface CompanyInput {
@@ -683,8 +687,8 @@ export interface TagCount {
 
 export interface DashboardSummary {
   totalCompanies: number;
-  hardwareCompanies: number;
-  softwareCompanies: number;
+  customerCompanies: number;
+  supplierCompanies: number;
   activeProjects: number;
   completedProjects: number;
   totalMatches: number;

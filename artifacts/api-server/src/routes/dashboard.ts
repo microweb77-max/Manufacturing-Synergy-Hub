@@ -42,8 +42,8 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
 
   const summary = {
     totalCompanies: companies.length,
-    hardwareCompanies: companies.filter((c) => c.type === "hardware").length,
-    softwareCompanies: companies.filter((c) => c.type === "software").length,
+    customerCompanies: companies.filter((c) => c.type === "customer").length,
+    supplierCompanies: companies.filter((c) => c.type === "supplier").length,
     activeProjects: projects.filter(
       (p) => p.status === "open" || p.status === "matching" || p.status === "in_progress",
     ).length,
@@ -110,7 +110,7 @@ router.get("/dashboard/activity", async (_req, res): Promise<void> => {
       id: `company-${c.id}`,
       type: "company" as const,
       title: c.name,
-      description: `${c.type === "hardware" ? "하드웨어" : c.type === "service" ? "서비스" : "소프트웨어"} 업체 등록`,
+      description: `${c.type === "customer" ? "제조(고객사)" : c.type === "supplier" ? "공급사" : c.type} 업체 등록`,
       createdAt: c.createdAt.toISOString(),
     })),
   ]

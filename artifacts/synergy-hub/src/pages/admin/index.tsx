@@ -265,6 +265,8 @@ function CompaniesAdmin() {
           label: "유형",
           getValue: (c) => c.type,
           options: [
+            { value: "customer", label: "제조 (고객사)" },
+            { value: "supplier", label: "공급사" },
             { value: "hardware", label: "하드웨어" },
             { value: "software", label: "소프트웨어" },
             { value: "service", label: "서비스" },
@@ -301,6 +303,8 @@ function CompaniesAdmin() {
           type: "select",
           required: true,
           options: [
+            { value: "customer", label: "제조 (고객사)" },
+            { value: "supplier", label: "공급사" },
             { value: "hardware", label: "하드웨어 (Hardware)" },
             { value: "software", label: "소프트웨어 (Software)" },
             { value: "service", label: "서비스 (Service)" },
@@ -318,7 +322,7 @@ function CompaniesAdmin() {
       ]}
       emptyValues={{
         name: "",
-        type: "hardware",
+        type: "supplier",
         location: "",
         contactEmail: "",
         phone: "",

@@ -21,7 +21,7 @@ export const HealthCheckResponse = zod.object({
  * @summary List companies
  */
 export const ListCompaniesQueryParams = zod.object({
-  "type": zod.enum(['hardware', 'software', 'service']).optional(),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']).optional(),
   "tag": zod.coerce.string().optional(),
   "search": zod.coerce.string().optional()
 })
@@ -29,7 +29,7 @@ export const ListCompaniesQueryParams = zod.object({
 export const ListCompaniesResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -56,7 +56,7 @@ export const ListCompaniesResponse = zod.array(ListCompaniesResponseItem)
 
 export const CreateCompanyBody = zod.object({
   "name": zod.string().min(1),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().optional(),
   "phone": zod.string().optional(),
   "kakaoTalkId": zod.string().optional(),
@@ -71,7 +71,7 @@ export const CreateCompanyBody = zod.object({
 export const CreateCompanyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -99,7 +99,7 @@ export const GetCompanyParams = zod.object({
 export const GetCompanyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -129,7 +129,7 @@ export const UpdateCompanyParams = zod.object({
 
 export const UpdateCompanyBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "type": zod.enum(['hardware', 'software', 'service']).optional(),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']).optional(),
   "taxCode": zod.string().optional(),
   "phone": zod.string().optional(),
   "kakaoTalkId": zod.string().optional(),
@@ -144,7 +144,7 @@ export const UpdateCompanyBody = zod.object({
 export const UpdateCompanyResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -178,7 +178,7 @@ export const DeleteCompanyResponse = zod.void()
 export const GetCompanyLeaderboardResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -207,7 +207,7 @@ export const AnalyzeCompanyMaterialBody = zod.object({
 
 export const AnalyzeCompanyMaterialResponse = zod.object({
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string(),
   "phone": zod.string(),
   "kakaoTalkId": zod.string(),
@@ -348,7 +348,7 @@ export const GetProjectRecommendationsResponseItem = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -400,7 +400,7 @@ export const ListProjectMatchesResponseItem = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -449,7 +449,7 @@ export const ListMatchesResponseItem = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -500,7 +500,7 @@ export const CreateMatchResponse = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -552,7 +552,7 @@ export const UpdateMatchResponse = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -598,7 +598,7 @@ export const ListSolutionsResponseItem = zod.object({
   "companies": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -649,7 +649,7 @@ export const CreateSolutionResponse = zod.object({
   "companies": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -689,7 +689,7 @@ export const GetSolutionResponse = zod.object({
   "companies": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -743,7 +743,7 @@ export const UpdateSolutionResponse = zod.object({
   "companies": zod.array(zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -796,7 +796,7 @@ export const ListPerformanceLogsResponseItem = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -852,7 +852,7 @@ export const CreatePerformanceLogResponse = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -911,7 +911,7 @@ export const UpdatePerformanceLogResponse = zod.object({
   "company": zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['hardware', 'software', 'service']),
+  "type": zod.enum(['hardware', 'software', 'service', 'customer', 'supplier']),
   "taxCode": zod.string().nullable(),
   "phone": zod.string().nullable(),
   "kakaoTalkId": zod.string().nullable(),
@@ -1648,8 +1648,8 @@ export const ListClientCompaniesResponse = zod.array(ListClientCompaniesResponse
  */
 export const GetDashboardSummaryResponse = zod.object({
   "totalCompanies": zod.number(),
-  "hardwareCompanies": zod.number(),
-  "softwareCompanies": zod.number(),
+  "customerCompanies": zod.number(),
+  "supplierCompanies": zod.number(),
   "activeProjects": zod.number(),
   "completedProjects": zod.number(),
   "totalMatches": zod.number(),

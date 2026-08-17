@@ -58,8 +58,8 @@ export default function Dashboard() {
   const { data: activityItems, isLoading: isActivityLoading } = useGetRecentActivity();
   const { data: companies, isLoading: isCompaniesLoading } = useListCompanies();
 
-  const hardwareCompanies = (companies ?? []).filter((c) => c.type === "hardware").slice(0, 4);
-  const softwareCompanies = (companies ?? []).filter((c) => c.type === "software").slice(0, 4);
+  const supplierCompanies = (companies ?? []).filter((c) => c.type === "supplier").slice(0, 4);
+  const customerCompanies = (companies ?? []).filter((c) => c.type === "customer").slice(0, 4);
 
   return (
     <div className="flex-1 p-8 pt-6 space-y-8 max-w-7xl mx-auto w-full">
@@ -99,7 +99,7 @@ export default function Dashboard() {
               <>
                 <div className="text-2xl font-bold font-mono">{summary?.totalCompanies ?? 0}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  하드웨어 <span className="font-medium text-foreground">{summary?.hardwareCompanies ?? 0}</span> • 소프트웨어 <span className="font-medium text-foreground">{summary?.softwareCompanies ?? 0}</span>
+                  고객사 <span className="font-medium text-foreground">{summary?.customerCompanies ?? 0}</span> • 공급사 <span className="font-medium text-foreground">{summary?.supplierCompanies ?? 0}</span>
                 </p>
               </>
             )}
@@ -170,7 +170,7 @@ export default function Dashboard() {
             <CardTitle className="text-xl flex items-center gap-2">
               <Handshake className="w-5 h-5 text-primary" /> 함께 협업할 회원사
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">하드웨어와 소프트웨어 파트너를 연결해 공동 솔루션을 제안해보세요.</p>
+            <p className="text-sm text-muted-foreground mt-1">공급사와 고객사(제조기업)를 연결해 공동 솔루션을 제안해보세요.</p>
           </div>
           <Link href="/companies">
             <span className="text-sm text-primary hover:underline cursor-pointer whitespace-nowrap">전체 보기</span>
@@ -186,28 +186,28 @@ export default function Dashboard() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-amber-600">
-                  <Factory className="w-4 h-4" /> 하드웨어 전문 회원사
+                <div className="flex items-center gap-2 text-sm font-semibold text-purple-600">
+                  <Factory className="w-4 h-4" /> 공급사
                 </div>
-                {hardwareCompanies.length === 0 ? (
-                  <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">등록된 하드웨어 회원사가 없습니다.</div>
+                {supplierCompanies.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">등록된 공급사가 없습니다.</div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {hardwareCompanies.map((company) => (
+                    {supplierCompanies.map((company) => (
                       <PartnerCard key={company.id} company={company} />
                     ))}
                   </div>
                 )}
               </div>
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
-                  <Monitor className="w-4 h-4" /> 소프트웨어 전문 회원사
+                <div className="flex items-center gap-2 text-sm font-semibold text-orange-600">
+                  <Monitor className="w-4 h-4" /> 고객사 (제조기업)
                 </div>
-                {softwareCompanies.length === 0 ? (
-                  <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">등록된 소프트웨어 회원사가 없습니다.</div>
+                {customerCompanies.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-6 text-center border border-dashed rounded-lg">등록된 고객사가 없습니다.</div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {softwareCompanies.map((company) => (
+                    {customerCompanies.map((company) => (
                       <PartnerCard key={company.id} company={company} />
                     ))}
                   </div>
