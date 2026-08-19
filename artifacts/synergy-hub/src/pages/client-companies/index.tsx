@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { useListCompanies } from "@workspace/api-client-react";
-import type { Company } from "@workspace/api-client-react";
+import { useListClientCompanies } from "@workspace/api-client-react";
+import type { ClientCompany } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -32,40 +32,39 @@ import {
   MapPin,
   ChevronLeft,
   ChevronRight,
-  Mail,
-  Phone,
-  Tag,
+  Briefcase,
+  Factory,
+  Landmark,
+  Network,
+  Mailbox,
+  Hash,
 } from "lucide-react";
 
 const PAGE_SIZE = 20;
 const ALL = "__all__";
 
 export default function ClientCompaniesPage() {
-  const { data: allCompanies, isLoading } = useListCompanies({ type: "customer" });
+  const { data, isLoading } = useListClientCompanies();
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState(ALL);
-  const [category, setCategory] = useState(ALL);
+  const [industry, setIndustry] = useState(ALL);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<Company | null>(null);
+  const [selected, setSelected] = useState<ClientCompany | null>(null);
 
-  const companies = allCompanies ?? [];
-
-  // Extract province from location (format: "Province — Address")
-  const getRegion = (c: Company) => c.location.split("—")[0].trim();
-  const getCategory = (c: Company) => c.description;
+  const companies = data ?? [];
 
   const regions = useMemo(
     () =>
-      [...new Set(companies.map(getRegion).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, "en"),
+      [...new Set(companies.map((c) => c.region).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, "ko"),
       ),
     [companies],
   );
 
-  const categories = useMemo(
+  const industries = useMemo(
     () =>
-      [...new Set(companies.map(getCategory).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, "en"),
+      [...new Set(companies.map((c) => c.industry).filter(Boolean))].sort(
+        (a, b) => a.localeCompare(b, "ko"),
       ),
     [companies],
   );
@@ -73,16 +72,17 @@ export default function ClientCompaniesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return companies.filter((c) => {
-      if (region !== ALL && getRegion(c) !== region) return false;
-      if (category !== ALL && getCategory(c) !== category) return false;
+      if (region !== ALL && c.region !== region) return false;
+      if (industry !== ALL && c.industry !== industry) return false;
       if (!q) return true;
       return (
-        c.name.toLowerCase().includes(q) ||
-        c.location.toLowerCase().includes(q) ||
-        c.contactEmail.toLowerCase().includes(q)
+        c.nameKo.toLowerCase().includes(q) ||
+        c.nameEn.toLowerCase().includes(q) ||
+        c.parentCompany.toLowerCase().includes(q) ||
+        c.address.toLowerCase().includes(q)
       );
     });
-  }, [companies, search, region, category]);
+  }, [companies, search, region, industry]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -101,7 +101,7 @@ export default function ClientCompaniesPage() {
           고객사 디렉토리
         </h1>
         <p className="text-muted-foreground mt-1">
-          베트남 진출 한국 제조기업 리스트 (총 {companies.length.toLocaleString()}개사 · 출처: KOCHAM 2025)
+          KOTRA FDI 및 KOCHAM 2025 제조기업 통합 리스트 (총 {companies.length.toLocaleString()}개사)
         </p>
       </div>
 
@@ -109,7 +109,7 @@ export default function ClientCompaniesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="기업명 · 주소 · 이메일 검색..."
+            placeholder="기업명(국문/영문) · 모기업 · 주소 검색..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -141,9 +141,9 @@ export default function ClientCompaniesPage() {
         </div>
         <div className="w-full lg:w-[260px]">
           <Select
-            value={category}
+            value={industry}
             onValueChange={(v) => {
-              setCategory(v);
+              setIndustry(v);
               resetPage();
             }}
           >
@@ -152,9 +152,9 @@ export default function ClientCompaniesPage() {
             </SelectTrigger>
             <SelectContent className="max-h-[300px]">
               <SelectItem value={ALL}>모든 업종</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
+              {industries.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {item}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -180,7 +180,7 @@ export default function ClientCompaniesPage() {
               <TableHead>업종</TableHead>
               <TableHead>진출지역</TableHead>
               <TableHead className="hidden lg:table-cell">주소</TableHead>
-              <TableHead className="hidden xl:table-cell">연락처</TableHead>
+              <TableHead className="hidden xl:table-cell">진출형태</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -203,48 +203,46 @@ export default function ClientCompaniesPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              pageItems.map((c, idx) => {
-                const rowNum = (currentPage - 1) * PAGE_SIZE + idx + 1;
-                const province = getRegion(c);
-                const address = c.location.includes("—")
-                  ? c.location.split("—")[1].trim()
-                  : "";
-                return (
-                  <TableRow
-                    key={c.id}
-                    onClick={() => setSelected(c)}
-                    className="cursor-pointer"
-                  >
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {rowNum}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{c.name}</div>
-                    </TableCell>
-                    <TableCell>
-                      {c.description ? (
-                        <Badge variant="secondary" className="font-normal">
-                          {c.description}
-                        </Badge>
-                      ) : (
-                        "-"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1 text-sm">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        {province || "-"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[260px]">
-                      <span className="line-clamp-2">{address || "-"}</span>
-                    </TableCell>
-                    <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
-                      {c.phone || c.contactEmail || "-"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              pageItems.map((c) => (
+                <TableRow
+                  key={c.no}
+                  onClick={() => setSelected(c)}
+                  className="cursor-pointer"
+                >
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {c.no}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-medium">{c.nameKo || c.nameEn || "-"}</div>
+                    {c.nameKo && c.nameEn && (
+                      <div className="text-xs text-muted-foreground line-clamp-1">
+                        {c.nameEn}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {c.industry ? (
+                      <Badge variant="secondary" className="font-normal">
+                        {c.industry}
+                      </Badge>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1 text-sm">
+                      <MapPin className="h-3 w-3 text-muted-foreground" />
+                      {c.region || "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[260px]">
+                    <span className="line-clamp-2">{c.address || "-"}</span>
+                  </TableCell>
+                  <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
+                    {c.entryType || "-"}
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -287,57 +285,99 @@ export default function ClientCompaniesPage() {
                 <div className="flex items-start gap-2">
                   <Building2 className="h-6 w-6 text-primary shrink-0 mt-1" />
                   <div className="min-w-0">
-                    <DialogTitle className="text-xl">{selected.name}</DialogTitle>
-                    {selected.description && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        <Badge variant="secondary">{selected.description}</Badge>
+                    <DialogTitle className="text-xl">
+                      {selected.nameKo || selected.nameEn || "\u00A0"}
+                    </DialogTitle>
+                    {selected.nameEn && selected.nameKo && (
+                      <p className="text-sm text-muted-foreground break-words">
+                        {selected.nameEn}
                       </p>
                     )}
                   </div>
                 </div>
               </DialogHeader>
 
-              <div className="grid grid-cols-1 gap-4 pt-2">
-                {selected.location && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <span>{selected.location}</span>
-                  </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {selected.industry && (
+                  <Badge variant="secondary">{selected.industry}</Badge>
                 )}
-                {selected.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{selected.phone}</span>
-                  </div>
+                {selected.entryType && (
+                  <Badge variant="outline">{selected.entryType}</Badge>
                 )}
-                {selected.contactEmail && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`mailto:${selected.contactEmail}`}
-                      className="text-primary hover:underline"
-                    >
-                      {selected.contactEmail}
-                    </a>
-                  </div>
+                {selected.investmentType && (
+                  <Badge variant="outline">{selected.investmentType}</Badge>
                 )}
-                {selected.capabilityTags.length > 0 && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <Tag className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-                    <div className="flex flex-wrap gap-1">
-                      {selected.capabilityTags.map((t) => (
-                        <Badge key={t} variant="outline" className="text-xs font-normal">
-                          {t}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-2">
+                <DetailRow icon={Hash} label="번호" value={String(selected.no)} />
+                <DetailRow
+                  icon={Briefcase}
+                  label="모기업"
+                  value={selected.parentCompany}
+                />
+                <DetailRow
+                  icon={Factory}
+                  label="진출형태"
+                  value={selected.entryType}
+                />
+                <DetailRow
+                  icon={Landmark}
+                  label="투자형태"
+                  value={selected.investmentType}
+                />
+                <DetailRow
+                  icon={Network}
+                  label="업종"
+                  value={selected.industry}
+                />
+                <DetailRow
+                  icon={Network}
+                  label="업종 상세"
+                  value={selected.industryDetail}
+                />
+                <DetailRow
+                  icon={MapPin}
+                  label="진출지역"
+                  value={selected.region}
+                />
+                <DetailRow
+                  icon={Mailbox}
+                  label="우편번호"
+                  value={selected.postalCode}
+                />
+                <div className="sm:col-span-2">
+                  <DetailRow
+                    icon={MapPin}
+                    label="주소"
+                    value={selected.address}
+                  />
+                </div>
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Hash;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </div>
+      <div className="text-sm break-words min-h-[1.25rem]">{value || "-"}</div>
     </div>
   );
 }
