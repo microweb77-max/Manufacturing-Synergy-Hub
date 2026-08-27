@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import heroBanner from "@assets/image_1782676670194.png";
 import { BannerCarousel } from "@/components/BannerCarousel";
 
+function formatNumber(value: number | undefined | null): string {
+  return (value ?? 0).toLocaleString("ko-KR");
+}
+
 type ShowcaseCompany = {
   id: number;
   name: string;
@@ -97,9 +101,9 @@ export default function Dashboard() {
               <Skeleton className="h-7 w-[60px]" />
             ) : (
               <>
-                <div className="text-2xl font-bold font-mono">{summary?.totalCompanies ?? 0}</div>
+                <div className="text-2xl font-bold font-mono">{formatNumber(summary?.totalCompanies)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  고객사 <span className="font-medium text-foreground">{summary?.customerCompanies ?? 0}</span> • 공급사 <span className="font-medium text-foreground">{summary?.supplierCompanies ?? 0}</span>
+                  고객사 <span className="font-medium text-foreground">{formatNumber(summary?.customerCompanies)}</span> • 공급사 <span className="font-medium text-foreground">{formatNumber(summary?.supplierCompanies)}</span>
                 </p>
               </>
             )}
@@ -116,9 +120,9 @@ export default function Dashboard() {
               <Skeleton className="h-7 w-[60px]" />
             ) : (
               <>
-                <div className="text-2xl font-bold font-mono">{summary?.activeProjects ?? 0}</div>
+                <div className="text-2xl font-bold font-mono">{formatNumber(summary?.activeProjects)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  완료된 협업 <span className="font-medium text-foreground">{summary?.completedProjects ?? 0}</span>
+                  완료된 협업 <span className="font-medium text-foreground">{formatNumber(summary?.completedProjects)}</span>
                 </p>
               </>
             )}
@@ -135,9 +139,9 @@ export default function Dashboard() {
               <Skeleton className="h-7 w-[60px]" />
             ) : (
               <>
-                <div className="text-2xl font-bold font-mono">{summary?.acceptedMatches ?? 0}</div>
+                <div className="text-2xl font-bold font-mono">{formatNumber(summary?.acceptedMatches)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  총 매칭 제안 <span className="font-medium text-foreground">{summary?.totalMatches ?? 0}</span>
+                  총 매칭 제안 <span className="font-medium text-foreground">{formatNumber(summary?.totalMatches)}</span>
                 </p>
               </>
             )}
@@ -154,7 +158,7 @@ export default function Dashboard() {
               <Skeleton className="h-7 w-[60px]" />
             ) : (
               <>
-                <div className="text-2xl font-bold font-mono">{summary?.jointSolutions ?? 0}</div>
+                <div className="text-2xl font-bold font-mono">{formatNumber(summary?.jointSolutions)}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   함께 만든 패키지
                 </p>
