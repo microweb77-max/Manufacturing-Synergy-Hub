@@ -8,6 +8,8 @@
 import type { TalentPostPostType } from './talentPostPostType';
 
 export interface TalentPost {
+  /** @nullable */
+  ownerCompanyId?: number | null;
   id: number;
   postType: TalentPostPostType;
   title: string;

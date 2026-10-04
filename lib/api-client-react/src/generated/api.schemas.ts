@@ -5,6 +5,176 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface CompanyVerification {
+  verified: boolean;
+  /** @nullable */
+  method: string | null;
+}
+
+export type MyCompanyRole = typeof MyCompanyRole[keyof typeof MyCompanyRole];
+
+
+export const MyCompanyRole = {
+  company_admin: 'company_admin',
+  staff: 'staff',
+} as const;
+
+export interface MyCompany {
+  companyId: number;
+  name: string;
+  role: MyCompanyRole;
+}
+
+export type CompanyMemberRole = typeof CompanyMemberRole[keyof typeof CompanyMemberRole];
+
+
+export const CompanyMemberRole = {
+  company_admin: 'company_admin',
+  staff: 'staff',
+} as const;
+
+export interface CompanyMember {
+  id: number;
+  companyId: number;
+  userId: string;
+  role: CompanyMemberRole;
+  createdAt: string;
+}
+
+export type CompanyInvitationRole = typeof CompanyInvitationRole[keyof typeof CompanyInvitationRole];
+
+
+export const CompanyInvitationRole = {
+  company_admin: 'company_admin',
+  staff: 'staff',
+} as const;
+
+export interface CompanyInvitation {
+  id: number;
+  email: string;
+  role: CompanyInvitationRole;
+  status: string;
+  expiresAt: string;
+}
+
+export type CompanyClaimStatusMethod = typeof CompanyClaimStatusMethod[keyof typeof CompanyClaimStatusMethod];
+
+
+export const CompanyClaimStatusMethod = {
+  email: 'email',
+  manual: 'manual',
+} as const;
+
+export interface CompanyClaimStatus {
+  id: number;
+  method: CompanyClaimStatusMethod;
+  status: string;
+  expiresAt: string;
+  /** @nullable */
+  reviewNote: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type CompanyMembershipRole = typeof CompanyMembershipRole[keyof typeof CompanyMembershipRole] | null;
+
+
+export const CompanyMembershipRole = {
+  company_admin: 'company_admin',
+  staff: 'staff',
+} as const;
+
+export interface CompanyMembership {
+  verified: boolean;
+  /** @nullable */
+  role: CompanyMembershipRole;
+  members: CompanyMember[];
+  invitations: CompanyInvitation[];
+  claims: CompanyClaimStatus[];
+}
+
+export interface CompanyClaimReview {
+  id: number;
+  companyId: number;
+  companyName: string;
+  userId: string;
+  method: string;
+  status: string;
+  expiresAt: string;
+  /** @nullable */
+  taxCode: string | null;
+  /** @nullable */
+  registeredTaxCode: string | null;
+  /** @nullable */
+  reviewNote: string | null;
+}
+
+export type CompanyClaimInputMethod = typeof CompanyClaimInputMethod[keyof typeof CompanyClaimInputMethod];
+
+
+export const CompanyClaimInputMethod = {
+  email: 'email',
+  manual: 'manual',
+} as const;
+
+export interface CompanyClaimInput {
+  /** @minimum 1 */
+  companyId: number;
+  method: CompanyClaimInputMethod;
+  taxCode?: string;
+  /** PNG/JPEG/PDF data URL up to 5MB, persisted privately in App Storage */
+  evidenceData?: string;
+}
+
+export type CompanyClaimDecisionDecision = typeof CompanyClaimDecisionDecision[keyof typeof CompanyClaimDecisionDecision];
+
+
+export const CompanyClaimDecisionDecision = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface CompanyClaimDecision {
+  decision: CompanyClaimDecisionDecision;
+  /**
+     * @minLength 1
+     * @maxLength 1000
+     */
+  note: string;
+}
+
+export type CompanyInvitationInputRole = typeof CompanyInvitationInputRole[keyof typeof CompanyInvitationInputRole];
+
+
+export const CompanyInvitationInputRole = {
+  company_admin: 'company_admin',
+  staff: 'staff',
+} as const;
+
+export interface CompanyInvitationInput {
+  email: string;
+  role: CompanyInvitationInputRole;
+}
+
+export interface CompanyLinkInput {
+  token: string;
+}
+
+export interface CompanyLinkResult {
+  companyId: number;
+}
+
+export interface MembershipSubmission {
+  id: number;
+  status: string;
+  expiresAt: string;
+}
+
+export interface MembershipResult {
+  ok: boolean;
+}
+
 export type TalentContactRequestStatus = typeof TalentContactRequestStatus[keyof typeof TalentContactRequestStatus];
 
 
@@ -197,6 +367,8 @@ export const ProjectStatus = {
 } as const;
 
 export interface Project {
+  /** @nullable */
+  ownerCompanyId?: number | null;
   id: number;
   title: string;
   description: string;
@@ -212,6 +384,8 @@ export interface Project {
 }
 
 export interface ProjectInput {
+  /** @minimum 1 */
+  ownerCompanyId?: number;
   /** @minLength 1 */
   title: string;
   description: string;
@@ -372,6 +546,8 @@ export const TalentPostPostType = {
 } as const;
 
 export interface TalentPost {
+  /** @nullable */
+  ownerCompanyId?: number | null;
   id: number;
   postType: TalentPostPostType;
   title: string;
@@ -491,6 +667,8 @@ export const TalentPostInputPostType = {
 } as const;
 
 export interface TalentPostInput {
+  /** @minimum 1 */
+  ownerCompanyId?: number;
   postType: TalentPostInputPostType;
   title: string;
   authorName: string;
@@ -498,7 +676,8 @@ export interface TalentPostInput {
   location?: string;
   employmentType?: string;
   experienceLevel?: string;
-  headcount?: number;
+  /** @nullable */
+  headcount?: number | null;
   skills?: string[];
   description?: string;
   contactEmail?: string;
@@ -521,7 +700,8 @@ export interface TalentPostUpdate {
   location?: string;
   employmentType?: string;
   experienceLevel?: string;
-  headcount?: number;
+  /** @nullable */
+  headcount?: number | null;
   skills?: string[];
   description?: string;
   contactEmail?: string;

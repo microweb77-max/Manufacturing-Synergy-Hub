@@ -38,9 +38,9 @@ app.use(clerkMiddleware((req) => ({
     process.env.CLERK_PUBLISHABLE_KEY,
   ),
 })));
-app.use("/api", createApiAuthorization());
 app.use(express.json({ limit: "12mb" }));
 app.use(express.urlencoded({ extended: true, limit: "12mb" }));
+app.use("/api", createApiAuthorization());
 
 app.use("/api", router);
 

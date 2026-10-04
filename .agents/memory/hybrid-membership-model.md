@@ -17,6 +17,7 @@ membership and enforce ownership on the server before lifting interim restrictio
 For claims, the plan prefers a one-time link to the existing profile's contact
 email, with document-based manual review as an exception; do not rely solely on
 matching email domains because many existing contacts use personal email providers.
-Keep unclaimed profiles publicly browseable. Treat company claiming, contact
-visibility, invitations, proposal-response flows, and legal consent as later phases,
-not as already delivered merely because login exists.
+Keep unclaimed profiles publicly browseable. Company-admin and contact roles
+must never confer platform-admin permission. Contact visibility, proposal-response
+flows and legal consent are separate capabilities, not implied by login or company
+verification.

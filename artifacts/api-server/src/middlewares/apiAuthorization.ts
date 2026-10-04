@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { clerkClient, getAuth } from "@clerk/express";
 import { getClerkProxyHost } from "./clerkProxyMiddleware";
+import { authorizeCompanyWrite } from "../lib/companyPermissions";
 
 export interface Identity {
   userId: string;
@@ -21,12 +22,14 @@ const privateLists = new Set([
 
 export function createApiAuthorization(
   identify: typeof resolveIdentity = resolveIdentity,
+  authorizeCompany: typeof authorizeCompanyWrite = authorizeCompanyWrite,
 ): RequestHandler {
   return async (req, res, next) => {
     // Express routes are case-insensitive by default; authorization must agree.
     const path = req.path.toLowerCase().replace(/\/+$/, "") || "/";
     const isRead = req.method === "GET" || req.method === "HEAD";
-    const isPrivate = [...privateLists].some(prefix => path === prefix || path.startsWith(`${prefix}/`));
+    const membership = path === "/membership" || path.startsWith("/membership/");
+    const isPrivate = membership || [...privateLists].some(prefix => path === prefix || path.startsWith(`${prefix}/`));
     if (req.method === "OPTIONS" || (isRead && !isPrivate)) {
       next();
       return;
@@ -50,12 +53,12 @@ export function createApiAuthorization(
         res.status(401).json({ error: "로그인이 필요합니다.", code: "AUTH_REQUIRED" });
         return;
       }
-      // Until company claims/ownership exist, a member must not modify shared records
-      // or impersonate another company via client-supplied company IDs.
-      if (!identity.isAdmin) {
+      res.locals.identity = identity;
+      // Membership handlers enforce their own company-admin/reviewer rules.
+      if (!identity.isAdmin && !membership && !await authorizeCompany(req, identity)) {
         res.status(403).json({
-          error: "현재 등록·수정·삭제는 플랫폼 관리자만 가능합니다. 회사 인증 기능은 준비 중입니다.",
-          code: "ADMIN_REQUIRED",
+          error: "이 회사의 인증된 소속과 해당 작업 권한이 필요합니다.",
+          code: "COMPANY_PERMISSION_REQUIRED",
         });
         return;
       }

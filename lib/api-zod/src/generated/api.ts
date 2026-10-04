@@ -8,6 +8,160 @@
 import * as zod from 'zod';
 
 
+export const GetCompanyVerificationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCompanyVerificationResponse = zod.object({
+  "verified": zod.boolean(),
+  "method": zod.string().nullable()
+})
+
+
+export const ListMyCompaniesResponseItem = zod.object({
+  "companyId": zod.number(),
+  "name": zod.string(),
+  "role": zod.enum(['company_admin', 'staff'])
+})
+export const ListMyCompaniesResponse = zod.array(ListMyCompaniesResponseItem)
+
+
+export const GetCompanyMembershipParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetCompanyMembershipResponse = zod.object({
+  "verified": zod.boolean(),
+  "role": zod.union([zod.literal('company_admin'),zod.literal('staff'),zod.literal(null)]).nullable(),
+  "members": zod.array(zod.object({
+  "id": zod.number(),
+  "companyId": zod.number(),
+  "userId": zod.string(),
+  "role": zod.enum(['company_admin', 'staff']),
+  "createdAt": zod.string()
+})),
+  "invitations": zod.array(zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "role": zod.enum(['company_admin', 'staff']),
+  "status": zod.string(),
+  "expiresAt": zod.string()
+})),
+  "claims": zod.array(zod.object({
+  "id": zod.number(),
+  "method": zod.enum(['email', 'manual']),
+  "status": zod.string(),
+  "expiresAt": zod.string(),
+  "reviewNote": zod.string().nullable()
+}))
+})
+
+
+export const ListCompanyClaimsResponseItem = zod.object({
+  "id": zod.number(),
+  "companyId": zod.number(),
+  "companyName": zod.string(),
+  "userId": zod.string(),
+  "method": zod.string(),
+  "status": zod.string(),
+  "expiresAt": zod.string(),
+  "taxCode": zod.string().nullable(),
+  "registeredTaxCode": zod.string().nullable(),
+  "reviewNote": zod.string().nullable()
+})
+export const ListCompanyClaimsResponse = zod.array(ListCompanyClaimsResponseItem)
+
+
+
+
+
+export const CreateCompanyClaimBody = zod.object({
+  "companyId": zod.number().min(1),
+  "method": zod.enum(['email', 'manual']),
+  "taxCode": zod.string().optional(),
+  "evidenceData": zod.string().optional().describe('PNG\/JPEG\/PDF data URL up to 5MB, persisted privately in App Storage')
+})
+
+export const CreateCompanyClaimResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.string(),
+  "expiresAt": zod.string()
+})
+
+
+export const CancelCompanyClaimParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CancelCompanyClaimResponse = zod.void()
+
+
+export const ReviewCompanyClaimParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const reviewCompanyClaimBodyNoteMax = 1000;
+
+
+
+export const ReviewCompanyClaimBody = zod.object({
+  "decision": zod.enum(['approve', 'reject']),
+  "note": zod.string().min(1).max(reviewCompanyClaimBodyNoteMax)
+})
+
+export const ReviewCompanyClaimResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const DownloadCompanyClaimEvidenceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DownloadCompanyClaimEvidenceResponse = zod.unknown()
+
+
+export const ConsumeCompanyLinkBody = zod.object({
+  "token": zod.string()
+})
+
+export const ConsumeCompanyLinkResponse = zod.object({
+  "companyId": zod.number()
+})
+
+
+export const InviteCompanyMemberParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const InviteCompanyMemberBody = zod.object({
+  "email": zod.string().email(),
+  "role": zod.enum(['company_admin', 'staff'])
+})
+
+export const InviteCompanyMemberResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.string(),
+  "expiresAt": zod.string()
+})
+
+
+export const CancelCompanyInvitationParams = zod.object({
+  "id": zod.coerce.number(),
+  "invitationId": zod.coerce.number()
+})
+
+export const CancelCompanyInvitationResponse = zod.void()
+
+
+export const RemoveCompanyMemberParams = zod.object({
+  "id": zod.coerce.number(),
+  "memberId": zod.coerce.number()
+})
+
+export const RemoveCompanyMemberResponse = zod.void()
+
+
 /**
  * @summary List talent contact requests (admin only)
  */
@@ -318,6 +472,7 @@ export const ListProjectsQueryParams = zod.object({
 })
 
 export const ListProjectsResponseItem = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -338,7 +493,9 @@ export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
 
 
 
+
 export const CreateProjectBody = zod.object({
+  "ownerCompanyId": zod.number().min(1).optional(),
   "title": zod.string().min(1),
   "description": zod.string(),
   "demandCompany": zod.string(),
@@ -349,6 +506,7 @@ export const CreateProjectBody = zod.object({
 })
 
 export const CreateProjectResponse = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -370,6 +528,7 @@ export const GetProjectParams = zod.object({
 })
 
 export const GetProjectResponse = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -405,6 +564,7 @@ export const UpdateProjectBody = zod.object({
 })
 
 export const UpdateProjectResponse = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -477,6 +637,7 @@ export const ListProjectMatchesResponseItem = zod.object({
   "synergyScore": zod.number(),
   "createdAt": zod.string(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -526,6 +687,7 @@ export const ListMatchesResponseItem = zod.object({
   "synergyScore": zod.number(),
   "createdAt": zod.string(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -577,6 +739,7 @@ export const CreateMatchResponse = zod.object({
   "synergyScore": zod.number(),
   "createdAt": zod.string(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -629,6 +792,7 @@ export const UpdateMatchResponse = zod.object({
   "synergyScore": zod.number(),
   "createdAt": zod.string(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -904,6 +1068,7 @@ export const ListPerformanceLogsResponseItem = zod.object({
   "createdAt": zod.string()
 }).optional(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -960,6 +1125,7 @@ export const CreatePerformanceLogResponse = zod.object({
   "createdAt": zod.string()
 }).optional(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -1019,6 +1185,7 @@ export const UpdatePerformanceLogResponse = zod.object({
   "createdAt": zod.string()
 }).optional(),
   "project": zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "title": zod.string(),
   "description": zod.string(),
@@ -1051,6 +1218,7 @@ export const ListTalentPostsQueryParams = zod.object({
 })
 
 export const ListTalentPostsResponseItem = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),
@@ -1074,7 +1242,11 @@ export const ListTalentPostsResponse = zod.array(ListTalentPostsResponseItem)
 /**
  * @summary Create a talent pool post
  */
+
+
+
 export const CreateTalentPostBody = zod.object({
+  "ownerCompanyId": zod.number().min(1).optional(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),
   "authorName": zod.string(),
@@ -1082,7 +1254,7 @@ export const CreateTalentPostBody = zod.object({
   "location": zod.string().optional(),
   "employmentType": zod.string().optional(),
   "experienceLevel": zod.string().optional(),
-  "headcount": zod.number().optional(),
+  "headcount": zod.number().nullish(),
   "skills": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "contactEmail": zod.string().optional(),
@@ -1090,6 +1262,7 @@ export const CreateTalentPostBody = zod.object({
 })
 
 export const CreateTalentPostResponse = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),
@@ -1124,7 +1297,7 @@ export const UpdateTalentPostBody = zod.object({
   "location": zod.string().optional(),
   "employmentType": zod.string().optional(),
   "experienceLevel": zod.string().optional(),
-  "headcount": zod.number().optional(),
+  "headcount": zod.number().nullish(),
   "skills": zod.array(zod.string()).optional(),
   "description": zod.string().optional(),
   "contactEmail": zod.string().optional(),
@@ -1132,6 +1305,7 @@ export const UpdateTalentPostBody = zod.object({
 })
 
 export const UpdateTalentPostResponse = zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),
@@ -1173,6 +1347,7 @@ export const CollectJobsResponse = zod.object({
   "inserted": zod.number(),
   "skipped": zod.number(),
   "posts": zod.array(zod.object({
+  "ownerCompanyId": zod.number().nullish(),
   "id": zod.number(),
   "postType": zod.enum(['hiring', 'seeking']),
   "title": zod.string(),

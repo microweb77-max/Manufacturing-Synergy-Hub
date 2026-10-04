@@ -66,8 +66,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
         <div className="flex flex-wrap items-center justify-end gap-3 border-b px-6 py-3">
-          <span className="text-sm text-muted-foreground">{isSignedIn ? (isAdmin ? "플랫폼 관리자" : "회원 · 회사 인증 준비 중") : "공개 열람"}</span>
+          <span className="text-sm text-muted-foreground">{isSignedIn ? (isAdmin ? "플랫폼 관리자" : "회원") : "공개 열람"}</span>
           {isSignedIn ? <>
+            <Link href="/my-companies"><Button variant="outline" size="sm" data-testid="link-my-companies">내 회사</Button></Link>
             <Link href="/admin"><Button variant="outline" size="sm">{isAdmin ? "관리자 화면" : "계정 권한"}</Button></Link>
             <Button variant="outline" size="sm" onClick={logout}>로그아웃</Button>
           </> : <>
@@ -75,7 +76,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <Link href="/sign-up"><Button size="sm">회원가입</Button></Link>
           </>}
         </div>
-        {!isAdmin && <p className="bg-muted px-6 py-2 text-sm text-muted-foreground">공개 열람은 자유롭게 이용하세요. 회사 인증 기능 도입 전까지 등록·수정·삭제 및 요청 전송은 플랫폼 관리자만 가능합니다.</p>}
+        {!isAdmin && <p className="bg-muted px-6 py-2 text-sm text-muted-foreground">공개 열람은 자유롭게 이용하세요. 회사 등록·수정·삭제는 인증된 회사 구성원 또는 플랫폼 관리자만 가능합니다.</p>}
         {children}
       </main>
     </div>

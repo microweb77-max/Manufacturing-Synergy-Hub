@@ -32,8 +32,16 @@ import type {
   CollectNewsRequest,
   CollectNewsResult,
   Company,
+  CompanyClaimDecision,
+  CompanyClaimInput,
+  CompanyClaimReview,
   CompanyInput,
+  CompanyInvitationInput,
+  CompanyLinkInput,
+  CompanyLinkResult,
+  CompanyMembership,
   CompanyUpdate,
+  CompanyVerification,
   DashboardSummary,
   Error,
   GetCurrentSession200,
@@ -50,6 +58,9 @@ import type {
   Match,
   MatchInput,
   MatchUpdate,
+  MembershipResult,
+  MembershipSubmission,
+  MyCompany,
   NavSetting,
   NavSettingUpdate,
   NewsArticle,
@@ -109,6 +120,815 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetCompanyVerificationUrl = (id: number,) => {
+
+
+
+
+  return `/api/companies/${id}/verification`
+}
+
+export const getCompanyVerification = async (id: number, options?: RequestInit): Promise<CompanyVerification> => {
+
+  return customFetch<CompanyVerification>(getGetCompanyVerificationUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyVerificationQueryKey = (id: number,) => {
+    return [
+    `/api/companies/${id}/verification`
+    ] as const;
+    }
+
+
+export const getGetCompanyVerificationQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyVerification>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanyVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyVerificationQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyVerification>>> = ({ signal }) => getCompanyVerification(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyVerification>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCompanyVerificationQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyVerification>>>
+export type GetCompanyVerificationQueryError = ErrorType<unknown>
+
+
+
+export function useGetCompanyVerification<TData = Awaited<ReturnType<typeof getCompanyVerification>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanyVerification>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCompanyVerificationQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListMyCompaniesUrl = () => {
+
+
+
+
+  return `/api/membership/mine`
+}
+
+export const listMyCompanies = async ( options?: RequestInit): Promise<MyCompany[]> => {
+
+  return customFetch<MyCompany[]>(getListMyCompaniesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyCompaniesQueryKey = () => {
+    return [
+    `/api/membership/mine`
+    ] as const;
+    }
+
+
+export const getListMyCompaniesQueryOptions = <TData = Awaited<ReturnType<typeof listMyCompanies>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyCompanies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyCompaniesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyCompanies>>> = ({ signal }) => listMyCompanies({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyCompanies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyCompaniesQueryResult = NonNullable<Awaited<ReturnType<typeof listMyCompanies>>>
+export type ListMyCompaniesQueryError = ErrorType<unknown>
+
+
+
+export function useListMyCompanies<TData = Awaited<ReturnType<typeof listMyCompanies>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyCompanies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyCompaniesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetCompanyMembershipUrl = (id: number,) => {
+
+
+
+
+  return `/api/membership/companies/${id}`
+}
+
+export const getCompanyMembership = async (id: number, options?: RequestInit): Promise<CompanyMembership> => {
+
+  return customFetch<CompanyMembership>(getGetCompanyMembershipUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCompanyMembershipQueryKey = (id: number,) => {
+    return [
+    `/api/membership/companies/${id}`
+    ] as const;
+    }
+
+
+export const getGetCompanyMembershipQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyMembership>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanyMembership>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyMembershipQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyMembership>>> = ({ signal }) => getCompanyMembership(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyMembership>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCompanyMembershipQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyMembership>>>
+export type GetCompanyMembershipQueryError = ErrorType<unknown>
+
+
+
+export function useGetCompanyMembership<TData = Awaited<ReturnType<typeof getCompanyMembership>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCompanyMembership>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCompanyMembershipQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListCompanyClaimsUrl = () => {
+
+
+
+
+  return `/api/membership/claims`
+}
+
+export const listCompanyClaims = async ( options?: RequestInit): Promise<CompanyClaimReview[]> => {
+
+  return customFetch<CompanyClaimReview[]>(getListCompanyClaimsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCompanyClaimsQueryKey = () => {
+    return [
+    `/api/membership/claims`
+    ] as const;
+    }
+
+
+export const getListCompanyClaimsQueryOptions = <TData = Awaited<ReturnType<typeof listCompanyClaims>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompanyClaims>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCompanyClaimsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCompanyClaims>>> = ({ signal }) => listCompanyClaims({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCompanyClaims>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCompanyClaimsQueryResult = NonNullable<Awaited<ReturnType<typeof listCompanyClaims>>>
+export type ListCompanyClaimsQueryError = ErrorType<unknown>
+
+
+
+export function useListCompanyClaims<TData = Awaited<ReturnType<typeof listCompanyClaims>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCompanyClaims>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCompanyClaimsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCompanyClaimUrl = () => {
+
+
+
+
+  return `/api/membership/claims`
+}
+
+export const createCompanyClaim = async (companyClaimInput: CompanyClaimInput, options?: RequestInit): Promise<MembershipSubmission> => {
+
+  return customFetch<MembershipSubmission>(getCreateCompanyClaimUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyClaimInput)
+  }
+);}
+
+
+
+
+export const getCreateCompanyClaimMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompanyClaim>>, TError,{data: BodyType<CompanyClaimInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCompanyClaim>>, TError,{data: BodyType<CompanyClaimInput>}, TContext> => {
+
+const mutationKey = ['createCompanyClaim'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCompanyClaim>>, {data: BodyType<CompanyClaimInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCompanyClaim(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCompanyClaimMutationResult = NonNullable<Awaited<ReturnType<typeof createCompanyClaim>>>
+    export type CreateCompanyClaimMutationBody = BodyType<CompanyClaimInput>
+    export type CreateCompanyClaimMutationError = ErrorType<unknown>
+
+    export const useCreateCompanyClaim = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompanyClaim>>, TError,{data: BodyType<CompanyClaimInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCompanyClaim>>,
+        TError,
+        {data: BodyType<CompanyClaimInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCompanyClaimMutationOptions(options));
+    }
+
+export const getCancelCompanyClaimUrl = (id: number,) => {
+
+
+
+
+  return `/api/membership/claims/${id}`
+}
+
+export const cancelCompanyClaim = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getCancelCompanyClaimUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getCancelCompanyClaimMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyClaim>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyClaim>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['cancelCompanyClaim'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelCompanyClaim>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  cancelCompanyClaim(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelCompanyClaimMutationResult = NonNullable<Awaited<ReturnType<typeof cancelCompanyClaim>>>
+
+    export type CancelCompanyClaimMutationError = ErrorType<unknown>
+
+    export const useCancelCompanyClaim = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyClaim>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelCompanyClaim>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getCancelCompanyClaimMutationOptions(options));
+    }
+
+export const getReviewCompanyClaimUrl = (id: number,) => {
+
+
+
+
+  return `/api/membership/claims/${id}`
+}
+
+export const reviewCompanyClaim = async (id: number,
+    companyClaimDecision: CompanyClaimDecision, options?: RequestInit): Promise<MembershipResult> => {
+
+  return customFetch<MembershipResult>(getReviewCompanyClaimUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyClaimDecision)
+  }
+);}
+
+
+
+
+export const getReviewCompanyClaimMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewCompanyClaim>>, TError,{id: number;data: BodyType<CompanyClaimDecision>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewCompanyClaim>>, TError,{id: number;data: BodyType<CompanyClaimDecision>}, TContext> => {
+
+const mutationKey = ['reviewCompanyClaim'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewCompanyClaim>>, {id: number;data: BodyType<CompanyClaimDecision>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  reviewCompanyClaim(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewCompanyClaimMutationResult = NonNullable<Awaited<ReturnType<typeof reviewCompanyClaim>>>
+    export type ReviewCompanyClaimMutationBody = BodyType<CompanyClaimDecision>
+    export type ReviewCompanyClaimMutationError = ErrorType<unknown>
+
+    export const useReviewCompanyClaim = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewCompanyClaim>>, TError,{id: number;data: BodyType<CompanyClaimDecision>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reviewCompanyClaim>>,
+        TError,
+        {id: number;data: BodyType<CompanyClaimDecision>},
+        TContext
+      > => {
+      return useMutation(getReviewCompanyClaimMutationOptions(options));
+    }
+
+export const getDownloadCompanyClaimEvidenceUrl = (id: number,) => {
+
+
+
+
+  return `/api/membership/claims/${id}/evidence`
+}
+
+export const downloadCompanyClaimEvidence = async (id: number, options?: RequestInit): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadCompanyClaimEvidenceUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadCompanyClaimEvidenceQueryKey = (id: number,) => {
+    return [
+    `/api/membership/claims/${id}/evidence`
+    ] as const;
+    }
+
+
+export const getDownloadCompanyClaimEvidenceQueryOptions = <TData = Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadCompanyClaimEvidenceQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>> = ({ signal }) => downloadCompanyClaimEvidence(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadCompanyClaimEvidenceQueryResult = NonNullable<Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>>
+export type DownloadCompanyClaimEvidenceQueryError = ErrorType<unknown>
+
+
+
+export function useDownloadCompanyClaimEvidence<TData = Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadCompanyClaimEvidence>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadCompanyClaimEvidenceQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConsumeCompanyLinkUrl = () => {
+
+
+
+
+  return `/api/membership/consume`
+}
+
+export const consumeCompanyLink = async (companyLinkInput: CompanyLinkInput, options?: RequestInit): Promise<CompanyLinkResult> => {
+
+  return customFetch<CompanyLinkResult>(getConsumeCompanyLinkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyLinkInput)
+  }
+);}
+
+
+
+
+export const getConsumeCompanyLinkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof consumeCompanyLink>>, TError,{data: BodyType<CompanyLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof consumeCompanyLink>>, TError,{data: BodyType<CompanyLinkInput>}, TContext> => {
+
+const mutationKey = ['consumeCompanyLink'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof consumeCompanyLink>>, {data: BodyType<CompanyLinkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  consumeCompanyLink(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConsumeCompanyLinkMutationResult = NonNullable<Awaited<ReturnType<typeof consumeCompanyLink>>>
+    export type ConsumeCompanyLinkMutationBody = BodyType<CompanyLinkInput>
+    export type ConsumeCompanyLinkMutationError = ErrorType<unknown>
+
+    export const useConsumeCompanyLink = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof consumeCompanyLink>>, TError,{data: BodyType<CompanyLinkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof consumeCompanyLink>>,
+        TError,
+        {data: BodyType<CompanyLinkInput>},
+        TContext
+      > => {
+      return useMutation(getConsumeCompanyLinkMutationOptions(options));
+    }
+
+export const getInviteCompanyMemberUrl = (id: number,) => {
+
+
+
+
+  return `/api/membership/companies/${id}/invitations`
+}
+
+export const inviteCompanyMember = async (id: number,
+    companyInvitationInput: CompanyInvitationInput, options?: RequestInit): Promise<MembershipSubmission> => {
+
+  return customFetch<MembershipSubmission>(getInviteCompanyMemberUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyInvitationInput)
+  }
+);}
+
+
+
+
+export const getInviteCompanyMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteCompanyMember>>, TError,{id: number;data: BodyType<CompanyInvitationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviteCompanyMember>>, TError,{id: number;data: BodyType<CompanyInvitationInput>}, TContext> => {
+
+const mutationKey = ['inviteCompanyMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviteCompanyMember>>, {id: number;data: BodyType<CompanyInvitationInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inviteCompanyMember(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviteCompanyMemberMutationResult = NonNullable<Awaited<ReturnType<typeof inviteCompanyMember>>>
+    export type InviteCompanyMemberMutationBody = BodyType<CompanyInvitationInput>
+    export type InviteCompanyMemberMutationError = ErrorType<unknown>
+
+    export const useInviteCompanyMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteCompanyMember>>, TError,{id: number;data: BodyType<CompanyInvitationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviteCompanyMember>>,
+        TError,
+        {id: number;data: BodyType<CompanyInvitationInput>},
+        TContext
+      > => {
+      return useMutation(getInviteCompanyMemberMutationOptions(options));
+    }
+
+export const getCancelCompanyInvitationUrl = (id: number,
+    invitationId: number,) => {
+
+
+
+
+  return `/api/membership/companies/${id}/invitations/${invitationId}`
+}
+
+export const cancelCompanyInvitation = async (id: number,
+    invitationId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getCancelCompanyInvitationUrl(id,invitationId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getCancelCompanyInvitationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyInvitation>>, TError,{id: number;invitationId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyInvitation>>, TError,{id: number;invitationId: number}, TContext> => {
+
+const mutationKey = ['cancelCompanyInvitation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelCompanyInvitation>>, {id: number;invitationId: number}> = (props) => {
+          const {id,invitationId} = props ?? {};
+
+          return  cancelCompanyInvitation(id,invitationId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelCompanyInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof cancelCompanyInvitation>>>
+
+    export type CancelCompanyInvitationMutationError = ErrorType<unknown>
+
+    export const useCancelCompanyInvitation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelCompanyInvitation>>, TError,{id: number;invitationId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cancelCompanyInvitation>>,
+        TError,
+        {id: number;invitationId: number},
+        TContext
+      > => {
+      return useMutation(getCancelCompanyInvitationMutationOptions(options));
+    }
+
+export const getRemoveCompanyMemberUrl = (id: number,
+    memberId: number,) => {
+
+
+
+
+  return `/api/membership/companies/${id}/members/${memberId}`
+}
+
+export const removeCompanyMember = async (id: number,
+    memberId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveCompanyMemberUrl(id,memberId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveCompanyMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCompanyMember>>, TError,{id: number;memberId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeCompanyMember>>, TError,{id: number;memberId: number}, TContext> => {
+
+const mutationKey = ['removeCompanyMember'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeCompanyMember>>, {id: number;memberId: number}> = (props) => {
+          const {id,memberId} = props ?? {};
+
+          return  removeCompanyMember(id,memberId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveCompanyMemberMutationResult = NonNullable<Awaited<ReturnType<typeof removeCompanyMember>>>
+
+    export type RemoveCompanyMemberMutationError = ErrorType<unknown>
+
+    export const useRemoveCompanyMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeCompanyMember>>, TError,{id: number;memberId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeCompanyMember>>,
+        TError,
+        {id: number;memberId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveCompanyMemberMutationOptions(options));
+    }
 
 export const getListTalentContactRequestsUrl = () => {
 

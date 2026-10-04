@@ -8,6 +8,8 @@
 import type { TalentPostInputPostType } from './talentPostInputPostType';
 
 export interface TalentPostInput {
+  /** @minimum 1 */
+  ownerCompanyId?: number;
   postType: TalentPostInputPostType;
   title: string;
   authorName: string;
@@ -15,7 +17,8 @@ export interface TalentPostInput {
   location?: string;
   employmentType?: string;
   experienceLevel?: string;
-  headcount?: number;
+  /** @nullable */
+  headcount?: number | null;
   skills?: string[];
   description?: string;
   contactEmail?: string;

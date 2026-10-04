@@ -18,7 +18,7 @@ async function withServer(identity: Identity | null | "failure", run: (base: str
   app.use("/api", createApiAuthorization(async () => {
     if (identity === "failure") throw new Error("Provider unavailable");
     return identity;
-  }));
+  }, async () => false));
   app.use((_req, res) => { res.status(204).end(); });
   const server = app.listen(0, "127.0.0.1");
   await new Promise<void>(resolve => server.once("listening", resolve));
@@ -46,7 +46,7 @@ test("signed-in members cannot impersonate admins on any write route", async () 
   await withServer({ userId: "member", isAdmin: false }, async base => {
     for (const route of writes) {
       const response = await fetch(base + route.path, { method: route.method });
-      assert.equal(response.status, 403, `${route.method} ${route.path}`);
+      assert.equal(response.status, route.path.startsWith("/membership/") ? 204 : 403, `${route.method} ${route.path}`);
     }
   });
 });

@@ -34,6 +34,10 @@ import AdminPage from "./pages/admin";
 import ClientCompaniesPage from "./pages/client-companies";
 
 import OffersPage from "./pages/offers";
+import MyCompaniesPage from "./pages/my-companies";
+import MyCompanyActivityPage from "./pages/my-company-activity";
+import CompanyLinkPage from "./pages/company-link";
+import CompanyClaimsPage from "./pages/company-claims";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -71,6 +75,11 @@ function Router() {
         <Route path="/client-companies" component={ClientCompaniesPage} />
 
         <Route path="/offers" component={OffersPage} />
+
+        <Route path="/my-companies" component={MyCompaniesPage} />
+        <Route path="/my-companies/:id/activity" component={MyCompanyActivityPage} />
+        <Route path="/company-link" component={CompanyLinkPage} />
+        <Route path="/company-claims" component={CompanyClaimsPage} />
 
         <Route path="/admin" component={AdminGuard} />
 

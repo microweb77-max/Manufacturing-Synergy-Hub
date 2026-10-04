@@ -31,6 +31,132 @@ tags:
   - name: dashboard
     description: Aggregated dashboard data
 paths:
+  /companies/{id}/verification:
+    get:
+      operationId: getCompanyVerification
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Public verification badge
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyVerification" }
+  /membership/mine:
+    get:
+      operationId: listMyCompanies
+      responses:
+        "200":
+          description: Current verified memberships
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MyCompany" } }
+  /membership/companies/{id}:
+    get:
+      operationId: getCompanyMembership
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Own claims and company management state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyMembership" }
+  /membership/claims:
+    get:
+      operationId: listCompanyClaims
+      responses:
+        "200":
+          description: Platform administrator review queue
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CompanyClaimReview" } }
+    post:
+      operationId: createCompanyClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyClaimInput" }
+      responses:
+        "201":
+          description: Submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipSubmission" }
+  /membership/claims/{id}:
+    delete:
+      operationId: cancelCompanyClaim
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "204": { description: Cancelled }
+    patch:
+      operationId: reviewCompanyClaim
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyClaimDecision" }
+      responses:
+        "200":
+          description: Reviewed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipResult" }
+  /membership/claims/{id}/evidence:
+    get:
+      operationId: downloadCompanyClaimEvidence
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Private evidence attachment for applicant or reviewer
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+  /membership/consume:
+    post:
+      operationId: consumeCompanyLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyLinkInput" }
+      responses:
+        "200":
+          description: Claimed or joined existing company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyLinkResult" }
+  /membership/companies/{id}/invitations:
+    post:
+      operationId: inviteCompanyMember
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyInvitationInput" }
+      responses:
+        "201":
+          description: Invitation sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipSubmission" }
+  /membership/companies/{id}/invitations/{invitationId}:
+    delete:
+      operationId: cancelCompanyInvitation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: invitationId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Cancelled }
+  /membership/companies/{id}/members/{memberId}:
+    delete:
+      operationId: removeCompanyMember
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: memberId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Removed }
   /talent-contact-requests:
     get:
       operationId: listTalentContactRequests
@@ -1341,6 +1467,111 @@ paths:
 
 components:
   schemas:
+    CompanyVerification:
+      type: object
+      required: [verified, method]
+      properties:
+        verified: { type: boolean }
+        method: { type: [string, "null"] }
+    MyCompany:
+      type: object
+      required: [companyId, name, role]
+      properties:
+        companyId: { type: integer }
+        name: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+    CompanyMember:
+      type: object
+      required: [id, companyId, userId, role, createdAt]
+      properties:
+        id: { type: integer }
+        companyId: { type: integer }
+        userId: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+        createdAt: { type: string }
+    CompanyInvitation:
+      type: object
+      required: [id, email, role, status, expiresAt]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+        status: { type: string }
+        expiresAt: { type: string }
+    CompanyClaimStatus:
+      type: object
+      required: [id, method, status, expiresAt, reviewNote]
+      properties:
+        id: { type: integer }
+        method: { type: string, enum: [email, manual] }
+        status: { type: string }
+        expiresAt: { type: string }
+        reviewNote: { type: [string, "null"] }
+    CompanyMembership:
+      type: object
+      required: [verified, role, members, invitations, claims]
+      properties:
+        verified: { type: boolean }
+        role: { type: [string, "null"], enum: [company_admin, staff, null] }
+        members: { type: array, items: { $ref: "#/components/schemas/CompanyMember" } }
+        invitations: { type: array, items: { $ref: "#/components/schemas/CompanyInvitation" } }
+        claims: { type: array, items: { $ref: "#/components/schemas/CompanyClaimStatus" } }
+    CompanyClaimReview:
+      type: object
+      required: [id, companyId, companyName, userId, method, status, expiresAt, taxCode, registeredTaxCode, reviewNote]
+      properties:
+        id: { type: integer }
+        companyId: { type: integer }
+        companyName: { type: string }
+        userId: { type: string }
+        method: { type: string }
+        status: { type: string }
+        expiresAt: { type: string }
+        taxCode: { type: [string, "null"] }
+        registeredTaxCode: { type: [string, "null"] }
+        reviewNote: { type: [string, "null"] }
+    CompanyClaimInput:
+      type: object
+      required: [companyId, method]
+      properties:
+        companyId: { type: integer, minimum: 1 }
+        method: { type: string, enum: [email, manual] }
+        taxCode: { type: string }
+        evidenceData: { type: string, description: "PNG/JPEG/PDF data URL up to 5MB, persisted privately in App Storage" }
+    CompanyClaimDecision:
+      type: object
+      required: [decision, note]
+      properties:
+        decision: { type: string, enum: [approve, reject] }
+        note: { type: string, minLength: 1, maxLength: 1000 }
+    CompanyInvitationInput:
+      type: object
+      required: [email, role]
+      properties:
+        email: { type: string, format: email }
+        role: { type: string, enum: [company_admin, staff] }
+    CompanyLinkInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    CompanyLinkResult:
+      type: object
+      required: [companyId]
+      properties:
+        companyId: { type: integer }
+    MembershipSubmission:
+      type: object
+      required: [id, status, expiresAt]
+      properties:
+        id: { type: integer }
+        status: { type: string }
+        expiresAt: { type: string }
+    MembershipResult:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
     TalentContactRequest:
       type: object
       required: [id, talentPostId, seekerName, postTitle, companyName, contactPerson, phone, email, status, createdAt]
@@ -1626,6 +1857,7 @@ components:
         - deadline
         - createdAt
       properties:
+        ownerCompanyId: { type: [integer, "null"] }
         id:
           type: integer
         title:
@@ -1658,6 +1890,7 @@ components:
         - category
         - requiredTags
       properties:
+        ownerCompanyId: { type: integer, minimum: 1 }
         title:
           type: string
           minLength: 1
@@ -1952,6 +2185,7 @@ components:
         - sourceUrl
         - createdAt
       properties:
+        ownerCompanyId: { type: [integer, "null"] }
         id:
           type: integer
         postType:
@@ -2128,6 +2362,7 @@ components:
         - title
         - authorName
       properties:
+        ownerCompanyId: { type: integer, minimum: 1 }
         postType:
           type: string
           enum: [hiring, seeking]
@@ -2144,7 +2379,7 @@ components:
         experienceLevel:
           type: string
         headcount:
-          type: integer
+          type: ["integer", "null"]
         skills:
           type: array
           items:
@@ -2174,7 +2409,7 @@ components:
         experienceLevel:
           type: string
         headcount:
-          type: integer
+          type: ["integer", "null"]
         skills:
           type: array
           items:

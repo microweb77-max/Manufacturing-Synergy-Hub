@@ -1,7 +1,8 @@
 import { useRoute } from "wouter";
-import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, useListProjectApplications, useCreateProjectApplication, useListCompanies, getListProjectMatchesQueryKey, getListProjectApplicationsQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
+import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, useListProjectApplications, useCreateProjectApplication, useListCompanies, useListMyCompanies, getListMyCompaniesQueryKey, getListProjectMatchesQueryKey, getListProjectApplicationsQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +30,11 @@ export default function ProjectDetail() {
   const { data: recommendations, isLoading: isRecsLoading } = useGetProjectRecommendations(id, { query: { enabled: !!id, queryKey: getGetProjectRecommendationsQueryKey(id) } });
   const { data: matches, isLoading: isMatchesLoading } = useListProjectMatches(id, { query: { enabled: !!id, queryKey: getListProjectMatchesQueryKey(id) } });
   const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id && isAdmin, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
-  const { data: companies } = useListCompanies({});
+  const { isSignedIn, userId } = useAuth();
+  const { data: allCompanies } = useListCompanies({});
+  const { data: myCompanies } = useListMyCompanies({ query: { enabled: !!isSignedIn && !isAdmin, queryKey: [...getListMyCompaniesQueryKey(), userId ?? null], staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 30_000 } });
+  const companies = isAdmin ? allCompanies : allCompanies?.filter((c) => myCompanies?.some((mc) => mc.companyId === c.id));
+  const canApply = isAdmin || (myCompanies?.length ?? 0) > 0;
   const createMatch = useCreateMatch();
   const createApplication = useCreateProjectApplication();
 
@@ -277,7 +282,7 @@ export default function ProjectDetail() {
               </div>
               <Dialog open={applyOpen} onOpenChange={(o) => { setApplyOpen(o); if (!o) resetApplyForm(); }}>
                 <DialogTrigger asChild>
-                  <Button disabled={!isAdmin} className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
+                  <Button disabled={!canApply} title={canApply ? undefined : "인증된 회사 구성원만 지원할 수 있습니다"} className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>

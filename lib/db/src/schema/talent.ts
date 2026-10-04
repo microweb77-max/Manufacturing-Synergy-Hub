@@ -8,6 +8,7 @@ import {
 
 export const talentPostsTable = pgTable("talent_posts", {
   id: serial("id").primaryKey(),
+  ownerCompanyId: integer("owner_company_id"),
   postType: text("post_type").notNull(),
   title: text("title").notNull(),
   authorName: text("author_name").notNull(),

@@ -83,6 +83,7 @@ router.post("/talent", async (req, res): Promise<void> => {
     .insert(talentPostsTable)
     .values({
       postType: data.postType,
+      ownerCompanyId: data.ownerCompanyId ?? null,
       title: data.title,
       authorName: data.authorName,
       position: data.position ?? "",
