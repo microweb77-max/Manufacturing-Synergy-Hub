@@ -5,3 +5,4 @@
 - [Company logo storage](company-logo-storage.md) — logos stored inline as base64 data URLs in companies.logo_url (no object storage); server allow-lists raster data URLs / https only, never trust client checks.
 - [Customer directory sources](customer-directory-sources.md) — merged FDI and KOCHAM manufacturer records favor the richer FDI entry whenever normalized company names match.
 - [Company correction policy](company-correction-policy.md) — apply unflagged KOVIMA corrections only; preserve excluded companies and never merge branches solely by tax number.
+- [Hybrid membership](hybrid-membership-model.md) — public browsing, company-owned participation; existing profiles are claimed, with phased rollout starting with Clerk protection.

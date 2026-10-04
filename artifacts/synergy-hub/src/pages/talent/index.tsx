@@ -1,3 +1,4 @@
+import { useAdminAuth } from "@/lib/adminAuth";
 import { useEffect, useMemo, useState } from "react";
 import {
   useListTalentPosts,
@@ -429,6 +430,7 @@ function ResumeDialog({
 }
 
 export default function TalentPool() {
+  const { isAdmin } = useAdminAuth();
   const [tab, setTab] = useState<"hiring" | "seeking">("hiring");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
@@ -657,7 +659,7 @@ export default function TalentPool() {
         <div className="flex flex-wrap items-center gap-2">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => openDialog(tab)}>
+            <Button disabled={!isAdmin} onClick={() => openDialog(tab)}>
               <Plus className="mr-2 h-4 w-4" />
               {tab === "hiring" ? "구인 등록" : "구직 등록"}
             </Button>
@@ -1011,7 +1013,7 @@ export default function TalentPool() {
                   ? "등록된 구인 정보가 없습니다."
                   : "등록된 구직 정보가 없습니다."}
               </p>
-              <Button variant="outline" onClick={() => openDialog(tab)}>
+              <Button disabled={!isAdmin} variant="outline" onClick={() => openDialog(tab)}>
                 <Plus className="mr-2 h-4 w-4" />
                 {tab === "hiring" ? "첫 구인 정보 등록" : "첫 구직 정보 등록"}
               </Button>
@@ -1148,7 +1150,7 @@ export default function TalentPool() {
                         size="icon"
                         className="text-muted-foreground hover:text-destructive shrink-0"
                         onClick={() => handleDelete(post.id)}
-                        disabled={deletePost.isPending}
+                        disabled={!isAdmin || deletePost.isPending}
                         aria-label="삭제"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -1238,6 +1240,7 @@ export default function TalentPool() {
                           size="sm"
                           className="w-full gap-1.5"
                           onClick={() => setResumeTarget(post)}
+                          disabled={!isAdmin}
                         >
                           <FileUp className="h-4 w-4" />
                           이력서 접수
@@ -1252,6 +1255,7 @@ export default function TalentPool() {
                           size="sm"
                           className="w-full gap-1.5"
                           onClick={() => setContactTarget(post)}
+                          disabled={!isAdmin}
                         >
                           <Phone className="h-4 w-4" />
                           연락 요청

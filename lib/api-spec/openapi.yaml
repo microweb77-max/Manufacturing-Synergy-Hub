@@ -31,6 +31,95 @@ tags:
   - name: dashboard
     description: Aggregated dashboard data
 paths:
+  /talent-contact-requests:
+    get:
+      operationId: listTalentContactRequests
+      tags: [talent]
+      summary: List talent contact requests (admin only)
+      parameters: []
+      responses:
+        "200":
+          description: Contact requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TalentContactRequest"
+    post:
+      operationId: createTalentContactRequest
+      tags: [talent]
+      summary: Create a contact request for a seeking post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentContactRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentContactRequest"
+  /talent-contact-requests/{id}:
+    patch:
+      operationId: updateTalentContactRequest
+      tags: [talent]
+      summary: Update contact request status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentContactRequestUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentContactRequest"
+    delete:
+      operationId: deleteTalentContactRequest
+      tags: [talent]
+      summary: Delete a contact request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /auth/me:
+    get:
+      operationId: getCurrentSession
+      tags: [auth]
+      summary: Get verified session and platform permissions
+      responses:
+        "200":
+          description: Current session (anonymous visitors have no privileges)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [userId, isAdmin]
+                properties:
+                  userId:
+                    type: [string, "null"]
+                  isAdmin:
+                    type: boolean
+        "503":
+          description: Account verification unavailable
   /healthz:
     get:
       operationId: healthCheck
@@ -56,7 +145,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [hardware, software, service]
+            enum: [hardware, software, service, customer, supplier]
         - name: tag
           in: query
           required: false
@@ -1252,6 +1341,53 @@ paths:
 
 components:
   schemas:
+    TalentContactRequest:
+      type: object
+      required: [id, talentPostId, seekerName, postTitle, companyName, contactPerson, phone, email, status, createdAt]
+      properties:
+        id:
+          type: integer
+        talentPostId:
+          type: integer
+        seekerName:
+          type: string
+        postTitle:
+          type: string
+        companyName:
+          type: string
+        contactPerson:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed]
+        createdAt:
+          type: string
+    TalentContactRequestInput:
+      type: object
+      required: [talentPostId, companyName, contactPerson]
+      properties:
+        talentPostId:
+          type: integer
+        companyName:
+          type: string
+          minLength: 1
+        contactPerson:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        email:
+          type: string
+    TalentContactRequestUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, completed]
     HealthStatus:
       type: object
       properties:
@@ -1294,7 +1430,7 @@ components:
           type: string
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: ["string", "null"]
         phone:
@@ -1336,7 +1472,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: string
         phone:
@@ -1365,7 +1501,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: string
         phone:
@@ -2366,8 +2502,8 @@ components:
       type: object
       required:
         - totalCompanies
-        - hardwareCompanies
-        - softwareCompanies
+        - customerCompanies
+        - supplierCompanies
         - activeProjects
         - completedProjects
         - totalMatches
@@ -2378,9 +2514,9 @@ components:
       properties:
         totalCompanies:
           type: integer
-        hardwareCompanies:
+        customerCompanies:
           type: integer
-        softwareCompanies:
+        supplierCompanies:
           type: integer
         activeProjects:
           type: integer

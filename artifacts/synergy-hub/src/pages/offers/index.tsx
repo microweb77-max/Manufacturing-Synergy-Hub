@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAdminAuth } from "@/lib/adminAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListSupplyOffers,
@@ -58,6 +59,7 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function OffersPage() {
+  const { isAdmin } = useAdminAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
   const { data: offers, isLoading } = useListSupplyOffers();
@@ -101,7 +103,7 @@ export default function OffersPage() {
             협력사가 공급 가능한 원재료·자재·부자재 품목과 단가입니다. 관심 품목에 매칭을 요청하세요.
           </p>
         </div>
-        <Button onClick={() => setOfferOpen(true)}>
+        <Button disabled={!isAdmin} onClick={() => setOfferOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           공급 오퍼 등록
         </Button>
@@ -192,6 +194,7 @@ export default function OffersPage() {
                     variant="outline"
                     className="w-full"
                     onClick={() => setMatchTarget(o)}
+                    disabled={!isAdmin}
                   >
                     <Handshake className="h-4 w-4 mr-2" />
                     매칭 요청

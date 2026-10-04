@@ -36,6 +36,7 @@ import type {
   CompanyUpdate,
   DashboardSummary,
   Error,
+  GetCurrentSession200,
   HealthStatus,
   ListCompaniesParams,
   ListMatchesParams,
@@ -108,6 +109,371 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getListTalentContactRequestsUrl = () => {
+
+
+
+
+  return `/api/talent-contact-requests`
+}
+
+/**
+ * @summary List talent contact requests (admin only)
+ */
+export const listTalentContactRequests = async ( options?: RequestInit): Promise<TalentContactRequest[]> => {
+
+  return customFetch<TalentContactRequest[]>(getListTalentContactRequestsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTalentContactRequestsQueryKey = () => {
+    return [
+    `/api/talent-contact-requests`
+    ] as const;
+    }
+
+
+export const getListTalentContactRequestsQueryOptions = <TData = Awaited<ReturnType<typeof listTalentContactRequests>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTalentContactRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTalentContactRequests>>> = ({ signal }) => listTalentContactRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTalentContactRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof listTalentContactRequests>>>
+export type ListTalentContactRequestsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List talent contact requests (admin only)
+ */
+
+export function useListTalentContactRequests<TData = Awaited<ReturnType<typeof listTalentContactRequests>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTalentContactRequestsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTalentContactRequestUrl = () => {
+
+
+
+
+  return `/api/talent-contact-requests`
+}
+
+/**
+ * @summary Create a contact request for a seeking post
+ */
+export const createTalentContactRequest = async (talentContactRequestInput: TalentContactRequestInput, options?: RequestInit): Promise<TalentContactRequest> => {
+
+  return customFetch<TalentContactRequest>(getCreateTalentContactRequestUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(talentContactRequestInput)
+  }
+);}
+
+
+
+
+export const getCreateTalentContactRequestMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTalentContactRequest>>, TError,{data: BodyType<TalentContactRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTalentContactRequest>>, TError,{data: BodyType<TalentContactRequestInput>}, TContext> => {
+
+const mutationKey = ['createTalentContactRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTalentContactRequest>>, {data: BodyType<TalentContactRequestInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTalentContactRequest(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTalentContactRequestMutationResult = NonNullable<Awaited<ReturnType<typeof createTalentContactRequest>>>
+    export type CreateTalentContactRequestMutationBody = BodyType<TalentContactRequestInput>
+    export type CreateTalentContactRequestMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a contact request for a seeking post
+ */
+export const useCreateTalentContactRequest = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTalentContactRequest>>, TError,{data: BodyType<TalentContactRequestInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTalentContactRequest>>,
+        TError,
+        {data: BodyType<TalentContactRequestInput>},
+        TContext
+      > => {
+      return useMutation(getCreateTalentContactRequestMutationOptions(options));
+    }
+
+export const getUpdateTalentContactRequestUrl = (id: number,) => {
+
+
+
+
+  return `/api/talent-contact-requests/${id}`
+}
+
+/**
+ * @summary Update contact request status
+ */
+export const updateTalentContactRequest = async (id: number,
+    talentContactRequestUpdate: TalentContactRequestUpdate, options?: RequestInit): Promise<TalentContactRequest> => {
+
+  return customFetch<TalentContactRequest>(getUpdateTalentContactRequestUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(talentContactRequestUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateTalentContactRequestMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTalentContactRequest>>, TError,{id: number;data: BodyType<TalentContactRequestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTalentContactRequest>>, TError,{id: number;data: BodyType<TalentContactRequestUpdate>}, TContext> => {
+
+const mutationKey = ['updateTalentContactRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTalentContactRequest>>, {id: number;data: BodyType<TalentContactRequestUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTalentContactRequest(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTalentContactRequestMutationResult = NonNullable<Awaited<ReturnType<typeof updateTalentContactRequest>>>
+    export type UpdateTalentContactRequestMutationBody = BodyType<TalentContactRequestUpdate>
+    export type UpdateTalentContactRequestMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update contact request status
+ */
+export const useUpdateTalentContactRequest = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTalentContactRequest>>, TError,{id: number;data: BodyType<TalentContactRequestUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTalentContactRequest>>,
+        TError,
+        {id: number;data: BodyType<TalentContactRequestUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateTalentContactRequestMutationOptions(options));
+    }
+
+export const getDeleteTalentContactRequestUrl = (id: number,) => {
+
+
+
+
+  return `/api/talent-contact-requests/${id}`
+}
+
+/**
+ * @summary Delete a contact request
+ */
+export const deleteTalentContactRequest = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteTalentContactRequestUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteTalentContactRequestMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTalentContactRequest>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTalentContactRequest>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteTalentContactRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTalentContactRequest>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteTalentContactRequest(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTalentContactRequestMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTalentContactRequest>>>
+
+    export type DeleteTalentContactRequestMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a contact request
+ */
+export const useDeleteTalentContactRequest = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTalentContactRequest>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTalentContactRequest>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteTalentContactRequestMutationOptions(options));
+    }
+
+export const getGetCurrentSessionUrl = () => {
+
+
+
+
+  return `/api/auth/me`
+}
+
+/**
+ * @summary Get verified session and platform permissions
+ */
+export const getCurrentSession = async ( options?: RequestInit): Promise<GetCurrentSession200> => {
+
+  return customFetch<GetCurrentSession200>(getGetCurrentSessionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCurrentSessionQueryKey = () => {
+    return [
+    `/api/auth/me`
+    ] as const;
+    }
+
+
+export const getGetCurrentSessionQueryOptions = <TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCurrentSessionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrentSession>>> = ({ signal }) => getCurrentSession({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCurrentSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrentSession>>>
+export type GetCurrentSessionQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get verified session and platform permissions
+ */
+
+export function useGetCurrentSession<TData = Awaited<ReturnType<typeof getCurrentSession>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCurrentSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCurrentSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getHealthCheckUrl = () => {
 
@@ -4546,71 +4912,3 @@ export function useGetRecentActivity<TData = Awaited<ReturnType<typeof getRecent
 
 
 
-
-
-// ─── Talent Contact Requests ──────────────────────────────────────────────────
-
-export const getListTalentContactRequestsUrl = () => `/api/talent-contact-requests`
-
-export const listTalentContactRequests = async (options?: RequestInit): Promise<TalentContactRequest[]> =>
-  customFetch<TalentContactRequest[]>(getListTalentContactRequestsUrl(), { ...options, method: 'GET' });
-
-export const getListTalentContactRequestsQueryKey = () => ['/api/talent-contact-requests'] as const;
-
-export const getListTalentContactRequestsQueryOptions = <TData = Awaited<ReturnType<typeof listTalentContactRequests>>, TError = ErrorType<unknown>>(
-  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData>; request?: SecondParameter<typeof customFetch> }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-  const queryKey = queryOptions?.queryKey ?? getListTalentContactRequestsQueryKey();
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTalentContactRequests>>> = ({ signal }) => listTalentContactRequests({ signal, ...requestOptions });
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData> & { queryKey: QueryKey };
-};
-
-export function useListTalentContactRequests<TData = Awaited<ReturnType<typeof listTalentContactRequests>>, TError = ErrorType<unknown>>(
-  options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof listTalentContactRequests>>, TError, TData>; request?: SecondParameter<typeof customFetch> }
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getListTalentContactRequestsQueryOptions(options);
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const createTalentContactRequest = async (input: TalentContactRequestInput, options?: RequestInit): Promise<TalentContactRequest> =>
-  customFetch<TalentContactRequest>(`/api/talent-contact-requests`, {
-    ...options, method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(input),
-  });
-
-export const useCreateTalentContactRequest = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof createTalentContactRequest>>, TError, { data: BodyType<TalentContactRequestInput> }, TContext>; request?: SecondParameter<typeof customFetch> }
-): UseMutationResult<Awaited<ReturnType<typeof createTalentContactRequest>>, TError, { data: BodyType<TalentContactRequestInput> }, TContext> => {
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTalentContactRequest>>, { data: BodyType<TalentContactRequestInput> }> = ({ data }) =>
-    createTalentContactRequest(data);
-  return useMutation({ mutationFn, ...options?.mutation });
-};
-
-export const updateTalentContactRequest = async (id: number, update: TalentContactRequestUpdate, options?: RequestInit): Promise<TalentContactRequest> =>
-  customFetch<TalentContactRequest>(`/api/talent-contact-requests/${id}`, {
-    ...options, method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(update),
-  });
-
-export const useUpdateTalentContactRequest = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof updateTalentContactRequest>>, TError, { id: number; data: BodyType<TalentContactRequestUpdate> }, TContext>; request?: SecondParameter<typeof customFetch> }
-): UseMutationResult<Awaited<ReturnType<typeof updateTalentContactRequest>>, TError, { id: number; data: BodyType<TalentContactRequestUpdate> }, TContext> => {
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTalentContactRequest>>, { id: number; data: BodyType<TalentContactRequestUpdate> }> = ({ id, data }) =>
-    updateTalentContactRequest(id, data);
-  return useMutation({ mutationFn, ...options?.mutation });
-};
-
-export const deleteTalentContactRequest = async (id: number, options?: RequestInit): Promise<void> =>
-  customFetch<void>(`/api/talent-contact-requests/${id}`, { ...options, method: 'DELETE' });
-
-export const useDeleteTalentContactRequest = <TError = ErrorType<unknown>, TContext = unknown>(
-  options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof deleteTalentContactRequest>>, TError, { id: number }, TContext>; request?: SecondParameter<typeof customFetch> }
-): UseMutationResult<Awaited<ReturnType<typeof deleteTalentContactRequest>>, TError, { id: number }, TContext> => {
-  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTalentContactRequest>>, { id: number }> = ({ id }) =>
-    deleteTalentContactRequest(id);
-  return useMutation({ mutationFn, ...options?.mutation });
-};

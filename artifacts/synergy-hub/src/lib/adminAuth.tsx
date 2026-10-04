@@ -1,47 +1,54 @@
 import {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useRef,
   type ReactNode,
 } from "react";
-
-const STORAGE_KEY = "admin_auth";
-const ADMIN_PASSWORD = "Admin@123";
+import { useAuth, useClerk } from "@clerk/react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetCurrentSession } from "@workspace/api-client-react";
 
 interface AdminAuthContextValue {
   isAdmin: boolean;
-  checkPassword: (pw: string) => boolean;
+  isLoaded: boolean;
+  error: boolean;
   logout: () => void;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
-    try {
-      return sessionStorage.getItem(STORAGE_KEY) === "1";
-    } catch {
-      return false;
-    }
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { signOut } = useClerk();
+  const queryClient = useQueryClient();
+  const previousUser = useRef<string | null | undefined>(undefined);
+  const session = useGetCurrentSession({
+    query: {
+      queryKey: ["verified-session", userId ?? null],
+      enabled: isLoaded && !!isSignedIn,
+      staleTime: 0,
+      refetchOnWindowFocus: true,
+      refetchInterval: 60_000,
+    },
   });
-
-  const checkPassword = (pw: string): boolean => {
-    if (pw === ADMIN_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, "1");
-      setIsAdmin(true);
-      return true;
+  useEffect(() => {
+    if (previousUser.current !== undefined && previousUser.current !== (userId ?? null)) {
+      queryClient.clear();
     }
-    return false;
-  };
-
-  const logout = () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setIsAdmin(false);
-  };
+    previousUser.current = userId ?? null;
+  }, [userId, queryClient]);
+  const isAdmin = !!isSignedIn && !session.isError &&
+    session.data?.userId === userId && session.data?.isAdmin === true;
+  const logout = () => { void signOut({ redirectUrl: import.meta.env.BASE_URL }); };
 
   return (
-    <AdminAuthContext.Provider value={{ isAdmin, checkPassword, logout }}>
+    <AdminAuthContext.Provider value={{
+      isAdmin,
+      isLoaded: isLoaded && (!isSignedIn || !session.isPending),
+      error: session.isError,
+      logout,
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );

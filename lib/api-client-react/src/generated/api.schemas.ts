@@ -5,6 +5,49 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type TalentContactRequestStatus = typeof TalentContactRequestStatus[keyof typeof TalentContactRequestStatus];
+
+
+export const TalentContactRequestStatus = {
+  pending: 'pending',
+  completed: 'completed',
+} as const;
+
+export interface TalentContactRequest {
+  id: number;
+  talentPostId: number;
+  seekerName: string;
+  postTitle: string;
+  companyName: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  status: TalentContactRequestStatus;
+  createdAt: string;
+}
+
+export interface TalentContactRequestInput {
+  talentPostId: number;
+  /** @minLength 1 */
+  companyName: string;
+  /** @minLength 1 */
+  contactPerson: string;
+  phone?: string;
+  email?: string;
+}
+
+export type TalentContactRequestUpdateStatus = typeof TalentContactRequestUpdateStatus[keyof typeof TalentContactRequestUpdateStatus];
+
+
+export const TalentContactRequestUpdateStatus = {
+  pending: 'pending',
+  completed: 'completed',
+} as const;
+
+export interface TalentContactRequestUpdate {
+  status?: TalentContactRequestUpdateStatus;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -718,6 +761,12 @@ export interface ActivityItem {
   createdAt: string;
 }
 
+export type GetCurrentSession200 = {
+  /** @nullable */
+  userId: string | null;
+  isAdmin: boolean;
+};
+
 export type ListCompaniesParams = {
 type?: ListCompaniesType;
 tag?: string;
@@ -795,47 +844,4 @@ projectId?: number;
 export type ListResumeSubmissionsParams = {
 talentPostId?: number;
 };
-
-export type TalentContactRequestStatus = typeof TalentContactRequestStatus[keyof typeof TalentContactRequestStatus];
-
-export const TalentContactRequestStatus = {
-  pending: 'pending',
-  completed: 'completed',
-} as const;
-
-export interface TalentContactRequest {
-  id: number;
-  talentPostId: number;
-  seekerName: string;
-  postTitle: string;
-  companyName: string;
-  contactPerson: string;
-  phone: string;
-  email: string;
-  status: TalentContactRequestStatus;
-  createdAt: string;
-}
-
-export interface TalentContactRequestInput {
-  talentPostId: number;
-  /** @minLength 1 */
-  companyName: string;
-  /** @minLength 1 */
-  contactPerson: string;
-  phone?: string;
-  email?: string;
-}
-
-export type TalentContactRequestUpdateStatus = typeof TalentContactRequestUpdateStatus[keyof typeof TalentContactRequestUpdateStatus];
-
-export const TalentContactRequestUpdateStatus = {
-  pending: 'pending',
-  completed: 'completed',
-} as const;
-
-export interface TalentContactRequestUpdate {
-  status?: TalentContactRequestUpdateStatus;
-}
-
-export type ListTalentContactRequestsParams = Record<string, never>;
 

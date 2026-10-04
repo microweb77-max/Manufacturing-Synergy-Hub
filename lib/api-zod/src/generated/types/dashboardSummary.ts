@@ -9,8 +9,8 @@ import type { TagCount } from './tagCount';
 
 export interface DashboardSummary {
   totalCompanies: number;
-  hardwareCompanies: number;
-  softwareCompanies: number;
+  customerCompanies: number;
+  supplierCompanies: number;
   activeProjects: number;
   completedProjects: number;
   totalMatches: number;

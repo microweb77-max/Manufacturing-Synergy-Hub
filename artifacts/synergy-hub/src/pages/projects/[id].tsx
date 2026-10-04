@@ -16,8 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Zap, Bot, Network, Sparkles, ShieldCheck, Send, UserPlus } from "lucide-react";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminAuth } from "@/lib/adminAuth";
 
 export default function ProjectDetail() {
+  const { isAdmin } = useAdminAuth();
   const [, params] = useRoute("/projects/:id");
   const id = params?.id ? parseInt(params.id, 10) : 0;
   const { toast } = useToast();
@@ -26,7 +28,7 @@ export default function ProjectDetail() {
   const { data: project, isLoading: isProjectLoading } = useGetProject(id, { query: { enabled: !!id, queryKey: getGetProjectQueryKey(id) } });
   const { data: recommendations, isLoading: isRecsLoading } = useGetProjectRecommendations(id, { query: { enabled: !!id, queryKey: getGetProjectRecommendationsQueryKey(id) } });
   const { data: matches, isLoading: isMatchesLoading } = useListProjectMatches(id, { query: { enabled: !!id, queryKey: getListProjectMatchesQueryKey(id) } });
-  const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
+  const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id && isAdmin, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
   const { data: companies } = useListCompanies({});
   const createMatch = useCreateMatch();
   const createApplication = useCreateProjectApplication();
@@ -251,7 +253,7 @@ export default function ProjectDetail() {
                           </div>
                           <Button 
                             variant={invited ? "secondary" : "default"} 
-                            disabled={invited || createMatch.isPending}
+                            disabled={!isAdmin || invited || createMatch.isPending}
                             onClick={() => handleInvite(rec.company.id, rec.synergyScore)}
                           >
                             {invited ? "초대 완료됨" : "매칭 제안하기"}
@@ -275,7 +277,7 @@ export default function ProjectDetail() {
               </div>
               <Dialog open={applyOpen} onOpenChange={(o) => { setApplyOpen(o); if (!o) resetApplyForm(); }}>
                 <DialogTrigger asChild>
-                  <Button className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
+                  <Button disabled={!isAdmin} className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>

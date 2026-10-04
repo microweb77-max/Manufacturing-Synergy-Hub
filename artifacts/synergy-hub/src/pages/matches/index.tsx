@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAdminAuth } from "@/lib/adminAuth";
 import { Link } from "wouter";
 import { useListMatches, useUpdateMatch, getListMatchesQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Network, Check, X, ArrowRight, Building2, Calendar, LayoutDashboard } from "lucide-react";
 
 export default function MatchesList() {
+  const { isAdmin } = useAdminAuth();
   const [status, setStatus] = useState<"pending" | "accepted" | "declined" | "all">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -130,14 +132,14 @@ export default function MatchesList() {
                         variant="outline" 
                         className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-white"
                         onClick={() => handleStatusChange(match.id, "declined")}
-                        disabled={updateMatch.isPending}
+                        disabled={!isAdmin || updateMatch.isPending}
                       >
                         <X className="w-4 h-4 mr-1" /> 거절
                       </Button>
                       <Button 
                         className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                         onClick={() => handleStatusChange(match.id, "accepted")}
-                        disabled={updateMatch.isPending}
+                        disabled={!isAdmin || updateMatch.isPending}
                       >
                         <Check className="w-4 h-4 mr-1" /> 수락
                       </Button>

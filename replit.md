@@ -6,6 +6,16 @@ Companies have a `type` of `hardware` | `software` | `service` (서비스: 컨�
 
 ## Run & Operate
 
+### Current authentication policy
+
+Clerk now protects the API. All writes and private submission-list reads require
+a verified platform administrator; public data reads remain open. `/admin` and
+registration pages use server-verified permissions, not a browser password.
+Company claims and member-owned activities are a later phase. See
+`artifacts/api-server/AUTHENTICATION.md` for the first-admin grant/revoke command,
+environment separation, and checks. This policy supersedes the legacy no-auth
+descriptions in the product notes below.
+
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages

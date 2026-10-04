@@ -3,7 +3,6 @@ import { toJson } from "../lib/serialize";
 import { eq, desc } from "drizzle-orm";
 import { db, talentContactRequestsTable, talentPostsTable } from "@workspace/db";
 import {
-  ListTalentContactRequestsQueryParams,
   ListTalentContactRequestsResponse,
   CreateTalentContactRequestBody,
   CreateTalentContactRequestResponse,
@@ -43,12 +42,6 @@ function shape(r: RawRow) {
 }
 
 router.get("/talent-contact-requests", async (req, res): Promise<void> => {
-  const query = ListTalentContactRequestsQueryParams.safeParse(req.query);
-  if (!query.success) {
-    res.status(400).json({ error: query.error.message });
-    return;
-  }
-
   const rows = await db
     .select(selectShape)
     .from(talentContactRequestsTable)
