@@ -461,7 +461,7 @@ export function AdminSection<T>({
       )}
 
       <div className="border rounded-lg bg-card overflow-hidden">
-        <Table>
+        <Table className="min-w-[720px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[60px]">ID</TableHead>

@@ -199,7 +199,7 @@ export default function NewCompany() {
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-4 md:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">새 기업 등록</h1>
         <p className="text-muted-foreground mt-1">시너지 허브 네트워크에 귀사를 등록하고 파트너를 만나보세요.</p>

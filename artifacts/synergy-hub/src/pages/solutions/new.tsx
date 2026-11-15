@@ -108,7 +108,7 @@ export default function NewSolution() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">조인트 솔루션 패키지 생성</h1>
         <p className="text-muted-foreground mt-1">협력사들과 함께 만든 통합 솔루션을 시장에 선보이세요.</p>
