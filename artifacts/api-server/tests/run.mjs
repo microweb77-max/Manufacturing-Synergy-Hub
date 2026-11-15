@@ -54,6 +54,20 @@ try {
   });
   const guardsResult = spawnSync(process.execPath, ["--test", guardsOutput], { stdio: "inherit" });
   if (guardsResult.status !== 0) process.exitCode = guardsResult.status ?? 1;
+  const pricesOutput = path.join(temp, "offer-prices.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/offerPriceVisibility.test.ts")],
+    outfile: pricesOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+  });
+  const pricesResult = spawnSync(process.execPath, ["--test", pricesOutput], { stdio: "inherit" });
+  if (pricesResult.status !== 0) process.exitCode = pricesResult.status ?? 1;
+  const clientsOutput = path.join(temp, "client-directory.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/clientCompanyVisibility.test.ts")],
+    outfile: clientsOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+  });
+  const clientsResult = spawnSync(process.execPath, ["--test", clientsOutput], { stdio: "inherit" });
+  if (clientsResult.status !== 0) process.exitCode = clientsResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }

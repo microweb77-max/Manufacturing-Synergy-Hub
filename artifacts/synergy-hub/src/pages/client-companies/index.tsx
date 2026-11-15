@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
-import { useListClientCompanies } from "@workspace/api-client-react";
-import type { ClientCompany } from "@workspace/api-client-react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@clerk/react";
+import { useListClientCompanies, getListClientCompaniesQueryKey } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -42,23 +42,39 @@ import {
 
 const PAGE_SIZE = 20;
 const ALL = "__all__";
+const MASK = "------------";
 
 export default function ClientCompaniesPage() {
-  const { data, isLoading } = useListClientCompanies();
+  const { isLoaded: authLoaded, isSignedIn, userId } = useAuth();
+  const canViewDetails = authLoaded && isSignedIn === true;
+  const { data, isLoading } = useListClientCompanies({
+    query: {
+      queryKey: [...getListClientCompaniesQueryKey(), { directoryViewer: canViewDetails ? userId : null }],
+      enabled: authLoaded,
+    },
+  });
   const [search, setSearch] = useState("");
   const [region, setRegion] = useState(ALL);
   const [industry, setIndustry] = useState(ALL);
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<ClientCompany | null>(null);
+  const [selectedNo, setSelectedNo] = useState<number | null>(null);
 
   const companies = data ?? [];
+  const selected = companies.find((company) => company.no === selectedNo) ?? null;
+  const memberValue = (value: string) => canViewDetails ? (value || "-") : MASK;
+
+  useEffect(() => {
+    setSelectedNo(null);
+    setRegion(ALL);
+    setPage(1);
+  }, [canViewDetails, userId]);
 
   const regions = useMemo(
     () =>
-      [...new Set(companies.map((c) => c.region).filter(Boolean))].sort((a, b) =>
+      [...new Set((canViewDetails ? companies : []).map((c) => c.region).filter(Boolean))].sort((a, b) =>
         a.localeCompare(b, "ko"),
       ),
-    [companies],
+    [companies, canViewDetails],
   );
 
   const industries = useMemo(
@@ -72,17 +88,20 @@ export default function ClientCompaniesPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return companies.filter((c) => {
-      if (region !== ALL && c.region !== region) return false;
+      if (canViewDetails && region !== ALL && c.region !== region) return false;
       if (industry !== ALL && c.industry !== industry) return false;
       if (!q) return true;
       return (
         c.nameKo.toLowerCase().includes(q) ||
         c.nameEn.toLowerCase().includes(q) ||
-        c.parentCompany.toLowerCase().includes(q) ||
-        c.address.toLowerCase().includes(q)
+        c.industry.toLowerCase().includes(q) ||
+        (canViewDetails && (
+          c.parentCompany.toLowerCase().includes(q) ||
+          c.address.toLowerCase().includes(q)
+        ))
       );
     });
-  }, [companies, search, region, industry]);
+  }, [companies, search, region, industry, canViewDetails]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -103,13 +122,16 @@ export default function ClientCompaniesPage() {
         <p className="text-muted-foreground mt-1">
           KOTRA FDI 및 KOCHAM 2025 제조기업 통합 리스트 (총 {companies.length.toLocaleString()}개사)
         </p>
+        {!canViewDetails && (
+          <p className="mt-1 text-sm text-muted-foreground">로그인 전에는 기업명과 업종만 공개됩니다. 나머지 정보는 로그인 후 확인할 수 있습니다.</p>
+        )}
       </div>
 
       <div className="flex flex-col lg:flex-row gap-3 bg-card p-4 border rounded-lg shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="기업명(국문/영문) · 모기업 · 주소 검색..."
+            placeholder={canViewDetails ? "기업명(국문/영문) · 업종 · 모기업 · 주소 검색..." : "기업명(국문/영문) · 업종 검색..."}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -120,7 +142,8 @@ export default function ClientCompaniesPage() {
         </div>
         <div className="w-full lg:w-[200px]">
           <Select
-            value={region}
+            disabled={!canViewDetails}
+            value={canViewDetails ? region : ALL}
             onValueChange={(v) => {
               setRegion(v);
               resetPage();
@@ -130,7 +153,7 @@ export default function ClientCompaniesPage() {
               <SelectValue placeholder="진출지역" />
             </SelectTrigger>
             <SelectContent className="max-h-[300px]">
-              <SelectItem value={ALL}>모든 지역</SelectItem>
+              <SelectItem value={ALL}>{canViewDetails ? "모든 지역" : MASK}</SelectItem>
               {regions.map((r) => (
                 <SelectItem key={r} value={r}>
                   {r}
@@ -184,7 +207,7 @@ export default function ClientCompaniesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {!authLoaded || isLoading ? (
               Array.from({ length: 10 }).map((_, i) => (
                 <TableRow key={i}>
                   <TableCell colSpan={6}>
@@ -206,11 +229,11 @@ export default function ClientCompaniesPage() {
               pageItems.map((c) => (
                 <TableRow
                   key={c.no}
-                  onClick={() => setSelected(c)}
+                  onClick={() => setSelectedNo(c.no)}
                   className="cursor-pointer"
                 >
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {c.no}
+                  <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
+                    {canViewDetails ? c.no : MASK}
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">{c.nameKo || c.nameEn || "-"}</div>
@@ -232,14 +255,14 @@ export default function ClientCompaniesPage() {
                   <TableCell>
                     <span className="inline-flex items-center gap-1 text-sm">
                       <MapPin className="h-3 w-3 text-muted-foreground" />
-                      {c.region || "-"}
+                      {memberValue(c.region)}
                     </span>
                   </TableCell>
                   <TableCell className="hidden lg:table-cell text-xs text-muted-foreground max-w-[260px]">
-                    <span className="line-clamp-2">{c.address || "-"}</span>
+                    <span className="line-clamp-2">{memberValue(c.address)}</span>
                   </TableCell>
                   <TableCell className="hidden xl:table-cell text-xs text-muted-foreground">
-                    {c.entryType || "-"}
+                    {memberValue(c.entryType)}
                   </TableCell>
                 </TableRow>
               ))
@@ -276,7 +299,7 @@ export default function ClientCompaniesPage() {
 
       <Dialog
         open={!!selected}
-        onOpenChange={(open) => !open && setSelected(null)}
+        onOpenChange={(open) => !open && setSelectedNo(null)}
       >
         <DialogContent className="max-w-lg">
           {selected && (
@@ -301,30 +324,30 @@ export default function ClientCompaniesPage() {
                 {selected.industry && (
                   <Badge variant="secondary">{selected.industry}</Badge>
                 )}
-                {selected.entryType && (
+                {canViewDetails && selected.entryType && (
                   <Badge variant="outline">{selected.entryType}</Badge>
                 )}
-                {selected.investmentType && (
+                {canViewDetails && selected.investmentType && (
                   <Badge variant="outline">{selected.investmentType}</Badge>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 pt-2">
-                <DetailRow icon={Hash} label="번호" value={String(selected.no)} />
+                <DetailRow icon={Hash} label="번호" value={memberValue(String(selected.no))} />
                 <DetailRow
                   icon={Briefcase}
                   label="모기업"
-                  value={selected.parentCompany}
+                  value={memberValue(selected.parentCompany)}
                 />
                 <DetailRow
                   icon={Factory}
                   label="진출형태"
-                  value={selected.entryType}
+                  value={memberValue(selected.entryType)}
                 />
                 <DetailRow
                   icon={Landmark}
                   label="투자형태"
-                  value={selected.investmentType}
+                  value={memberValue(selected.investmentType)}
                 />
                 <DetailRow
                   icon={Network}
@@ -334,23 +357,23 @@ export default function ClientCompaniesPage() {
                 <DetailRow
                   icon={Network}
                   label="업종 상세"
-                  value={selected.industryDetail}
+                  value={memberValue(selected.industryDetail)}
                 />
                 <DetailRow
                   icon={MapPin}
                   label="진출지역"
-                  value={selected.region}
+                  value={memberValue(selected.region)}
                 />
                 <DetailRow
                   icon={Mailbox}
                   label="우편번호"
-                  value={selected.postalCode}
+                  value={memberValue(selected.postalCode)}
                 />
                 <div className="sm:col-span-2">
                   <DetailRow
                     icon={MapPin}
                     label="주소"
-                    value={selected.address}
+                    value={memberValue(selected.address)}
                   />
                 </div>
               </div>

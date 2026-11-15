@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, companiesTable } from "@workspace/db";
 import { ListClientCompaniesResponse } from "@workspace/api-zod";
 import clientCompanies from "../data/clientCompanies.json";
+import { createClientCompanyVisibility, visibleClientCompany } from "../middlewares/clientCompanyVisibility";
 
 const router: IRouter = Router();
 
@@ -24,7 +25,7 @@ function splitLocation(location: string): { region: string; address: string } {
   };
 }
 
-router.get("/client-companies", async (_req, res): Promise<void> => {
+router.get("/client-companies", createClientCompanyVisibility(), async (_req, res): Promise<void> => {
   const kochamCustomers = await db
     .select()
     .from(companiesTable)
@@ -65,7 +66,10 @@ router.get("/client-companies", async (_req, res): Promise<void> => {
     (company, index) => ({ ...company, no: index + 1 }),
   );
 
-  res.json(ListClientCompaniesResponse.parse(mergedCompanies));
+  const visible = mergedCompanies.map((company) =>
+    visibleClientCompany(company, res.locals.canViewClientDetails === true),
+  );
+  res.json(ListClientCompaniesResponse.parse(visible));
 });
 
 export default router;

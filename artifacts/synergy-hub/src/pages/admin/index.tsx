@@ -346,11 +346,13 @@ function CompaniesAdmin() {
         description: c.description ?? "",
         techSpecs: c.techSpecs ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "기업이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "기업이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -400,6 +402,7 @@ function ProjectsAdmin() {
   return (
     <AdminSection
       title="프로젝트"
+      importExcludeFields={["status"]}
       description="수요 프로젝트(데맨드)를 관리합니다."
       items={data}
       isLoading={isLoading}
@@ -454,7 +457,7 @@ function ProjectsAdmin() {
         requiredTags: fromTags(p.requiredTags),
         description: p.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({
             data: {
@@ -467,8 +470,10 @@ function ProjectsAdmin() {
               deadline: v.deadline,
             },
           });
-          toast({ title: "추가 완료", description: "프로젝트가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "프로젝트가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -529,6 +534,7 @@ function MatchesAdmin() {
   return (
     <AdminSection
       title="매칭"
+      importExcludeFields={["status"]}
       description="프로젝트-기업 매칭을 관리합니다. (수정 시 상태만 변경됩니다)"
       items={data}
       isLoading={isLoading}
@@ -565,7 +571,7 @@ function MatchesAdmin() {
         synergyScore: String(m.synergyScore),
         status: m.status,
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({
             data: {
@@ -574,8 +580,10 @@ function MatchesAdmin() {
               ...(v.synergyScore ? { synergyScore: toNum(v.synergyScore) } : {}),
             },
           });
-          toast({ title: "추가 완료", description: "매칭이 생성되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "매칭이 생성되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -697,11 +705,13 @@ function SolutionsAdmin() {
         outcome: s.outcome ?? "",
         description: s.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "솔루션이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "솔루션이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -793,11 +803,13 @@ function PerformanceAdmin() {
         revenue: p.revenue ?? "",
         notes: p.notes ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "성과 로그가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "성과 로그가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -965,11 +977,13 @@ function TalentAdmin() {
         skills: fromTags(t.skills),
         description: t.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "게시물이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "게시물이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -1095,11 +1109,13 @@ function SupplyOffersAdmin() {
         minOrderQty: o.minOrderQty ?? "",
         description: o.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "공급 오퍼가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "공급 오퍼가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -1746,11 +1762,13 @@ function BannersAdmin() {
         displayOrder: String(b.displayOrder),
         active: b.active ? "true" : "false",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "배너가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "배너가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");

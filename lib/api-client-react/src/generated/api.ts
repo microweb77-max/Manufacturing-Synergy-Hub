@@ -3762,6 +3762,7 @@ export const getListSupplyOffersUrl = (params?: ListSupplyOffersParams,) => {
 }
 
 /**
+ * Public browsing is allowed. unitPrice is "xxx" without a verified signed-in session; signed-in members receive the actual price. Responses must not be stored in shared caches.
  * @summary List supply offers (raw materials, parts) from partner companies
  */
 export const listSupplyOffers = async (params?: ListSupplyOffersParams, options?: RequestInit): Promise<SupplyOffer[]> => {
@@ -5582,6 +5583,7 @@ export const getListClientCompaniesUrl = () => {
 }
 
 /**
+ * Anonymous visitors receive company names and industry only; other business fields contain "------------". The numeric no is retained as an internal row identifier. A verified signed-in session returns full records. Responses are private and must not be cached.
  * @summary List Korean FDI manufacturing client companies (KOTRA directory)
  */
 export const listClientCompanies = async ( options?: RequestInit): Promise<ClientCompany[]> => {

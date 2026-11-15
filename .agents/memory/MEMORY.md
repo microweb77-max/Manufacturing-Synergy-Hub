@@ -6,4 +6,5 @@
 - [Customer directory sources](customer-directory-sources.md) — merged FDI and KOCHAM manufacturer records favor the richer FDI entry whenever normalized company names match.
 - [Company correction policy](company-correction-policy.md) — KOVIMA file is the approved full membership scope, including flagged rows; preserve retained IDs and never merge branches solely by tax number.
 - [Daily news refresh](news-refresh-policy.md) — Vietnam-midnight collection uses an authenticated external trigger on Autoscale, not visitor refresh buttons.
-- [Hybrid membership](hybrid-membership-model.md) — public browsing, company-owned participation; existing profiles are claimed, with phased rollout starting with Clerk protection.
+- [Hybrid membership](hybrid-membership-model.md) — company-owned activity; guest client directory exposes names/industry only. Offer prices and other client details need sign-in, not admin.
+- [Clerk admin testing](clerk-admin-testing.md) — programmatic test sign-in creates a real non-admin user; arrange an authorized admin identity first and clean up temporary accounts.
