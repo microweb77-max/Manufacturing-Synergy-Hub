@@ -10,5 +10,6 @@ export * from "./applications";
 export * from "./resumes";
 export * from "./nav";
 export * from "./news";
+export * from "./newsRefreshRuns";
 export * from "./banners";
 export * from "./contactRequests";

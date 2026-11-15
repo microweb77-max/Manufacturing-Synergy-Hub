@@ -1783,6 +1783,23 @@ export const ListNewsResponse = zod.array(ListNewsResponseItem)
 
 
 /**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
+ * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ */
+export const RefreshScheduledNewsHeader = zod.object({
+  "Authorization": zod.string().describe('Bearer scheduler credential supplied by the external scheduling service.')
+})
+
+export const RefreshScheduledNewsResponse = zod.object({
+  "scheduledDay": zod.coerce.date(),
+  "timezone": zod.string(),
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "alreadyCompleted": zod.boolean()
+})
+
+
+/**
  * @summary Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
  */
 export const CollectNewsBody = zod.object({

@@ -77,6 +77,7 @@ import type {
   ProjectInput,
   ProjectUpdate,
   Recommendation,
+  RefreshScheduledNews200,
   ResumeSubmission,
   ResumeSubmissionInput,
   ResumeSubmissionUpdate,
@@ -5142,6 +5143,77 @@ export function useListNews<TData = Awaited<ReturnType<typeof listNews>>, TError
 
 
 
+
+export const getRefreshScheduledNewsUrl = () => {
+
+
+
+
+  return `/api/scheduled/news`
+}
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
+ * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ */
+export const refreshScheduledNews = async ( options?: RequestInit): Promise<RefreshScheduledNews200> => {
+
+  return customFetch<RefreshScheduledNews200>(getRefreshScheduledNewsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshScheduledNewsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledNews>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledNews>>, TError,void, TContext> => {
+
+const mutationKey = ['refreshScheduledNews'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshScheduledNews>>, void> = () => {
+
+
+          return  refreshScheduledNews(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshScheduledNewsMutationResult = NonNullable<Awaited<ReturnType<typeof refreshScheduledNews>>>
+
+    export type RefreshScheduledNewsMutationError = ErrorType<void>
+
+    /**
+ * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ */
+export const useRefreshScheduledNews = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledNews>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshScheduledNews>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshScheduledNewsMutationOptions(options));
+    }
 
 export const getCollectNewsUrl = () => {
 

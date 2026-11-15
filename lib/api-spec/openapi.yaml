@@ -1304,6 +1304,47 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/NewsArticle"
+  /scheduled/news:
+    post:
+      operationId: refreshScheduledNews
+      tags: [news]
+      summary: Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer scheduler credential supplied by the external scheduling service.
+      responses:
+        "200":
+          description: Completed or already completed today
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [scheduledDay, timezone, inserted, skipped, alreadyCompleted]
+                properties:
+                  scheduledDay:
+                    type: string
+                    format: date
+                  timezone:
+                    type: string
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+                  alreadyCompleted:
+                    type: boolean
+        "401":
+          description: Invalid scheduler credential
+        "429":
+          description: A collection is already running; retry later
+        "502":
+          description: Collection failed and may be retried
+        "503":
+          description: Scheduler credential not configured
   /news/collect:
     post:
       operationId: collectNews

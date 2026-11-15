@@ -1025,3 +1025,11 @@ export type ListResumeSubmissionsParams = {
 talentPostId?: number;
 };
 
+export type RefreshScheduledNews200 = {
+  scheduledDay: string;
+  timezone: string;
+  inserted: number;
+  skipped: number;
+  alreadyCompleted: boolean;
+};
+
