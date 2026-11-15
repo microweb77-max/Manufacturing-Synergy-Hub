@@ -5,6 +5,17 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export interface AuthStatus {
+  isAdmin: boolean;
+  /** Whether ADMIN_PASSWORD is set on the server */
+  configured: boolean;
+}
+
+export interface AdminCredentials {
+  /** @minLength 1 */
+  password: string;
+}
+
 export interface HealthStatus {
   status: string;
 }

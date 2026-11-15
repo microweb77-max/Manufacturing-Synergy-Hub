@@ -18,6 +18,40 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * @summary Current admin session status
+ */
+export const GetAuthMeResponse = zod.object({
+  "isAdmin": zod.boolean(),
+  "configured": zod.boolean().describe('Whether ADMIN_PASSWORD is set on the server')
+})
+
+
+/**
+ * @summary Log in as admin
+ */
+
+
+
+export const AdminLoginBody = zod.object({
+  "password": zod.string().min(1)
+})
+
+export const AdminLoginResponse = zod.object({
+  "isAdmin": zod.boolean(),
+  "configured": zod.boolean().describe('Whether ADMIN_PASSWORD is set on the server')
+})
+
+
+/**
+ * @summary Log out
+ */
+export const AdminLogoutResponse = zod.object({
+  "isAdmin": zod.boolean(),
+  "configured": zod.boolean().describe('Whether ADMIN_PASSWORD is set on the server')
+})
+
+
+/**
  * @summary List companies
  */
 export const ListCompaniesQueryParams = zod.object({

@@ -8,9 +8,11 @@
 
 export * from './activityItem';
 export * from './activityItemType';
+export * from './adminCredentials';
 export * from './analyzeMaterialInput';
 export * from './analyzeMaterialResult';
 export * from './analyzeMaterialResultType';
+export * from './authStatus';
 export * from './banner';
 export * from './bannerInput';
 export * from './bannerUpdate';

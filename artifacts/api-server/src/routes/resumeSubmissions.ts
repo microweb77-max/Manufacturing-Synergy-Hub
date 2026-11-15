@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { db, resumeSubmissionsTable, talentPostsTable } from "@workspace/db";
 import {
@@ -13,6 +13,8 @@ import {
   UpdateResumeSubmissionResponse,
   DeleteResumeSubmissionParams,
 } from "@workspace/api-zod";
+
+import { sendDataUrl } from "../lib/media";
 
 const router: IRouter = Router();
 
@@ -90,7 +92,11 @@ router.get("/resume-submissions", async (req, res): Promise<void> => {
     : undefined;
 
   const rows = await db
-    .select(selectShape)
+    .select({
+      ...selectShape,
+      // Only fetch whether a file exists, not the (large) file itself.
+      resumeFileData: sql<string>`case when ${resumeSubmissionsTable.resumeFileData} <> '' then '1' else '' end`,
+    })
     .from(resumeSubmissionsTable)
     .leftJoin(
       talentPostsTable,
@@ -99,7 +105,31 @@ router.get("/resume-submissions", async (req, res): Promise<void> => {
     .where(where)
     .orderBy(desc(resumeSubmissionsTable.createdAt));
 
-  res.json(ListResumeSubmissionsResponse.parse(toJson(rows.map(shape))));
+  // Don't ship whole files in the list; link to the download endpoint instead.
+  const listed = rows.map((r) => ({
+    ...shape(r),
+    resumeFileData: r.resumeFileData ? `/api/resume-submissions/${r.id}/file` : "",
+  }));
+  res.json(ListResumeSubmissionsResponse.parse(toJson(listed)));
+});
+
+/** Admin-only (see ADMIN_READS in lib/auth.ts): download a resume file. */
+router.get("/resume-submissions/:id/file", async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "잘못된 ID입니다." });
+    return;
+  }
+  const [row] = await db
+    .select({
+      data: resumeSubmissionsTable.resumeFileData,
+      name: resumeSubmissionsTable.resumeFileName,
+    })
+    .from(resumeSubmissionsTable)
+    .where(eq(resumeSubmissionsTable.id, id));
+  if (!row || !sendDataUrl(res, row.data, { downloadName: row.name || `resume-${id}` })) {
+    res.status(404).json({ error: "파일이 없습니다." });
+  }
 });
 
 router.post("/resume-submissions", async (req, res): Promise<void> => {

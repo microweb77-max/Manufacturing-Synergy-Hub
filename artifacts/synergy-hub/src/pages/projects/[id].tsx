@@ -85,10 +85,10 @@ export default function ProjectDetail() {
   };
 
   if (isProjectLoading) {
-    return <div className="p-8 max-w-6xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
+    return <div className="p-4 md:p-8 max-w-6xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
   }
 
-  if (!project) return <div className="p-8">프로젝트를 찾을 수 없습니다.</div>;
+  if (!project) return <div className="p-4 md:p-8">프로젝트를 찾을 수 없습니다.</div>;
 
   const isInvited = (companyId: number) => {
     return matches?.some(m => m.companyId === companyId);
@@ -136,7 +136,7 @@ export default function ProjectDetail() {
   const isFeedLoading = isMatchesLoading || isApplicationsLoading;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       {/* Project Header */}
       <div className="bg-card border rounded-lg p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
@@ -200,7 +200,7 @@ export default function ProjectDetail() {
               <Skeleton className="h-40 w-full" />
             </div>
           ) : recommendations?.length === 0 ? (
-            <Card><CardContent className="p-8 text-center text-muted-foreground">조건에 맞는 추천 기업이 없습니다.</CardContent></Card>
+            <Card><CardContent className="p-4 md:p-8 text-center text-muted-foreground">조건에 맞는 추천 기업이 없습니다.</CardContent></Card>
           ) : (
             <div className="grid gap-4">
               {recommendations?.map((rec, idx) => {

@@ -28,6 +28,8 @@ tags:
     description: Vietnam manufacturing news (crawled and translated to Korean)
   - name: banners
     description: Dashboard promotional banners (rotating carousel)
+  - name: auth
+    description: Admin authentication
   - name: dashboard
     description: Aggregated dashboard data
 paths:
@@ -44,6 +46,57 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getAuthMe
+      tags: [auth]
+      summary: Current admin session status
+      responses:
+        "200":
+          description: Session status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+
+  /auth/login:
+    post:
+      operationId: adminLogin
+      tags: [auth]
+      summary: Log in as admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCredentials"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
+        "401":
+          description: Wrong password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/logout:
+    post:
+      operationId: adminLogout
+      tags: [auth]
+      summary: Log out
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthStatus"
 
   /companies:
     get:
@@ -1252,6 +1305,25 @@ paths:
 
 components:
   schemas:
+    AuthStatus:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+        configured:
+          type: boolean
+          description: Whether ADMIN_PASSWORD is set on the server
+      required:
+        - isAdmin
+        - configured
+    AdminCredentials:
+      type: object
+      properties:
+        password:
+          type: string
+          minLength: 1
+      required:
+        - password
     HealthStatus:
       type: object
       properties:

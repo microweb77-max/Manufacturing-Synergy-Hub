@@ -66,6 +66,11 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Outside Replit (no path router), proxy /api to the local API server.
+    // Set API_PROXY_TARGET, e.g. http://localhost:8080
+    ...(process.env.API_PROXY_TARGET
+      ? { proxy: { "/api": { target: process.env.API_PROXY_TARGET, changeOrigin: true } } }
+      : {}),
   },
   preview: {
     port,
