@@ -84,7 +84,7 @@ export default function NewProject() {
   };
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
+    <div className="p-4 md:p-8 max-w-3xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">수요 프로젝트 등록</h1>
         <p className="text-muted-foreground mt-1">새로운 제조 현장의 수요를 등록하면 AI가 최적의 HW/SW 협력사를 추천합니다.</p>

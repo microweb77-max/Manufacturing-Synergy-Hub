@@ -92,7 +92,7 @@ export default function ProjectDetail() {
   };
 
   if (isProjectLoading) {
-    return <div className="p-8 max-w-6xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
+    return <div className="p-4 md:p-8 max-w-6xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
   }
 
   if (!project) return <div className="p-8">프로젝트를 찾을 수 없습니다.</div>;
@@ -143,7 +143,7 @@ export default function ProjectDetail() {
   const isFeedLoading = isMatchesLoading || isApplicationsLoading;
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
       {/* Project Header */}
       <div className="bg-card border rounded-lg p-8 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-6">

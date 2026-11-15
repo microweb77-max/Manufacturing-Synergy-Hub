@@ -47,6 +47,13 @@ try {
   });
   const newsResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", newsOutput], { stdio: "inherit" });
   if (newsResult.status !== 0) process.exitCode = newsResult.status ?? 1;
+  const guardsOutput = path.join(temp, "request-guards.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/requestGuards.test.ts")],
+    outfile: guardsOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+  });
+  const guardsResult = spawnSync(process.execPath, ["--test", guardsOutput], { stdio: "inherit" });
+  if (guardsResult.status !== 0) process.exitCode = guardsResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }

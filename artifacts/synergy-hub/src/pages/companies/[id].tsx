@@ -19,15 +19,15 @@ export default function CompanyDetail() {
   const { data: performanceLogs, isLoading: isLogsLoading } = useListPerformanceLogs({ companyId: id }, { query: { enabled: !!id, queryKey: getListPerformanceLogsQueryKey({ companyId: id }) } });
 
   if (isLoading) {
-    return <div className="p-8 max-w-5xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
+    return <div className="p-4 md:p-8 max-w-5xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
   }
 
   if (!company) {
-    return <div className="p-8 max-w-5xl mx-auto">기업 정보를 찾을 수 없습니다.</div>;
+    return <div className="p-4 md:p-8 max-w-5xl mx-auto">기업 정보를 찾을 수 없습니다.</div>;
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
       {/* Profile Header */}
       <div className="flex flex-col md:flex-row gap-6 items-start">
         <div className="w-24 h-24 rounded-lg bg-secondary/10 border border-secondary/20 flex items-center justify-center shrink-0 shadow-sm">

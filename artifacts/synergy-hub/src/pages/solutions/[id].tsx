@@ -15,15 +15,15 @@ export default function SolutionDetail() {
   const { data: solution, isLoading } = useGetSolution(id, { query: { enabled: !!id, queryKey: getGetSolutionQueryKey(id) } });
 
   if (isLoading) {
-    return <div className="p-8 max-w-5xl mx-auto"><Skeleton className="h-96 w-full" /></div>;
+    return <div className="p-4 md:p-8 max-w-5xl mx-auto"><Skeleton className="h-96 w-full" /></div>;
   }
 
   if (!solution) {
-    return <div className="p-8 max-w-5xl mx-auto">솔루션을 찾을 수 없습니다.</div>;
+    return <div className="p-4 md:p-8 max-w-5xl mx-auto">솔루션을 찾을 수 없습니다.</div>;
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
       {/* Header Banner */}
       <div className="relative rounded-2xl overflow-hidden bg-secondary/10 border border-border/50">
         <div className="absolute inset-0 z-0">

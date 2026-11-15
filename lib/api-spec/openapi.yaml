@@ -408,6 +408,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many analysis requests for this verified account on this server instance
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until another request can be attempted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /projects:
     get:

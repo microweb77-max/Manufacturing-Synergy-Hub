@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const matchesTable = pgTable("matches", {
@@ -15,7 +16,10 @@ export const matchesTable = pgTable("matches", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+}, (t) => [
+  index("matches_project_id_idx").on(t.projectId),
+  index("matches_company_id_idx").on(t.companyId),
+]);
 
 export type Match = typeof matchesTable.$inferSelect;
 export type InsertMatch = typeof matchesTable.$inferInsert;

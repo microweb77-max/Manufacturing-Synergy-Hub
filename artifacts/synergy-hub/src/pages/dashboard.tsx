@@ -66,7 +66,7 @@ export default function Dashboard() {
   const customerCompanies = (companies ?? []).filter((c) => c.type === "customer").slice(0, 4);
 
   return (
-    <div className="flex-1 p-8 pt-6 space-y-8 max-w-7xl mx-auto w-full">
+    <div className="flex-1 p-4 md:p-8 pt-6 md:pt-6 space-y-8 max-w-7xl mx-auto w-full">
       <BannerCarousel fallbackSrc={heroBanner} />
       {/* Promotion CTA banner */}
       <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-secondary/5">
