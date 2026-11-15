@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/lib/auth";
 import { useEffect, useMemo, useState } from "react";
 import {
   useListTalentPosts,
@@ -352,6 +353,7 @@ export default function TalentPool() {
   const { data: hiringPosts } = useListTalentPosts({ postType: "hiring" });
   const createPost = useCreateTalentPost();
   const deletePost = useDeleteTalentPost();
+  const isAdmin = useIsAdmin();
 
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [resumeTarget, setResumeTarget] = useState<TalentPost | null>(null);
@@ -1038,6 +1040,7 @@ export default function TalentPool() {
                           {post.authorName}
                         </div>
                       </div>
+                      {isAdmin && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -1048,6 +1051,7 @@ export default function TalentPool() {
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-3">

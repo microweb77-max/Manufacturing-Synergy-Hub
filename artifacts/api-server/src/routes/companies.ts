@@ -24,6 +24,8 @@ import {
   AnalyzeCompanyMaterialResponse,
 } from "@workspace/api-zod";
 
+import { rateLimit } from "../lib/auth";
+
 const router: IRouter = Router();
 
 const ALLOWED_MATERIAL_MIME = /^(image\/(png|jpeg|jpg|webp|gif)|application\/pdf)$/;
@@ -97,7 +99,13 @@ const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 �
 
 모든 텍스트 값은 한국어로 작성하세요. 정보가 명확하지 않으면 합리적으로 추론하되, 전혀 알 수 없는 항목은 빈 문자열 또는 빈 배열로 둡니다.`;
 
-router.post("/companies/analyze-material", async (req, res): Promise<void> => {
+const analyzeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: "자료 분석 요청이 너무 많습니다. 1시간 후 다시 시도해주세요.",
+});
+
+router.post("/companies/analyze-material", analyzeLimiter, async (req, res): Promise<void> => {
   const parsed = AnalyzeCompanyMaterialBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

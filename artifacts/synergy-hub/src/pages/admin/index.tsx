@@ -58,6 +58,7 @@ import {
   getListBannersQueryKey,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
+import { AdminGate, LogoutButton } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Badge } from "@/components/ui/badge";
@@ -1865,8 +1866,17 @@ function AdminDashboard() {
 
 export default function AdminPage() {
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6">
-      <div>
+    <AdminGate>
+      <AdminConsole />
+    </AdminGate>
+  );
+}
+
+function AdminConsole() {
+  return (
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <ShieldAlert className="h-7 w-7 text-primary" />
           관리자 (ADMIN)
@@ -1874,6 +1884,8 @@ export default function AdminPage() {
         <p className="text-muted-foreground mt-1">
           모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
         </p>
+        </div>
+        <LogoutButton />
       </div>
 
       <AdminDashboard />

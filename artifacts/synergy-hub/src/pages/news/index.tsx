@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/lib/auth";
 import { useMemo, useState } from "react";
 import {
   useListNews,
@@ -52,6 +53,7 @@ export default function NewsPage() {
   const queryClient = useQueryClient();
   const { data: articles, isLoading } = useListNews();
   const collect = useCollectNews();
+  const isAdmin = useIsAdmin();
 
   const [category, setCategory] = useState<string>(ALL);
 
@@ -105,12 +107,14 @@ export default function NewsPage() {
             제공합니다.
           </p>
         </div>
+        {isAdmin && (
         <Button onClick={handleCollect} disabled={collect.isPending}>
           <RefreshCw
             className={`h-4 w-4 mr-2 ${collect.isPending ? "animate-spin" : ""}`}
           />
           {collect.isPending ? "수집 중…" : "뉴스 새로고침"}
         </Button>
+        )}
       </div>
 
       {categories.length > 0 && (
@@ -162,6 +166,7 @@ export default function NewsPage() {
               <p className="mt-4 text-muted-foreground">
                 아직 수집된 뉴스가 없습니다.
               </p>
+              {isAdmin && (<>
               <p className="text-sm text-muted-foreground/70">
                 "뉴스 새로고침" 버튼을 눌러 최신 베트남 제조산업 뉴스를
                 가져오세요.
@@ -178,6 +183,7 @@ export default function NewsPage() {
                 />
                 뉴스 가져오기
               </Button>
+              </>)}
             </CardContent>
           </Card>
         ) : (

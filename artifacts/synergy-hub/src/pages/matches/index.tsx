@@ -1,3 +1,4 @@
+import { useIsAdmin } from "@/lib/auth";
 import { useState } from "react";
 import { Link } from "wouter";
 import { useListMatches, useUpdateMatch, getListMatchesQueryKey } from "@workspace/api-client-react";
@@ -20,6 +21,7 @@ export default function MatchesList() {
   });
 
   const updateMatch = useUpdateMatch();
+  const isAdmin = useIsAdmin();
 
   const handleStatusChange = (id: number, newStatus: "accepted" | "declined") => {
     updateMatch.mutate({
@@ -124,7 +126,7 @@ export default function MatchesList() {
                     {match.status === 'declined' && <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">거절됨</Badge>}
                   </div>
 
-                  {match.status === 'pending' && (
+                  {isAdmin && match.status === 'pending' && (
                     <div className="flex gap-2 w-full mt-2">
                       <Button 
                         variant="outline" 
