@@ -12,6 +12,8 @@ import {
   DeleteBannerParams,
 } from "@workspace/api-zod";
 
+import { isMediaUrl } from "../lib/media";
+
 const router: IRouter = Router();
 
 const IMAGE_DATA_URL_RE =
@@ -108,7 +110,7 @@ router.patch("/banners/:id", async (req, res): Promise<void> => {
 
   const updates: Record<string, unknown> = {};
   if (parsed.data.title !== undefined) updates.title = parsed.data.title;
-  if (parsed.data.imageUrl !== undefined) {
+  if (parsed.data.imageUrl !== undefined && !isMediaUrl(parsed.data.imageUrl)) {
     const imageResult = validateImageUrl(parsed.data.imageUrl);
     if ("error" in imageResult) {
       res.status(400).json({ error: imageResult.error });

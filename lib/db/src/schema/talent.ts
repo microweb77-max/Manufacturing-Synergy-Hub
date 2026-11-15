@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const talentPostsTable = pgTable("talent_posts", {
@@ -25,7 +26,9 @@ export const talentPostsTable = pgTable("talent_posts", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+},
+  (t) => [index("talent_posts_post_type_idx").on(t.postType)],
+);
 
 export type TalentPost = typeof talentPostsTable.$inferSelect;
 export type InsertTalentPost = typeof talentPostsTable.$inferInsert;

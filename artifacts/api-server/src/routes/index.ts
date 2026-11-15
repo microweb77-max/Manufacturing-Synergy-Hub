@@ -16,12 +16,14 @@ import bannersRouter from "./banners";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 import authRouter from "./auth";
+import mediaRouter from "./media";
 import { accessPolicy } from "../lib/auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(mediaRouter);
 // Everything below is subject to the central access policy (see lib/auth.ts).
 router.use(accessPolicy);
 router.use(companiesRouter);

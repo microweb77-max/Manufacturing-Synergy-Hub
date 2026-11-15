@@ -26,6 +26,8 @@ import {
 
 import { rateLimit } from "../lib/auth";
 
+import { isMediaUrl } from "../lib/media";
+
 const router: IRouter = Router();
 
 const ALLOWED_MATERIAL_MIME = /^(image\/(png|jpeg|jpg|webp|gif)|application\/pdf)$/;
@@ -291,7 +293,9 @@ router.patch("/companies/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const { taxCode, phone, kakaoTalkId, logoUrl, ...rest } = parsed.data;
+  const { taxCode, phone, kakaoTalkId, logoUrl: rawLogoUrl, ...rest } = parsed.data;
+  // A media URL echoed back by the admin form means "unchanged".
+  const logoUrl = isMediaUrl(rawLogoUrl) ? undefined : rawLogoUrl;
 
   let normalizedLogoUrl: string | null | undefined;
   if (logoUrl !== undefined) {
