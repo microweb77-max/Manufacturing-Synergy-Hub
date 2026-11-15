@@ -77,15 +77,15 @@ A 최근 소식 (latest news) feature crawls recent Vietnam manufacturing-indust
 
 Images are still stored as base64 data URLs in the DB, but responses no longer embed them: `toJson()` (lib/serialize.ts) calls `rewriteMediaUrls()` (lib/media.ts), replacing `logoUrl` (company) / `imageUrl` (banner if `linkUrl` present, else solution) data URLs with `/api/media/{company|banner|solution}/{id}?v={hash}`, served by `routes/media.ts` with immutable caching (raster types only). PATCH handlers treat an echoed-back `/api/media/...` value as "unchanged". Resume list returns `resumeFileData` as `/api/resume-submissions/{id}/file` (admin-only download, `Content-Disposition: attachment`) and never selects the file column.
 
-## Local development outside Replit
+## Local development outside Replit (Windows / macOS / Linux, e.g. Claude Code)
 
 ```
-export DATABASE_URL=postgres://...  ADMIN_PASSWORD=...
-pnpm --filter @workspace/db run push
-PORT=8080 pnpm --filter @workspace/api-server run dev
-cd artifacts/synergy-hub && PORT=5173 BASE_PATH=/ API_PROXY_TARGET=http://localhost:8080 pnpm run dev
+pnpm install
+cp .env.example .env        # set DATABASE_URL (local Postgres) and ADMIN_PASSWORD
+pnpm run db:push:local
+pnpm run dev:local          # API :8080 + Vite :5173 with /api proxy
 ```
-`API_PROXY_TARGET` enables a Vite `/api` proxy (replaces Replit's path router locally).
+`scripts/dev-local.mjs` loads `.env`, builds+starts the API and runs Vite with `API_PROXY_TARGET` (replaces Replit's path router). `pnpm-workspace.yaml` keeps win32-x64 and darwin native binaries (esbuild/rollup/lightningcss/tailwind oxide) for this; `preinstall` is a Node script (`scripts/preinstall.cjs`) so it runs on Windows. `.claude/launch.json` + `CLAUDE.md` configure Claude Code.
 
 ## User preferences
 

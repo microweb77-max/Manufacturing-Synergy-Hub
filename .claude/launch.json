@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Synergy Hub (API + Web)",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev:local"],
+      "port": 5173
+    }
+  ]
+}
