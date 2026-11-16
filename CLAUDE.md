@@ -44,3 +44,5 @@ When asked to implement a spec or issue:
 6. **PR description (Korean)**: 요약 / 변경 내용 / 결정·가정 / 검증 결과 / 배포 시 주의(DB 변경, 새 Secret 등) / `Closes #이슈번호`.
 7. 새 기능/수정에는 해당 테스트(`artifacts/api-server/src/__tests__`)를 함께 추가한다.
 8. Keep PRs focused on one spec. Unrelated improvements → mention in the PR as follow-up suggestions instead of doing them.
+
+> Note: the Claude GitHub App cannot push files under `.github/workflows/`. If a spec needs a workflow change, put the full file content in the PR description (or a `.txt` copy) and Cowork will add it.

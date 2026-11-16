@@ -53,7 +53,7 @@
 ## 6. 완료 조건 (Acceptance Criteria)
 - [x] 로컬/CI에서 `pnpm test` 실행 시 단위 + 통합 테스트 전부 통과
 - [x] `DATABASE_URL` 없으면 통합 테스트는 skip되고 단위 테스트는 통과
-- [ ] PR 생성 시 CI가 자동 실행되어 상태가 표시됨 (이 PR 자체로 확인) — `ci.yml`은 GitHub App 권한상 Claude가 push할 수 없어 수동 추가 필요(PR 설명 참조)
+- [x] PR 생성 시 CI가 자동 실행되어 상태가 표시됨 (이 PR 자체로 확인) — `ci.yml`은 GitHub App 권한상 Claude가 push할 수 없어 Cowork가 `.github/workflows/ci.yml`로 추가
 - [x] 기존 동작·API 응답 변경 없음 (리팩터링은 export/분리 수준)
 - [x] typecheck·빌드 통과, Replit 배포 설정(`.replit`, artifact.toml) 변경 없음
 
