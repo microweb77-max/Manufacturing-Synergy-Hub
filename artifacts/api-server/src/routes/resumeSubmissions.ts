@@ -15,40 +15,9 @@ import {
 } from "@workspace/api-zod";
 
 import { sendDataUrl } from "../lib/media";
+import { validateResumeData } from "../lib/validation";
 
 const router: IRouter = Router();
-
-const RESUME_DATA_URL_RE =
-  /^data:(application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|image\/(png|jpe?g|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
-const MAX_RESUME_BYTES = 5 * 1024 * 1024;
-
-/**
- * Validates an uploaded resume file value. Accepts a PDF / Word / raster image
- * data URL (<= 5MB decoded). Empty string is allowed (no file attached).
- * Never trust the client-only size/type checks.
- */
-function validateResumeData(value: string): { value: string } | { error: string } {
-  const trimmed = value.trim();
-  if (trimmed === "") return { value: "" };
-
-  const match = RESUME_DATA_URL_RE.exec(trimmed);
-  if (!match) {
-    return {
-      error:
-        "유효하지 않은 이력서 파일입니다. PDF, Word 또는 이미지(PNG, JPG, WEBP) 파일을 업로드해주세요.",
-    };
-  }
-
-  const base64 = match[match.length - 1];
-  const decodedBytes =
-    Math.floor((base64.length * 3) / 4) -
-    (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
-  if (decodedBytes > MAX_RESUME_BYTES) {
-    return { error: "이력서 파일은 5MB 이하여야 합니다." };
-  }
-
-  return { value: trimmed };
-}
 
 const selectShape = {
   id: resumeSubmissionsTable.id,

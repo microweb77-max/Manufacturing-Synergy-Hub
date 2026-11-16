@@ -98,6 +98,10 @@ pnpm run dev:local          # API :8080 + Vite :5173 with /api proxy
 - Workflow names are prefixed: `artifacts/<slug>: <service>` (e.g. `artifacts/api-server: API Server`).
 - esbuild externalizes `@google/*` (see `api-server/build.mjs`), so `@google/genai` must be a DIRECT api-server dependency or the bundle fails at runtime with `ERR_MODULE_NOT_FOUND`. Import integration clients lazily inside handlers so a missing integration can't crash server startup.
 
+## Testing & CI
+
+`pnpm test` runs Vitest (`artifacts/api-server/src/__tests__`). Unit tests (synergy score, auth/session/`accessPolicy`/`rateLimit`, media URL rewriting, `lib/validation.ts`) need no DB. `api.integration.test.ts` calls `app` directly via supertest and needs Postgres: it runs only when `DATABASE_URL` is set AND looks like a throwaway DB (contains `test`, or `CI=true`) because it TRUNCATEs tables; otherwise it is skipped. `.github/workflows/ci.yml` runs install → db push (Postgres 16 service) → typecheck → build → test on PRs to `main`. The web/sandbox builds need `PORT` and `BASE_PATH` env vars (set in CI). New features should add tests alongside.
+
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

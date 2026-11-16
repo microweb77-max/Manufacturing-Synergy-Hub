@@ -27,59 +27,12 @@ import {
 import { rateLimit } from "../lib/auth";
 
 import { isMediaUrl } from "../lib/media";
+import { validateLogoUrl } from "../lib/validation";
 
 const router: IRouter = Router();
 
 const ALLOWED_MATERIAL_MIME = /^(image\/(png|jpeg|jpg|webp|gif)|application\/pdf)$/;
 const MAX_MATERIAL_BYTES = 7 * 1024 * 1024;
-
-const LOGO_DATA_URL_RE = /^data:image\/(png|jpe?g|webp|gif);base64,([A-Za-z0-9+/]+={0,2})$/;
-const MAX_LOGO_BYTES = 2 * 1024 * 1024;
-
-/**
- * Validates a logo value. Accepts a raster image data URL (<= 2MB decoded) or a
- * plain https URL. Returns the normalized value, or `{ error }` if invalid.
- */
-function validateLogoUrl(value: string): { value: string } | { error: string } {
-  const trimmed = value.trim();
-  if (trimmed === "") return { value: "" };
-
-  const dataMatch = LOGO_DATA_URL_RE.exec(trimmed);
-  if (dataMatch) {
-    const base64 = dataMatch[2];
-    const decodedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
-    if (decodedBytes > MAX_LOGO_BYTES) {
-      return { error: "로고 이미지는 2MB 이하여야 합니다." };
-    }
-    return { value: trimmed };
-  }
-
-  if (/^https:\/\/\S+$/.test(trimmed)) {
-    return { value: extractDirectImageUrl(trimmed) };
-  }
-
-  return { error: "유효하지 않은 로고 이미지입니다. 이미지(PNG, JPG, WEBP, GIF) 파일을 업로드해주세요." };
-}
-
-// Users sometimes paste a Google Images viewer-page link
-// (https://www.google.com/imgres?...&imgurl=<direct-url>) instead of the direct
-// image URL. That page returns HTML, not an image, so the <img> never renders.
-// Extract the embedded `imgurl` (the real image file) when present.
-function extractDirectImageUrl(url: string): string {
-  try {
-    const parsed = new URL(url);
-    const isGoogle = /(^|\.)google\.[a-z.]+$/i.test(parsed.hostname);
-    if (isGoogle && parsed.pathname.includes("/imgres")) {
-      const imgUrl = parsed.searchParams.get("imgurl");
-      if (imgUrl && /^https:\/\/\S+$/.test(imgUrl)) {
-        return imgUrl;
-      }
-    }
-  } catch {
-    // Not parseable; return original.
-  }
-  return url;
-}
 
 const ANALYZE_PROMPT = `당신은 B2B 제조업 협업 네트워크의 기업 프로필 분석 전문가입니다.
 첨부된 기업 홍보자료(이미지 또는 PDF)를 읽고, 그 안의 텍스트와 시각 정보를 분석하여 아래 항목을 추출하세요.
