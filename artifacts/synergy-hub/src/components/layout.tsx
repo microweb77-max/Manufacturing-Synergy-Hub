@@ -73,7 +73,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-background">
       {/* Mobile top bar */}
-      <header className="md:hidden flex items-center justify-between h-14 px-3 border-b border-sidebar-border bg-sidebar shrink-0">
+      <header className="md:hidden flex items-center justify-between h-14 px-3 border-b border-sidebar-border bg-background shrink-0">
         <Link href="/">
           <span className="flex items-center gap-2 font-bold text-sidebar-foreground cursor-pointer">
             <Factory className="h-5 w-5 text-primary" />
@@ -85,7 +85,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </Button>
       </header>
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-72 p-0 bg-sidebar flex flex-col">
+        <SheetContent side="left" className="w-72 p-0 bg-background flex flex-col">
           <SheetTitle className="sr-only">메뉴</SheetTitle>
           <SidebarContent location={location} navItems={navItems} onNavigate={() => setMobileOpen(false)} />
         </SheetContent>
