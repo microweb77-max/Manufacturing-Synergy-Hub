@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { useAuth } from "@clerk/react";
+import { useAdminAuth } from "@/lib/adminAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListSupplyOffers,
@@ -58,9 +60,18 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function OffersPage() {
+  const { isAdmin } = useAdminAuth();
+  const { isLoaded: authLoaded, isSignedIn, userId } = useAuth();
+  const canViewPrices = authLoaded && isSignedIn === true;
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { data: offers, isLoading } = useListSupplyOffers();
+  const { data: offers, isLoading } = useListSupplyOffers(undefined, {
+    query: {
+      // Never reuse member prices for a guest, or a guest's masked data after sign-in.
+      queryKey: [...getListSupplyOffersQueryKey(), { priceViewer: canViewPrices ? userId : null }],
+      enabled: authLoaded,
+    },
+  });
   const { data: companies } = useListCompanies({});
   const { data: clientCompanies } = useListClientCompanies();
   const createOffer = useCreateSupplyOffer();
@@ -101,7 +112,7 @@ export default function OffersPage() {
             협력사가 공급 가능한 원재료·자재·부자재 품목과 단가입니다. 관심 품목에 매칭을 요청하세요.
           </p>
         </div>
-        <Button onClick={() => setOfferOpen(true)}>
+        <Button disabled={!isAdmin} onClick={() => setOfferOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           공급 오퍼 등록
         </Button>
@@ -134,7 +145,7 @@ export default function OffersPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {!authLoaded || isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-44 w-full" />
@@ -170,7 +181,7 @@ export default function OffersPage() {
               <CardContent className="flex flex-col flex-1 gap-3">
                 <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold font-mono text-primary">
-                    {o.unitPrice || "-"}
+                    {canViewPrices ? (o.unitPrice || "-") : "xxx"}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {o.currency}
@@ -192,6 +203,7 @@ export default function OffersPage() {
                     variant="outline"
                     className="w-full"
                     onClick={() => setMatchTarget(o)}
+                    disabled={!isAdmin}
                   >
                     <Handshake className="h-4 w-4 mr-2" />
                     매칭 요청

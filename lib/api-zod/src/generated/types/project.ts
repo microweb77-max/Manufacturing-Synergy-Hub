@@ -8,6 +8,8 @@
 import type { ProjectStatus } from './projectStatus';
 
 export interface Project {
+  /** @nullable */
+  ownerCompanyId?: number | null;
   id: number;
   title: string;
   description: string;

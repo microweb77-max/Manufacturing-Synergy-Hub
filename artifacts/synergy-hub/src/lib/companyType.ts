@@ -1,6 +1,6 @@
-import { Factory, Monitor, Wrench, type LucideIcon } from "lucide-react";
+import { Factory, Monitor, Wrench, Building2, Truck, type LucideIcon } from "lucide-react";
 
-export type CompanyType = "hardware" | "software" | "service";
+export type CompanyType = "hardware" | "software" | "service" | "customer" | "supplier";
 
 export type CompanyTypeMeta = {
   label: string;
@@ -30,13 +30,27 @@ export const COMPANY_TYPE_META: Record<CompanyType, CompanyTypeMeta> = {
     badgeClass: "bg-teal-500/10 text-teal-600",
     iconColor: "text-teal-500",
   },
+  customer: {
+    label: "제조 (고객사)",
+    icon: Building2,
+    badgeClass: "bg-orange-500/10 text-orange-600",
+    iconColor: "text-orange-500",
+  },
+  supplier: {
+    label: "공급사",
+    icon: Truck,
+    badgeClass: "bg-purple-500/10 text-purple-600",
+    iconColor: "text-purple-500",
+  },
 };
 
 export function getCompanyTypeMeta(type: string | null | undefined): CompanyTypeMeta {
-  return COMPANY_TYPE_META[(type ?? "hardware") as CompanyType] ?? COMPANY_TYPE_META.hardware;
+  return COMPANY_TYPE_META[(type ?? "supplier") as CompanyType] ?? COMPANY_TYPE_META.supplier;
 }
 
 export const COMPANY_TYPE_OPTIONS: { value: CompanyType; label: string }[] = [
+  { value: "customer", label: "제조 (고객사)" },
+  { value: "supplier", label: "공급사" },
   { value: "hardware", label: "하드웨어" },
   { value: "software", label: "소프트웨어" },
   { value: "service", label: "서비스" },

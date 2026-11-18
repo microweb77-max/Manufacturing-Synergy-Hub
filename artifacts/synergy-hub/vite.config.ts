@@ -4,27 +4,16 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
+// PORT and BASE_PATH are required for the dev server but not for `vite build`
+// (which produces static files and never starts a server). Fall back to safe
+// defaults so the production build doesn't fail when these vars are absent.
+const rawPort = process.env.PORT ?? "25071";
 const port = Number(rawPort);
-
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
@@ -66,11 +55,12 @@ export default defineConfig({
     fs: {
       strict: true,
     },
-    // Outside Replit (no path router), proxy /api to the local API server.
-    // Set API_PROXY_TARGET, e.g. http://localhost:8080
-    ...(process.env.API_PROXY_TARGET
-      ? { proxy: { "/api": { target: process.env.API_PROXY_TARGET, changeOrigin: true } } }
-      : {}),
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port,

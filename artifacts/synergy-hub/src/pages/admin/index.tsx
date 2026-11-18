@@ -1,4 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { useAdminAuth } from "@/lib/adminAuth";
 import {
   useListCompanies,
   useCreateCompany,
@@ -47,6 +49,10 @@ import {
   useUpdateResumeSubmission,
   useDeleteResumeSubmission,
   getListResumeSubmissionsQueryKey,
+  useListTalentContactRequests,
+  useUpdateTalentContactRequest,
+  useDeleteTalentContactRequest,
+  getListTalentContactRequestsQueryKey,
   useListNavSettings,
   useUpsertNavSetting,
   getListNavSettingsQueryKey,
@@ -58,7 +64,6 @@ import {
   getListBannersQueryKey,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
-import { AdminGate, LogoutButton } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Badge } from "@/components/ui/badge";
@@ -260,6 +265,8 @@ function CompaniesAdmin() {
           label: "유형",
           getValue: (c) => c.type,
           options: [
+            { value: "customer", label: "제조 (고객사)" },
+            { value: "supplier", label: "공급사" },
             { value: "hardware", label: "하드웨어" },
             { value: "software", label: "소프트웨어" },
             { value: "service", label: "서비스" },
@@ -296,6 +303,8 @@ function CompaniesAdmin() {
           type: "select",
           required: true,
           options: [
+            { value: "customer", label: "제조 (고객사)" },
+            { value: "supplier", label: "공급사" },
             { value: "hardware", label: "하드웨어 (Hardware)" },
             { value: "software", label: "소프트웨어 (Software)" },
             { value: "service", label: "서비스 (Service)" },
@@ -313,7 +322,7 @@ function CompaniesAdmin() {
       ]}
       emptyValues={{
         name: "",
-        type: "hardware",
+        type: "supplier",
         location: "",
         contactEmail: "",
         phone: "",
@@ -337,11 +346,13 @@ function CompaniesAdmin() {
         description: c.description ?? "",
         techSpecs: c.techSpecs ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "기업이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "기업이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -391,6 +402,7 @@ function ProjectsAdmin() {
   return (
     <AdminSection
       title="프로젝트"
+      importExcludeFields={["status"]}
       description="수요 프로젝트(데맨드)를 관리합니다."
       items={data}
       isLoading={isLoading}
@@ -445,7 +457,7 @@ function ProjectsAdmin() {
         requiredTags: fromTags(p.requiredTags),
         description: p.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({
             data: {
@@ -458,8 +470,10 @@ function ProjectsAdmin() {
               deadline: v.deadline,
             },
           });
-          toast({ title: "추가 완료", description: "프로젝트가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "프로젝트가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -520,6 +534,7 @@ function MatchesAdmin() {
   return (
     <AdminSection
       title="매칭"
+      importExcludeFields={["status"]}
       description="프로젝트-기업 매칭을 관리합니다. (수정 시 상태만 변경됩니다)"
       items={data}
       isLoading={isLoading}
@@ -556,7 +571,7 @@ function MatchesAdmin() {
         synergyScore: String(m.synergyScore),
         status: m.status,
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({
             data: {
@@ -565,8 +580,10 @@ function MatchesAdmin() {
               ...(v.synergyScore ? { synergyScore: toNum(v.synergyScore) } : {}),
             },
           });
-          toast({ title: "추가 완료", description: "매칭이 생성되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "매칭이 생성되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -688,11 +705,13 @@ function SolutionsAdmin() {
         outcome: s.outcome ?? "",
         description: s.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "솔루션이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "솔루션이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -784,11 +803,13 @@ function PerformanceAdmin() {
         revenue: p.revenue ?? "",
         notes: p.notes ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "성과 로그가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "성과 로그가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -956,11 +977,13 @@ function TalentAdmin() {
         skills: fromTags(t.skills),
         description: t.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "게시물이 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "게시물이 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -1086,11 +1109,13 @@ function SupplyOffersAdmin() {
         minOrderQty: o.minOrderQty ?? "",
         description: o.description ?? "",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "공급 오퍼가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "공급 오퍼가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -1737,11 +1762,13 @@ function BannersAdmin() {
         displayOrder: String(b.displayOrder),
         active: b.active ? "true" : "false",
       })}
-      onCreate={async (v) => {
+      onCreate={async (v, options) => {
         try {
           await create.mutateAsync({ data: buildBody(v) });
-          toast({ title: "추가 완료", description: "배너가 등록되었습니다." });
-          invalidate();
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "배너가 등록되었습니다." });
+            invalidate();
+          }
         } catch {
           toast({ title: "오류", description: "저장에 실패했습니다.", variant: "destructive" });
           throw new Error("failed");
@@ -1767,6 +1794,86 @@ function BannersAdmin() {
         }
       }}
     />
+  );
+}
+
+function TalentContactRequestsAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data: requests, isLoading } = useListTalentContactRequests();
+  const updateReq = useUpdateTalentContactRequest();
+  const deleteReq = useDeleteTalentContactRequest();
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: getListTalentContactRequestsQueryKey() });
+
+  const toggleStatus = (id: number, current: string) => {
+    const next = current === "pending" ? "completed" : "pending";
+    updateReq.mutate(
+      { id, data: { status: next as "pending" | "completed" } },
+      {
+        onSuccess: () => { toast({ title: "상태 변경 완료" }); invalidate(); },
+        onError: () => toast({ title: "오류", description: "상태 변경에 실패했습니다.", variant: "destructive" }),
+      },
+    );
+  };
+
+  const handleDelete = (id: number) => {
+    deleteReq.mutate(
+      { id },
+      {
+        onSuccess: () => { toast({ title: "삭제 완료" }); invalidate(); },
+        onError: () => toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" }),
+      },
+    );
+  };
+
+  if (isLoading) return <div className="py-8 text-center text-muted-foreground">로딩 중...</div>;
+  if (!requests || requests.length === 0)
+    return <div className="py-8 text-center text-muted-foreground border rounded-lg bg-card">연락 요청이 없습니다.</div>;
+
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50">
+          <tr>
+            {["구직자", "포스트", "업체명", "담당자", "연락처", "이메일", "상태", "접수일", ""].map((h) => (
+              <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {requests.map((r) => (
+            <tr key={r.id} className="border-t hover:bg-muted/30">
+              <td className="px-3 py-2 font-medium">{r.seekerName}</td>
+              <td className="px-3 py-2 max-w-[180px] truncate text-muted-foreground">{r.postTitle}</td>
+              <td className="px-3 py-2">{r.companyName}</td>
+              <td className="px-3 py-2">{r.contactPerson}</td>
+              <td className="px-3 py-2">{r.phone || "-"}</td>
+              <td className="px-3 py-2">{r.email || "-"}</td>
+              <td className="px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => toggleStatus(r.id, r.status)}
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border transition-colors ${
+                    r.status === "completed"
+                      ? "bg-green-100 text-green-800 border-green-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200"
+                  }`}
+                >
+                  {r.status === "completed" ? "처리완료" : "대기중"}
+                </button>
+              </td>
+              <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">{formatDateTime(r.createdAt)}</td>
+              <td className="px-3 py-2">
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-7 px-2" onClick={() => handleDelete(r.id)}>
+                  삭제
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -1865,27 +1972,30 @@ function AdminDashboard() {
 }
 
 export default function AdminPage() {
-  return (
-    <AdminGate>
-      <AdminConsole />
-    </AdminGate>
-  );
-}
+  const { logout } = useAdminAuth();
+  const [, navigate] = useLocation();
 
-function AdminConsole() {
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between">
         <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <ShieldAlert className="h-7 w-7 text-primary" />
-          관리자 (ADMIN)
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
-        </p>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <ShieldAlert className="h-7 w-7 text-primary" />
+            관리자 (ADMIN)
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            모든 데이터를 입력 · 수정 · 삭제할 수 있는 통합 관리 콘솔입니다.
+          </p>
         </div>
-        <LogoutButton />
+        <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 shrink-0">
+          <ShieldAlert className="h-4 w-4" />
+          관리자 로그아웃
+        </Button>
       </div>
 
       <AdminDashboard />
@@ -1904,6 +2014,7 @@ function AdminConsole() {
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
           <TabsTrigger value="banners">배너 관리</TabsTrigger>
           <TabsTrigger value="menu">메뉴 관리</TabsTrigger>
+          <TabsTrigger value="contact-requests">구직 연락 요청</TabsTrigger>
         </TabsList>
         <TabsContent value="companies" className="mt-6">
           <CompaniesAdmin />
@@ -1940,6 +2051,9 @@ function AdminConsole() {
         </TabsContent>
         <TabsContent value="menu" className="mt-6">
           <MenuManagementAdmin />
+        </TabsContent>
+        <TabsContent value="contact-requests" className="mt-6">
+          <TalentContactRequestsAdmin />
         </TabsContent>
       </Tabs>
     </div>

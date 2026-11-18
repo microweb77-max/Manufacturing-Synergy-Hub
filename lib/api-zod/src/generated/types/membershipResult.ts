@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface AdminCredentials {
-  /** @minLength 1 */
-  password: string;
+export interface MembershipResult {
+  ok: boolean;
 }

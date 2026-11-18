@@ -28,11 +28,224 @@ tags:
     description: Vietnam manufacturing news (crawled and translated to Korean)
   - name: banners
     description: Dashboard promotional banners (rotating carousel)
-  - name: auth
-    description: Admin authentication
   - name: dashboard
     description: Aggregated dashboard data
 paths:
+  /companies/{id}/verification:
+    get:
+      operationId: getCompanyVerification
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Public verification badge
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyVerification" }
+  /membership/mine:
+    get:
+      operationId: listMyCompanies
+      responses:
+        "200":
+          description: Current verified memberships
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/MyCompany" } }
+  /membership/companies/{id}:
+    get:
+      operationId: getCompanyMembership
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Own claims and company management state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyMembership" }
+  /membership/claims:
+    get:
+      operationId: listCompanyClaims
+      responses:
+        "200":
+          description: Platform administrator review queue
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CompanyClaimReview" } }
+    post:
+      operationId: createCompanyClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyClaimInput" }
+      responses:
+        "201":
+          description: Submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipSubmission" }
+  /membership/claims/{id}:
+    delete:
+      operationId: cancelCompanyClaim
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "204": { description: Cancelled }
+    patch:
+      operationId: reviewCompanyClaim
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyClaimDecision" }
+      responses:
+        "200":
+          description: Reviewed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipResult" }
+  /membership/claims/{id}/evidence:
+    get:
+      operationId: downloadCompanyClaimEvidence
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: Private evidence attachment for applicant or reviewer
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+  /membership/consume:
+    post:
+      operationId: consumeCompanyLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyLinkInput" }
+      responses:
+        "200":
+          description: Claimed or joined existing company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyLinkResult" }
+  /membership/companies/{id}/invitations:
+    post:
+      operationId: inviteCompanyMember
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CompanyInvitationInput" }
+      responses:
+        "201":
+          description: Invitation sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MembershipSubmission" }
+  /membership/companies/{id}/invitations/{invitationId}:
+    delete:
+      operationId: cancelCompanyInvitation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: invitationId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Cancelled }
+  /membership/companies/{id}/members/{memberId}:
+    delete:
+      operationId: removeCompanyMember
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: memberId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Removed }
+  /talent-contact-requests:
+    get:
+      operationId: listTalentContactRequests
+      tags: [talent]
+      summary: List talent contact requests (admin only)
+      parameters: []
+      responses:
+        "200":
+          description: Contact requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TalentContactRequest"
+    post:
+      operationId: createTalentContactRequest
+      tags: [talent]
+      summary: Create a contact request for a seeking post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentContactRequestInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentContactRequest"
+  /talent-contact-requests/{id}:
+    patch:
+      operationId: updateTalentContactRequest
+      tags: [talent]
+      summary: Update contact request status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TalentContactRequestUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TalentContactRequest"
+    delete:
+      operationId: deleteTalentContactRequest
+      tags: [talent]
+      summary: Delete a contact request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+  /auth/me:
+    get:
+      operationId: getCurrentSession
+      tags: [auth]
+      summary: Get verified session and platform permissions
+      responses:
+        "200":
+          description: Current session (anonymous visitors have no privileges)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [userId, isAdmin]
+                properties:
+                  userId:
+                    type: [string, "null"]
+                  isAdmin:
+                    type: boolean
+        "503":
+          description: Account verification unavailable
   /healthz:
     get:
       operationId: healthCheck
@@ -47,57 +260,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /auth/me:
-    get:
-      operationId: getAuthMe
-      tags: [auth]
-      summary: Current admin session status
-      responses:
-        "200":
-          description: Session status
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthStatus"
-
-  /auth/login:
-    post:
-      operationId: adminLogin
-      tags: [auth]
-      summary: Log in as admin
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminCredentials"
-      responses:
-        "200":
-          description: Logged in
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthStatus"
-        "401":
-          description: Wrong password
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /auth/logout:
-    post:
-      operationId: adminLogout
-      tags: [auth]
-      summary: Log out
-      responses:
-        "200":
-          description: Logged out
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AuthStatus"
-
   /companies:
     get:
       operationId: listCompanies
@@ -109,7 +271,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [hardware, software, service]
+            enum: [hardware, software, service, customer, supplier]
         - name: tag
           in: query
           required: false
@@ -242,6 +404,17 @@ paths:
                 $ref: "#/components/schemas/AnalyzeMaterialResult"
         "400":
           description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Too many analysis requests for this verified account on this server instance
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until another request can be attempted
           content:
             application/json:
               schema:
@@ -767,6 +940,7 @@ paths:
       operationId: listSupplyOffers
       tags: [supplyOffers]
       summary: List supply offers (raw materials, parts) from partner companies
+      description: Public browsing is allowed. unitPrice is "xxx" without a verified signed-in session; signed-in members receive the actual price. Responses must not be stored in shared caches.
       parameters:
         - name: category
           in: query
@@ -1142,6 +1316,47 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/NewsArticle"
+  /scheduled/news:
+    post:
+      operationId: refreshScheduledNews
+      tags: [news]
+      summary: Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer scheduler credential supplied by the external scheduling service.
+      responses:
+        "200":
+          description: Completed or already completed today
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [scheduledDay, timezone, inserted, skipped, alreadyCompleted]
+                properties:
+                  scheduledDay:
+                    type: string
+                    format: date
+                  timezone:
+                    type: string
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+                  alreadyCompleted:
+                    type: boolean
+        "401":
+          description: Invalid scheduler credential
+        "429":
+          description: A collection is already running; retry later
+        "502":
+          description: Collection failed and may be retried
+        "503":
+          description: Scheduler credential not configured
   /news/collect:
     post:
       operationId: collectNews
@@ -1265,6 +1480,7 @@ paths:
       operationId: listClientCompanies
       tags: [clientCompanies]
       summary: List Korean FDI manufacturing client companies (KOTRA directory)
+      description: Anonymous visitors receive company names and industry only; other business fields contain "------------". The numeric no is retained as an internal row identifier. A verified signed-in session returns full records. Responses are private and must not be cached.
       responses:
         "200":
           description: Client company directory
@@ -1305,25 +1521,158 @@ paths:
 
 components:
   schemas:
-    AuthStatus:
+    CompanyVerification:
       type: object
+      required: [verified, method]
       properties:
-        isAdmin:
-          type: boolean
-        configured:
-          type: boolean
-          description: Whether ADMIN_PASSWORD is set on the server
-      required:
-        - isAdmin
-        - configured
-    AdminCredentials:
+        verified: { type: boolean }
+        method: { type: [string, "null"] }
+    MyCompany:
       type: object
+      required: [companyId, name, role]
       properties:
-        password:
+        companyId: { type: integer }
+        name: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+    CompanyMember:
+      type: object
+      required: [id, companyId, userId, role, createdAt]
+      properties:
+        id: { type: integer }
+        companyId: { type: integer }
+        userId: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+        createdAt: { type: string }
+    CompanyInvitation:
+      type: object
+      required: [id, email, role, status, expiresAt]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        role: { type: string, enum: [company_admin, staff] }
+        status: { type: string }
+        expiresAt: { type: string }
+    CompanyClaimStatus:
+      type: object
+      required: [id, method, status, expiresAt, reviewNote]
+      properties:
+        id: { type: integer }
+        method: { type: string, enum: [email, manual] }
+        status: { type: string }
+        expiresAt: { type: string }
+        reviewNote: { type: [string, "null"] }
+    CompanyMembership:
+      type: object
+      required: [verified, role, members, invitations, claims]
+      properties:
+        verified: { type: boolean }
+        role: { type: [string, "null"], enum: [company_admin, staff, null] }
+        members: { type: array, items: { $ref: "#/components/schemas/CompanyMember" } }
+        invitations: { type: array, items: { $ref: "#/components/schemas/CompanyInvitation" } }
+        claims: { type: array, items: { $ref: "#/components/schemas/CompanyClaimStatus" } }
+    CompanyClaimReview:
+      type: object
+      required: [id, companyId, companyName, userId, method, status, expiresAt, taxCode, registeredTaxCode, reviewNote]
+      properties:
+        id: { type: integer }
+        companyId: { type: integer }
+        companyName: { type: string }
+        userId: { type: string }
+        method: { type: string }
+        status: { type: string }
+        expiresAt: { type: string }
+        taxCode: { type: [string, "null"] }
+        registeredTaxCode: { type: [string, "null"] }
+        reviewNote: { type: [string, "null"] }
+    CompanyClaimInput:
+      type: object
+      required: [companyId, method]
+      properties:
+        companyId: { type: integer, minimum: 1 }
+        method: { type: string, enum: [email, manual] }
+        taxCode: { type: string }
+        evidenceData: { type: string, description: "PNG/JPEG/PDF data URL up to 5MB, persisted privately in App Storage" }
+    CompanyClaimDecision:
+      type: object
+      required: [decision, note]
+      properties:
+        decision: { type: string, enum: [approve, reject] }
+        note: { type: string, minLength: 1, maxLength: 1000 }
+    CompanyInvitationInput:
+      type: object
+      required: [email, role]
+      properties:
+        email: { type: string, format: email }
+        role: { type: string, enum: [company_admin, staff] }
+    CompanyLinkInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string }
+    CompanyLinkResult:
+      type: object
+      required: [companyId]
+      properties:
+        companyId: { type: integer }
+    MembershipSubmission:
+      type: object
+      required: [id, status, expiresAt]
+      properties:
+        id: { type: integer }
+        status: { type: string }
+        expiresAt: { type: string }
+    MembershipResult:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    TalentContactRequest:
+      type: object
+      required: [id, talentPostId, seekerName, postTitle, companyName, contactPerson, phone, email, status, createdAt]
+      properties:
+        id:
+          type: integer
+        talentPostId:
+          type: integer
+        seekerName:
+          type: string
+        postTitle:
+          type: string
+        companyName:
+          type: string
+        contactPerson:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed]
+        createdAt:
+          type: string
+    TalentContactRequestInput:
+      type: object
+      required: [talentPostId, companyName, contactPerson]
+      properties:
+        talentPostId:
+          type: integer
+        companyName:
           type: string
           minLength: 1
-      required:
-        - password
+        contactPerson:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+        email:
+          type: string
+    TalentContactRequestUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, completed]
     HealthStatus:
       type: object
       properties:
@@ -1366,7 +1715,7 @@ components:
           type: string
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: ["string", "null"]
         phone:
@@ -1408,7 +1757,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: string
         phone:
@@ -1437,7 +1786,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [hardware, software, service]
+          enum: [hardware, software, service, customer, supplier]
         taxCode:
           type: string
         phone:
@@ -1562,6 +1911,7 @@ components:
         - deadline
         - createdAt
       properties:
+        ownerCompanyId: { type: [integer, "null"] }
         id:
           type: integer
         title:
@@ -1594,6 +1944,7 @@ components:
         - category
         - requiredTags
       properties:
+        ownerCompanyId: { type: integer, minimum: 1 }
         title:
           type: string
           minLength: 1
@@ -1888,6 +2239,7 @@ components:
         - sourceUrl
         - createdAt
       properties:
+        ownerCompanyId: { type: [integer, "null"] }
         id:
           type: integer
         postType:
@@ -2064,6 +2416,7 @@ components:
         - title
         - authorName
       properties:
+        ownerCompanyId: { type: integer, minimum: 1 }
         postType:
           type: string
           enum: [hiring, seeking]
@@ -2080,7 +2433,7 @@ components:
         experienceLevel:
           type: string
         headcount:
-          type: integer
+          type: ["integer", "null"]
         skills:
           type: array
           items:
@@ -2110,7 +2463,7 @@ components:
         experienceLevel:
           type: string
         headcount:
-          type: integer
+          type: ["integer", "null"]
         skills:
           type: array
           items:
@@ -2438,8 +2791,8 @@ components:
       type: object
       required:
         - totalCompanies
-        - hardwareCompanies
-        - softwareCompanies
+        - customerCompanies
+        - supplierCompanies
         - activeProjects
         - completedProjects
         - totalMatches
@@ -2450,9 +2803,9 @@ components:
       properties:
         totalCompanies:
           type: integer
-        hardwareCompanies:
+        customerCompanies:
           type: integer
-        softwareCompanies:
+        supplierCompanies:
           type: integer
         activeProjects:
           type: integer

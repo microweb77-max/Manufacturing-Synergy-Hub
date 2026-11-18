@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
+import { rateLimit } from "../lib/rateLimit";
 import { eq, desc, sql } from "drizzle-orm";
 import {
   db,
@@ -23,10 +24,6 @@ import {
   AnalyzeCompanyMaterialBody,
   AnalyzeCompanyMaterialResponse,
 } from "@workspace/api-zod";
-
-import { rateLimit } from "../lib/auth";
-
-import { isMediaUrl } from "../lib/media";
 
 const router: IRouter = Router();
 
@@ -293,9 +290,7 @@ router.patch("/companies/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const { taxCode, phone, kakaoTalkId, logoUrl: rawLogoUrl, ...rest } = parsed.data;
-  // A media URL echoed back by the admin form means "unchanged".
-  const logoUrl = isMediaUrl(rawLogoUrl) ? undefined : rawLogoUrl;
+  const { taxCode, phone, kakaoTalkId, logoUrl, ...rest } = parsed.data;
 
   let normalizedLogoUrl: string | null | undefined;
   if (logoUrl !== undefined) {

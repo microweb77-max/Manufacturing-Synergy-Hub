@@ -6,12 +6,22 @@ Companies have a `type` of `hardware` | `software` | `service` (서비스: 컨�
 
 ## Run & Operate
 
+### Current authentication policy
+
+Clerk now protects the API. All writes and private submission-list reads require
+a verified platform administrator; public data reads remain open. `/admin` and
+registration pages use server-verified permissions, not a browser password.
+Company claims and member-owned activities are a later phase. See
+`artifacts/api-server/AUTHENTICATION.md` for the first-admin grant/revoke command,
+environment separation, and checks. This policy supersedes the legacy no-auth
+descriptions in the product notes below.
+
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string; `ADMIN_PASSWORD` — admin console password (secret)
+- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
@@ -44,7 +54,7 @@ Company capability directory, demand-project posting with smart partner matching
 
 A 고객사 디렉토리 (`/client-companies`, in the sidebar nav) lists 1,221 Korean FDI manufacturing companies in Vietnam (KOTRA directory 2024.12), with client-side search, region/industry filters, and pagination. This is static reference data served from a bundled JSON file (`artifacts/api-server/src/data/clientCompanies.json`, imported in `routes/clientCompanies.ts`, requires `resolveJsonModule` in the api-server tsconfig) via `GET /client-companies` — no DB table, so it works identically in dev and prod with no seeding. Frontend page: `artifacts/synergy-hub/src/pages/client-companies/index.tsx`. This is distinct from 기업 디렉토리 (`/companies`), the platform's own registered partner companies.
 
-An ADMIN console (`/admin`, NOT in the sidebar nav — direct URL only) provides full create/edit/delete for all entities via tabs, plus an `AdminDashboard` summary-count card row at the top. Built on a generic `src/pages/admin/AdminSection.tsx` with thin per-entity wrappers in `src/pages/admin/index.tsx` wiring the generated orval hooks. `AdminSection` supports optional, backward-compatible props: `getSearchText`/`searchPlaceholder` (toolbar search), `filters` (AdminFilter[] → select dropdowns, with an `__all__` sentinel for "전체"), per-column `sortValue` (tri-state asc→desc→none sortable headers), `pageSize` (client-side pagination, default 10), and `headerActions` (extra header controls). `AdminField.type` includes an `"image"` type (used by company `logoUrl` + solution `imageUrl`): rendered by the in-file `AdminImageField`, it shows a URL text input PLUS a direct file-upload button that converts the picked image to a base64 data URL stored in the same field value (raster-only allow-list, ≤2MB, thumbnail preview + remove + onError fallback). `AdminField.type` also includes a `"readonly"` type: renders the value in a non-editable bordered block (`whitespace-pre-wrap` for multiline) — used by the 오퍼 매칭 admin tab to display request content (고객사/담당자/연락처/요청일/요청 메시지) that must be viewable but never edited; still included in `values`/`toFormValues` but ignored by the entity's `onUpdate` body builder. Same inline-base64 storage as the company new-page logo; no object storage. Company `logoUrl` is server-validated via `validateLogoUrl`; solution `imageUrl` is NOT server-validated (pre-existing). The table = table + create/edit Dialog form + delete AlertDialog. Note: matches "update" sends status only (MatchUpdate); project "create" omits status (ProjectInput); these per-entity body shapes are built explicitly in each wrapper. `/admin` requires admin login (see Security section).
+An ADMIN console (`/admin`, NOT in the sidebar nav — direct URL only) provides full create/edit/delete for all entities via tabs, plus an `AdminDashboard` summary-count card row at the top. Built on a generic `src/pages/admin/AdminSection.tsx` with thin per-entity wrappers in `src/pages/admin/index.tsx` wiring the generated orval hooks. `AdminSection` supports optional, backward-compatible props: `getSearchText`/`searchPlaceholder` (toolbar search), `filters` (AdminFilter[] → select dropdowns, with an `__all__` sentinel for "전체"), per-column `sortValue` (tri-state asc→desc→none sortable headers), `pageSize` (client-side pagination, default 10), and `headerActions` (extra header controls). `AdminField.type` includes an `"image"` type (used by company `logoUrl` + solution `imageUrl`): rendered by the in-file `AdminImageField`, it shows a URL text input PLUS a direct file-upload button that converts the picked image to a base64 data URL stored in the same field value (raster-only allow-list, ≤2MB, thumbnail preview + remove + onError fallback). `AdminField.type` also includes a `"readonly"` type: renders the value in a non-editable bordered block (`whitespace-pre-wrap` for multiline) — used by the 오퍼 매칭 admin tab to display request content (고객사/담당자/연락처/요청일/요청 메시지) that must be viewable but never edited; still included in `values`/`toFormValues` but ignored by the entity's `onUpdate` body builder. Same inline-base64 storage as the company new-page logo; no object storage. Company `logoUrl` is server-validated via `validateLogoUrl`; solution `imageUrl` is NOT server-validated (pre-existing). The table = table + create/edit Dialog form + delete AlertDialog. Note: matches "update" sends status only (MatchUpdate); project "create" omits status (ProjectInput); these per-entity body shapes are built explicitly in each wrapper. The app has NO auth, so `/admin` is publicly reachable.
 
 The talent pool replaced the former performance/trust-leaderboard board in the sidebar. Talent schema: `lib/db/src/schema/talent.ts` (`talent_posts`, incl. `source` + `sourceUrl` columns marking auto-collected posts); API routes: `artifacts/api-server/src/routes/talent.ts` (GET `/talent` with `postType` filter, POST `/talent`, PATCH/DELETE `/talent/{id}`); frontend page: `artifacts/synergy-hub/src/pages/talent/index.tsx`. The `/talent` page has 5 client-side filters over the tab-scoped posts (computed via `useMemo`): a free-text 검색 (matches title/authorName/description/position/location/skills), plus 직무(position)/지역(location)/고용형태(employmentType)/경력(experienceLevel) `Select` dropdowns whose options are derived dynamically from the loaded posts via `distinctValues()` (trims + sorts). Equality predicates `.trim()` the post field before comparing (options are trimmed, so raw whitespace would otherwise hide rows). Filters reset on tab change via `useEffect([tab])` (covers both UI and programmatic `setTab`). A result count (`N건 / 전체 M건`) and a no-results empty state with a 초기화 button are shown. The performance backend (schema/routes) remains but is no longer linked in the frontend nav.
 
@@ -64,28 +74,22 @@ A 메뉴 관리 (sidebar menu management) feature lets an admin toggle which sid
 
 A 최근 소식 (latest news) feature crawls recent Vietnam manufacturing-industry news via Gemini grounded web search and translates it to Korean. It's the TOP sidebar nav item (`news` key in `navItems.ts`, `/news`). Schema: `lib/db/src/schema/news.ts` (`news_articles`: title [Korean], summary [Korean], category, originalTitle, source, sourceUrl, publishedAt [all text, some nullable], createdAt). API: `artifacts/api-server/src/routes/news.ts` — `GET /news` (list, desc by createdAt) + `POST /news/collect` (optional `topic` focus). Collect mirrors the talent collect-jobs two-step Gemini pattern EXACTLY: (1) grounded call `tools:[{googleSearch:{}}]` to pull real recent news, then (2) a `responseMimeType: application/json` structuring+translation call that outputs Korean title/summary + a category from a fixed enum (투자·FDI/생산·공장/자동화·기술/전자·반도체/물류·공급망/무역·수출/산업단지/기타); `sourceUrl` is validated against the grounding-chunk allow-list (else fallback to first chunk) to block hallucinated links. Dedupes against existing rows by lowercased `title`. Same expensive-endpoint guards as collect-jobs: single-flight `collectInProgress` (429) + 30s `COLLECT_COOLDOWN_MS`. The public `/news` page (`pages/news/index.tsx`) lists articles as cards with category filter chips (client-side), a 뉴스 새로고침 button (calls collect + invalidates query), and 원문 보기 links. The `news` key is included in the server-side `VALID_NAV_KEYS` allow-list so it can be toggled in 메뉴 관리. Like all functions in this no-auth app, the collect endpoint is public/unrestricted.
 
-## Security & access control (added 2026-11 via Claude)
+## Development workflow (GitHub main is the source of truth)
 
-- **Admin auth**: single admin password from the `ADMIN_PASSWORD` secret (optional `SESSION_SECRET` for the signing key; otherwise derived from the password). `POST /api/auth/login` issues an HMAC-signed httpOnly cookie (`admin_session`, 12h, stateless so it works on autoscale). `GET /api/auth/me` → `{isAdmin, configured}`; `POST /api/auth/logout`. If `ADMIN_PASSWORD` is unset, admin access is impossible (fail closed). Code: `artifacts/api-server/src/lib/auth.ts`, `routes/auth.ts`.
-- **Central access policy** (`accessPolicy` in `lib/auth.ts`, mounted in `routes/index.ts`): GETs are public, all writes require admin, EXCEPT the explicit `PUBLIC_WRITES` set (public submission flows: create company/project/match/solution/talent/supply-offer/offer-match/project-application/resume-submission, analyze-material). `ADMIN_READS` (`/resume-submissions`, `/offer-matches`) require admin. When adding a new route, decide whether it belongs in either list — the default for writes is admin-only.
-- Public `GET /project-applications` blanks `contactName`/`contactInfo`/`adminNote` for non-admins.
-- In-memory rate limits: login 10/10min per IP, analyze-material 20/hour per IP. `trust proxy` is 1.
-- Frontend: `src/lib/auth.tsx` (`AdminGate`, `useIsAdmin`, `LogoutButton`). `/admin` shows a login form until authenticated. Admin-only buttons on public pages (news collect, talent/solution delete, match accept/decline) render only when `useIsAdmin()`.
-- API hardening (`app.ts`): security headers, CORS only for `CORS_ORIGINS` (same-origin needs none), JSON body 1MB except upload routes (12MB), JSON 404 for unknown `/api` paths, central error handler (generic message, details logged).
-
-## Media (inline images)
-
-Images are still stored as base64 data URLs in the DB, but responses no longer embed them: `toJson()` (lib/serialize.ts) calls `rewriteMediaUrls()` (lib/media.ts), replacing `logoUrl` (company) / `imageUrl` (banner if `linkUrl` present, else solution) data URLs with `/api/media/{company|banner|solution}/{id}?v={hash}`, served by `routes/media.ts` with immutable caching (raster types only). PATCH handlers treat an echoed-back `/api/media/...` value as "unchanged". Resume list returns `resumeFileData` as `/api/resume-submissions/{id}/file` (admin-only download, `Content-Disposition: attachment`) and never selects the file column.
+- **All changes land on `main` through GitHub pull requests.** Replit deploys from `main`.
+- **Replit Agent:** before starting work, `git pull` the latest `main`; work on a **new branch** (e.g. `replit/<short-name>`), push it to GitHub, and open a PR into `main`. Do not keep long-lived branches only in Replit, and do not publish from a branch other than `main`.
+- Claude (Cowork designs specs in `docs/specs/`, Claude Code implements via GitHub Actions `@claude`) follows the same branch → PR → merge flow. See `CLAUDE.md`.
+- After a merge: Replit → Git → Pull (`scripts/post-merge.sh` installs deps and pushes the additive DB schema) → Publish.
 
 ## Local development outside Replit (Windows / macOS / Linux, e.g. Claude Code)
 
 ```
 pnpm install
-cp .env.example .env        # set DATABASE_URL (local Postgres) and ADMIN_PASSWORD
+cp .env.example .env        # DATABASE_URL (local Postgres) + Clerk development keys
 pnpm run db:push:local
 pnpm run dev:local          # API :8080 + Vite :5173 with /api proxy
 ```
-`scripts/dev-local.mjs` loads `.env`, builds+starts the API and runs Vite with `API_PROXY_TARGET` (replaces Replit's path router). `pnpm-workspace.yaml` keeps win32-x64 and darwin native binaries (esbuild/rollup/lightningcss/tailwind oxide) for this; `preinstall` is a Node script (`scripts/preinstall.cjs`) so it runs on Windows. `.claude/launch.json` + `CLAUDE.md` configure Claude Code.
+`scripts/dev-local.mjs` loads `.env`, builds+starts the API and runs Vite with `API_PROXY_TARGET` (replaces Replit's path router). Clerk needs `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY` and `VITE_CLERK_PUBLISHABLE_KEY` from a **development** Clerk instance (see `artifacts/api-server/AUTHENTICATION.md`). `pnpm-workspace.yaml` keeps win32-x64 and darwin native binaries for local builds; `preinstall` is a Node script so it runs on Windows. `.claude/launch.json` + `CLAUDE.md` configure Claude Code.
 
 ## User preferences
 

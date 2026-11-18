@@ -14,7 +14,7 @@ const PAGE_SIZE = 9;
 
 export default function CompaniesList() {
   const [search, setSearch] = useState("");
-  const [type, setType] = useState<"hardware" | "software" | "service" | "all">("all");
+  const [type, setType] = useState<"supplier" | "hardware" | "software" | "service" | "all">("supplier");
   const [tag, setTag] = useState("");
   const [page, setPage] = useState(1);
 
@@ -69,6 +69,7 @@ export default function CompaniesList() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">모든 유형</SelectItem>
+              <SelectItem value="supplier">공급사</SelectItem>
               <SelectItem value="hardware">하드웨어 (Hardware)</SelectItem>
               <SelectItem value="software">소프트웨어 (Software)</SelectItem>
               <SelectItem value="service">서비스 (Service)</SelectItem>

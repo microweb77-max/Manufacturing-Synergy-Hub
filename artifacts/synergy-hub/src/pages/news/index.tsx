@@ -1,21 +1,15 @@
-import { useIsAdmin } from "@/lib/auth";
 import { useMemo, useState } from "react";
 import {
   useListNews,
-  useCollectNews,
   getListNewsQueryKey,
   type NewsArticle,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Newspaper,
-  RefreshCw,
   ExternalLink,
   Calendar,
   Filter,
@@ -49,11 +43,10 @@ function formatCreatedAt(iso: string): string {
 }
 
 export default function NewsPage() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { data: articles, isLoading } = useListNews();
-  const collect = useCollectNews();
-  const isAdmin = useIsAdmin();
+  // Other sessions can receive new articles while this page remains open.
+  const { data: articles, isLoading } = useListNews({
+    query: { queryKey: getListNewsQueryKey(), refetchInterval: 60_000, refetchOnWindowFocus: true },
+  });
 
   const [category, setCategory] = useState<string>(ALL);
 
@@ -71,29 +64,6 @@ export default function NewsPage() {
     return (articles ?? []).filter((a) => a.category?.trim() === category);
   }, [articles, category]);
 
-  const handleCollect = () => {
-    collect.mutate(
-      { data: {} },
-      {
-        onSuccess: (res) => {
-          queryClient.invalidateQueries({ queryKey: getListNewsQueryKey() });
-          toast({
-            title: "뉴스 수집 완료",
-            description: `새 뉴스 ${res.inserted}건을 가져왔습니다. (중복 ${res.skipped}건 제외)`,
-          });
-        },
-        onError: () => {
-          toast({
-            title: "뉴스 수집 실패",
-            description:
-              "잠시 후 다시 시도해주세요. (30초 쿨다운이 있을 수 있습니다)",
-            variant: "destructive",
-          });
-        },
-      },
-    );
-  };
-
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -107,14 +77,10 @@ export default function NewsPage() {
             제공합니다.
           </p>
         </div>
-        {isAdmin && (
-        <Button onClick={handleCollect} disabled={collect.isPending}>
-          <RefreshCw
-            className={`h-4 w-4 mr-2 ${collect.isPending ? "animate-spin" : ""}`}
-          />
-          {collect.isPending ? "수집 중…" : "뉴스 새로고침"}
-        </Button>
-        )}
+        <p className="text-sm text-muted-foreground flex items-center gap-2 pt-2">
+          <Calendar className="h-4 w-4 shrink-0" />
+          자동 갱신 일정: 매일 자정 00:00 · 베트남 시간
+        </p>
       </div>
 
       {categories.length > 0 && (
@@ -166,24 +132,9 @@ export default function NewsPage() {
               <p className="mt-4 text-muted-foreground">
                 아직 수집된 뉴스가 없습니다.
               </p>
-              {isAdmin && (<>
               <p className="text-sm text-muted-foreground/70">
-                "뉴스 새로고침" 버튼을 눌러 최신 베트남 제조산업 뉴스를
-                가져오세요.
+                 자동 수집이 완료되면 최신 뉴스가 표시됩니다.
               </p>
-              <Button
-                onClick={handleCollect}
-                disabled={collect.isPending}
-                className="mt-6"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${
-                    collect.isPending ? "animate-spin" : ""
-                  }`}
-                />
-                뉴스 가져오기
-              </Button>
-              </>)}
             </CardContent>
           </Card>
         ) : (

@@ -3,3 +3,8 @@
 - [api-server esbuild externals](api-server-esbuild-externals.md) — externalized runtime deps (e.g. @google/*) must be DIRECT api-server deps or runtime ERR_MODULE_NOT_FOUND; load integration clients lazily so missing env can't crash startup.
 - [Gemini grounding via proxy](gemini-grounding-proxy.md) — Google Search grounding works at runtime through the Replit Gemini proxy, but ONLY with httpOptions.apiVersion:"" (else INVALID_ENDPOINT).
 - [Company logo storage](company-logo-storage.md) — logos stored inline as base64 data URLs in companies.logo_url (no object storage); server allow-lists raster data URLs / https only, never trust client checks.
+- [Customer directory sources](customer-directory-sources.md) — merged FDI and KOCHAM manufacturer records favor the richer FDI entry whenever normalized company names match.
+- [Company correction policy](company-correction-policy.md) — KOVIMA file is the approved full membership scope, including flagged rows; preserve retained IDs and never merge branches solely by tax number.
+- [Daily news refresh](news-refresh-policy.md) — Vietnam-midnight collection uses an authenticated external trigger on Autoscale, not visitor refresh buttons.
+- [Hybrid membership](hybrid-membership-model.md) — company-owned activity; guest client directory exposes names/industry only. Offer prices and other client details need sign-in, not admin.
+- [Clerk admin testing](clerk-admin-testing.md) — programmatic test sign-in creates a real non-admin user; arrange an authorized admin identity first and clean up temporary accounts.

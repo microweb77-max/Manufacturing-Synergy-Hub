@@ -6,12 +6,12 @@ B2B manufacturing collaboration portal for Vietnam (Korean UI). **Read `replit.m
 
 ```bash
 pnpm install
-cp .env.example .env          # Windows: copy .env.example .env  — then edit DATABASE_URL / ADMIN_PASSWORD
+cp .env.example .env          # Windows: copy .env.example .env  — then edit DATABASE_URL / Clerk dev keys
 pnpm run db:push:local        # apply DB schema to the local Postgres
 pnpm run dev:local            # API :8080 + web :5173 (Vite, /api proxied) → http://localhost:5173
 ```
 
-Admin console: http://localhost:5173/admin (password = `ADMIN_PASSWORD` in `.env`).
+Admin console: http://localhost:5173/admin — sign in with Clerk; grant the platform-admin role with `pnpm --filter @workspace/api-server admin:role <user_id> grant` (see `artifacts/api-server/AUTHENTICATION.md`).
 
 ## Commands
 
@@ -23,10 +23,10 @@ Admin console: http://localhost:5173/admin (password = `ADMIN_PASSWORD` in `.env
 
 - UI text in **Korean**.
 - API contract source of truth: `lib/api-spec/openapi.yaml` → codegen. DB schema: `lib/db/src/schema/*`.
-- New API route? Decide its access in `artifacts/api-server/src/lib/auth.ts` (`PUBLIC_WRITES` / `ADMIN_READS`); writes default to admin-only.
+- Auth is **Clerk** (see `artifacts/api-server/AUTHENTICATION.md`). New API route? Decide its access in `artifacts/api-server/src/middlewares/apiAuthorization.ts` / `lib/companyPermissions.ts`; writes are fail-closed (require a verified session and permission).
 - Wrap API responses in `toJson()` before Zod `.parse()`.
 - DB schema changes are applied to production by Replit's post-merge `db push` — never drop/rename columns without a migration plan.
-- Deployment stays on Replit: work on a branch → PR → merge → Replit Git Pull → Publish. Do not edit `.replit` / `.replit-artifact` unless needed.
+- Deployment stays on Replit and **always from `main`**: work on a branch → PR → merge → Replit Git Pull → Publish. Replit Agent follows the same rule (see `replit.md` → Development workflow). Do not edit `.replit` / `.replit-artifact` unless needed.
 - Keep `replit.md` updated when architecture changes (Replit Agent also reads it).
 
 ## Cowork → Claude Code workflow
@@ -38,7 +38,7 @@ When asked to implement a spec or issue:
 1. **Read the spec** (`docs/specs/NNN-*.md` linked from the issue, or the issue body). If something is ambiguous or conflicts with the codebase, make the most reasonable choice and list it under "결정·가정" in the PR — do not stop to ask unless the change would be destructive (dropping data, removing features).
 2. **Branch**: `claude/NNN-short-name` (or the branch the action creates). Never commit to `main` directly.
 3. **Implement** following the rules above (OpenAPI → codegen, schema in `lib/db`, access policy in `lib/auth.ts`, Korean UI, mobile-friendly).
-4. **Verify** before opening the PR: `pnpm run typecheck` and `pnpm run build` must pass. For API changes, start the API (`DATABASE_URL` is set in CI) and exercise the endpoints with curl, including admin vs anonymous access.
+4. **Verify** before opening the PR: `pnpm run typecheck` and `pnpm run build` must pass. For API changes, exercise the endpoints (anonymous requests to protected routes must get 401; Clerk keys are not available in CI, so authenticated paths are covered by unit tests/mocks).
 5. **Update docs**: set the spec status to `완료` (or `개발 중` if partial), update `replit.md` for architecture changes.
 6. **PR description (Korean)**: 요약 / 변경 내용 / 결정·가정 / 검증 결과 / 배포 시 주의(DB 변경, 새 Secret 등) / `Closes #이슈번호`.
 7. Keep PRs focused on one spec. Unrelated improvements → mention in the PR as follow-up suggestions instead of doing them.

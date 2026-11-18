@@ -13,4 +13,6 @@ export const CompanyUpdateType = {
   hardware: 'hardware',
   software: 'software',
   service: 'service',
+  customer: 'customer',
+  supplier: 'supplier',
 } as const;

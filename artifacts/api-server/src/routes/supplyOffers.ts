@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
+import { createOfferPriceVisibility, visibleOfferPrice } from "../middlewares/offerPriceVisibility";
 import { eq, desc, and, ilike, or, type SQL } from "drizzle-orm";
 import { db, supplyOffersTable, companiesTable } from "@workspace/db";
 import {
@@ -15,7 +16,7 @@ import {
 
 const router: IRouter = Router();
 
-router.get("/supply-offers", async (req, res): Promise<void> => {
+router.get("/supply-offers", createOfferPriceVisibility(), async (req, res): Promise<void> => {
   const query = ListSupplyOffersQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -55,7 +56,10 @@ router.get("/supply-offers", async (req, res): Promise<void> => {
     .where(filters.length ? and(...filters) : undefined)
     .orderBy(desc(supplyOffersTable.createdAt));
 
-  const shaped = rows.map((r) => ({ ...r, companyName: r.companyName ?? "" }));
+  const shaped = rows.map((r) => visibleOfferPrice(
+    { ...r, companyName: r.companyName ?? "" },
+    res.locals.canViewOfferPrices === true,
+  ));
   res.json(ListSupplyOffersResponse.parse(toJson(shaped)));
 });
 

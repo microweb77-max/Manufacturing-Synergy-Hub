@@ -19,8 +19,6 @@ import {
   DeleteProjectApplicationParams,
 } from "@workspace/api-zod";
 
-import { isAdmin } from "../lib/auth";
-
 const router: IRouter = Router();
 
 const selectShape = {
@@ -79,12 +77,7 @@ router.get("/project-applications", async (req, res): Promise<void> => {
     .where(where)
     .orderBy(desc(projectApplicationsTable.createdAt));
 
-  // Contact details and admin notes are visible to admins only.
-  const admin = isAdmin(req);
-  const visible = rows.map(shape).map((r) =>
-    admin ? r : { ...r, contactName: "", contactInfo: "", adminNote: "" },
-  );
-  res.json(ListProjectApplicationsResponse.parse(toJson(visible)));
+  res.json(ListProjectApplicationsResponse.parse(toJson(rows.map(shape))));
 });
 
 router.post("/project-applications", async (req, res): Promise<void> => {
