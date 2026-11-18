@@ -19,9 +19,10 @@ export const projectApplicationsTable = pgTable("project_applications", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("project_applications_project_id_idx").on(t.projectId), index("project_applications_company_id_idx").on(t.companyId)],
-);
+}, (t) => [
+  index("project_applications_project_id_idx").on(t.projectId),
+  index("project_applications_company_id_idx").on(t.companyId),
+]);
 
 export type ProjectApplication = typeof projectApplicationsTable.$inferSelect;
 export type InsertProjectApplication =

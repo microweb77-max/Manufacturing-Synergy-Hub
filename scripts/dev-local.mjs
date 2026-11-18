@@ -1,6 +1,6 @@
 // Local development runner (Windows / macOS / Linux) — not used on Replit.
 //
-//   1. copy .env.example to .env and fill in DATABASE_URL / ADMIN_PASSWORD
+//   1. copy .env.example to .env and fill in DATABASE_URL and Clerk development keys
 //   2. pnpm run dev:local
 //
 // Builds & starts the API server (port API_PORT, default 8080) and the Vite

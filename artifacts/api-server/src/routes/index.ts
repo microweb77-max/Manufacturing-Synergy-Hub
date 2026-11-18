@@ -1,5 +1,7 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
+import authRouter from "./auth";
+import membershipRouter from "./membership";
 import companiesRouter from "./companies";
 import projectsRouter from "./projects";
 import matchesRouter from "./matches";
@@ -15,17 +17,13 @@ import newsRouter from "./news";
 import bannersRouter from "./banners";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
-import authRouter from "./auth";
-import mediaRouter from "./media";
-import { accessPolicy } from "../lib/auth";
+import talentContactRequestsRouter from "./talentContactRequests";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
-router.use(mediaRouter);
-// Everything below is subject to the central access policy (see lib/auth.ts).
-router.use(accessPolicy);
+router.use(membershipRouter);
 router.use(companiesRouter);
 router.use(projectsRouter);
 router.use(matchesRouter);
@@ -41,5 +39,6 @@ router.use(newsRouter);
 router.use(bannersRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
+router.use(talentContactRequestsRouter);
 
 export default router;

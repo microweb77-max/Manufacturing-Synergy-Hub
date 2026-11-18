@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
 import { desc } from "drizzle-orm";
-import { db, newsArticlesTable } from "@workspace/db";
+import { db, pool, newsArticlesTable, newsRefreshRunsTable } from "@workspace/db";
 import {
   ListNewsResponse,
   CollectNewsBody,
@@ -22,7 +22,12 @@ type CollectedArticle = {
 
 const COLLECT_COOLDOWN_MS = 30_000;
 let lastCollectAt = 0;
-let collectInProgress = false;
+
+export class NewsCollectionError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
 function extractJsonArray(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -70,46 +75,62 @@ router.post("/news/collect", async (req, res): Promise<void> => {
     return;
   }
 
-  const topic = (parsed.data.topic ?? "").trim();
+  try {
+    const result = await collectNews((parsed.data.topic ?? "").trim());
+    res.json(CollectNewsResponse.parse(toJson(result)));
+  } catch (err) {
+    if (err instanceof NewsCollectionError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    req.log.error({ err }, "Failed to collect news");
+    res.status(502).json({ error: "뉴스 자동 수집 중 오류가 발생했습니다." });
+  }
+});
+
+// Both admin/manual and scheduler paths share this lock and collection logic.
+export async function collectNews(topic = "", scheduledDay?: string) {
   const focus = topic
     ? `특히 "${topic}" 주제에 집중해서 찾아줘.`
     : "제조업 투자(FDI), 공장 신설/증설, 자동화, 전자/반도체, 물류/공급망, 산업단지, 무역/수출 등 폭넓은 주제를 포함해줘.";
 
-  if (collectInProgress) {
-    res
-      .status(429)
-      .json({ error: "이미 수집이 진행 중입니다. 잠시 후 다시 시도해주세요." });
-    return;
-  }
-  const sinceLast = Date.now() - lastCollectAt;
-  if (sinceLast < COLLECT_COOLDOWN_MS) {
-    const waitSec = Math.ceil((COLLECT_COOLDOWN_MS - sinceLast) / 1000);
-    res.status(429).json({
-      error: `잠시 후 다시 시도해주세요. (${waitSec}초 후 가능)`,
-    });
-    return;
-  }
-  collectInProgress = true;
-  lastCollectAt = Date.now();
-
+  const connection = await pool.connect();
+  let locked = false;
   try {
+    // Session advisory lock works across Autoscale instances and process restarts.
+    locked = (await connection.query("SELECT pg_try_advisory_lock(728301, 1) AS locked")).rows[0].locked;
+    if (!locked) throw new NewsCollectionError(429, "이미 뉴스 수집이 진행 중입니다.");
+    if (scheduledDay) {
+      const completed = await connection.query(
+        "SELECT inserted, skipped FROM news_refresh_runs WHERE scheduled_day=$1::date",
+        [scheduledDay],
+      );
+      if (completed.rowCount) return {
+        inserted: 0, skipped: 0, articles: [], alreadyCompleted: true,
+      };
+    }
+    if (Date.now() - lastCollectAt < COLLECT_COOLDOWN_MS) {
+      throw new NewsCollectionError(429, "잠시 후 다시 시도해주세요. (30초 쿨다운)");
+    }
+    lastCollectAt = Date.now();
     const { ai } = await import("@workspace/integrations-gemini-ai");
+    const abortSignal = AbortSignal.timeout(240_000);
 
     const searchPrompt = `베트남 제조업/산업 분야의 최신 뉴스를 웹에서 검색해서 8건 정리해줘. ${focus}
 가능한 한 최근(최근 몇 주 이내) 기사 위주로 찾아줘.
+오늘 날짜는 ${scheduledDay ?? new Date().toISOString().slice(0, 10)}야.
 각 뉴스마다 다음을 포함해줘: 기사 원제목, 언론사/출처명, 보도 날짜, 핵심 내용 요약.
 베트남 제조업/산업/투자/무역과 무관한 뉴스는 제외해줘.`;
 
     const searchResp = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: searchPrompt }] }],
-      config: { tools: [{ googleSearch: {} }] },
+      config: { tools: [{ googleSearch: {} }], abortSignal },
     });
 
     const searchText = searchResp.text ?? "";
     if (!searchText.trim()) {
-      res.status(502).json({ error: "뉴스 검색 결과를 가져오지 못했습니다." });
-      return;
+      throw new NewsCollectionError(502, "뉴스 검색 결과를 가져오지 못했습니다.");
     }
 
     const chunks =
@@ -144,13 +165,12 @@ ${searchText}`;
     const structureResp = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: structurePrompt }] }],
-      config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+      config: { responseMimeType: "application/json", maxOutputTokens: 8192, abortSignal },
     });
 
     const arr = extractJsonArray(structureResp.text ?? "");
     if (!Array.isArray(arr)) {
-      res.status(502).json({ error: "뉴스 데이터를 해석하지 못했습니다." });
-      return;
+      throw new NewsCollectionError(502, "뉴스 데이터를 해석하지 못했습니다.");
     }
 
     const articles: CollectedArticle[] = arr
@@ -175,6 +195,9 @@ ${searchText}`;
         };
       })
       .filter((a): a is CollectedArticle => a !== null);
+    if (!articles.length) {
+      throw new NewsCollectionError(502, "유효한 뉴스 기사를 찾지 못했습니다.");
+    }
 
     const existing = await db
       .select({ title: newsArticlesTable.title })
@@ -194,9 +217,11 @@ ${searchText}`;
       toInsert.push(article);
     }
 
-    const inserted =
-      toInsert.length > 0
-        ? await db
+    // Articles and completion marker are committed together. A failed attempt
+    // never marks the day as completed, so the scheduler can safely retry.
+    const inserted = await db.transaction(async (tx) => {
+      const rows = toInsert.length > 0
+        ? await tx
             .insert(newsArticlesTable)
             .values(
               toInsert.map((article) => ({
@@ -211,24 +236,25 @@ ${searchText}`;
             )
             .returning()
         : [];
-
-    res.json(
-      CollectNewsResponse.parse(
-        toJson({
-          inserted: inserted.length,
-          skipped,
-          articles: inserted,
-        }),
-      ),
-    );
-  } catch (err) {
-    req.log.error({ err }, "Failed to collect news");
-    res.status(502).json({
-      error: "뉴스 자동 수집 중 오류가 발생했습니다.",
+      if (scheduledDay) {
+        await tx.insert(newsRefreshRunsTable).values({
+          scheduledDay, inserted: rows.length, skipped,
+        });
+      }
+      return rows;
     });
+    return { inserted: inserted.length, skipped, articles: inserted, alreadyCompleted: false };
   } finally {
-    collectInProgress = false;
+    try {
+      if (locked) await connection.query("SELECT pg_advisory_unlock(728301, 1)");
+    } catch {
+      // A broken connection must never go back into the pool with a held lock.
+      connection.release(true);
+      locked = false;
+      throw new Error("Failed to release the news collection lock.");
+    }
+    connection.release();
   }
-});
+}
 
 export default router;

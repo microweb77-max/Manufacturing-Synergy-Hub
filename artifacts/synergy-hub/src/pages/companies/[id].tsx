@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Mail, Calendar, Star, ShieldCheck, Briefcase, Activity, Target, Hash, Phone, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { normalizeImageUrl } from "@/lib/imageUrl";
+import { VerificationBadge, CompanyMembershipPanel } from "@/components/company-membership";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 
 export default function CompanyDetail() {
@@ -57,6 +58,7 @@ export default function CompanyDetail() {
                   </Badge>
                 );
               })()}
+              <VerificationBadge companyId={company.id} />
             </div>
             <p className="text-lg text-muted-foreground">{company.description}</p>
           </div>
@@ -71,6 +73,8 @@ export default function CompanyDetail() {
           </div>
         </div>
       </div>
+
+      <CompanyMembershipPanel company={company} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

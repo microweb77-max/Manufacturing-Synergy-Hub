@@ -1,4 +1,3 @@
-import { useIsAdmin } from "@/lib/auth";
 import { useState } from "react";
 import { Link } from "wouter";
 import {
@@ -33,7 +32,6 @@ export default function SolutionsList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const deleteSolution = useDeleteSolution();
-  const isAdmin = useIsAdmin();
 
   const { data: solutions, isLoading } = useListSolutions({
     featured: featuredOnly ? true : undefined,
@@ -107,7 +105,6 @@ export default function SolutionsList() {
           {solutions?.map(solution => (
             <Link key={solution.id} href={`/solutions/${solution.id}`}>
               <Card className="h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer flex flex-col overflow-hidden group border-border/50 relative">
-                {isAdmin && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
@@ -146,7 +143,6 @@ export default function SolutionsList() {
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-                )}
                 {/* Header Image Area */}
                 <div className="h-48 bg-secondary/20 relative flex items-center justify-center border-b border-border/50 overflow-hidden">
                   {solution.imageUrl ? (

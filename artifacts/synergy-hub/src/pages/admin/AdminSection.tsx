@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { ExcelImportDialog, type CreateOptions } from "./ExcelImportDialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -222,10 +223,12 @@ export type AdminSectionProps<T> = {
   getRowLabel: (item: T) => string;
   toFormValues: (item: T) => FormValues;
   emptyValues: FormValues;
-  onCreate: (values: FormValues) => Promise<void>;
+  onCreate: (values: FormValues, options?: CreateOptions) => Promise<void>;
   onUpdate: (id: number, values: FormValues) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
   canCreate?: boolean;
+  /** Fields only accepted by update endpoints must not appear in the import template. */
+  importExcludeFields?: string[];
   /** Returns the text searched by the toolbar search box. Defaults to the row label. */
   getSearchText?: (item: T) => string;
   searchPlaceholder?: string;
@@ -253,6 +256,7 @@ export function AdminSection<T>({
   onUpdate,
   onDelete,
   canCreate = true,
+  importExcludeFields,
   getSearchText,
   searchPlaceholder,
   filters,
@@ -397,8 +401,18 @@ export function AdminSection<T>({
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {headerActions}
+          {canCreate && (
+            <ExcelImportDialog
+              title={title}
+              fields={fields.filter((f) => !importExcludeFields?.includes(f.name))}
+              defaults={emptyValues}
+              existing={(items ?? []).map(toFormValues)}
+              disabled={isLoading || !items}
+              onCreate={onCreate}
+            />
+          )}
           {canCreate && (
             <Button size="sm" onClick={openCreate}>
               <Plus className="mr-1.5 h-4 w-4" />

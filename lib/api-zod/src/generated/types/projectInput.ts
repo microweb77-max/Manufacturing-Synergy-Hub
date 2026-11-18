@@ -7,6 +7,8 @@
  */
 
 export interface ProjectInput {
+  /** @minimum 1 */
+  ownerCompanyId?: number;
   /** @minLength 1 */
   title: string;
   description: string;

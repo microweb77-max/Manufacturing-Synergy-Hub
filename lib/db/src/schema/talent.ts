@@ -9,6 +9,7 @@ import {
 
 export const talentPostsTable = pgTable("talent_posts", {
   id: serial("id").primaryKey(),
+  ownerCompanyId: integer("owner_company_id"),
   postType: text("post_type").notNull(),
   title: text("title").notNull(),
   authorName: text("author_name").notNull(),
@@ -26,9 +27,7 @@ export const talentPostsTable = pgTable("talent_posts", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("talent_posts_post_type_idx").on(t.postType)],
-);
+}, (t) => [index("talent_posts_post_type_idx").on(t.postType)]);
 
 export type TalentPost = typeof talentPostsTable.$inferSelect;
 export type InsertTalentPost = typeof talentPostsTable.$inferInsert;

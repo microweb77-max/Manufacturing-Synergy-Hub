@@ -1,8 +1,12 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { AdminAuthProvider } from "@/lib/adminAuth";
+import { ClerkProvider } from "@clerk/react";
+import { basePath, clerkPubKey, clerkProxyUrl, clerkAppearance, stripBase } from "@/lib/clerk";
+import { SignInPage, SignUpPage, WriteGuard } from "@/pages/auth";
 
 import { Layout } from "@/components/layout";
 import Dashboard from "./pages/dashboard";
@@ -30,6 +34,10 @@ import AdminPage from "./pages/admin";
 import ClientCompaniesPage from "./pages/client-companies";
 
 import OffersPage from "./pages/offers";
+import MyCompaniesPage from "./pages/my-companies";
+import MyCompanyActivityPage from "./pages/my-company-activity";
+import CompanyLinkPage from "./pages/company-link";
+import CompanyClaimsPage from "./pages/company-claims";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,17 +55,17 @@ function Router() {
         <Route path="/" component={Dashboard} />
         
         <Route path="/companies" component={CompaniesList} />
-        <Route path="/companies/new" component={NewCompany} />
+        <Route path="/companies/new">{() => <WriteGuard><NewCompany /></WriteGuard>}</Route>
         <Route path="/companies/:id" component={CompanyDetail} />
         
         <Route path="/projects" component={ProjectsList} />
-        <Route path="/projects/new" component={NewProject} />
+        <Route path="/projects/new">{() => <WriteGuard><NewProject /></WriteGuard>}</Route>
         <Route path="/projects/:id" component={ProjectDetail} />
         
         <Route path="/matches" component={MatchesList} />
         
         <Route path="/solutions" component={SolutionsList} />
-        <Route path="/solutions/new" component={NewSolution} />
+        <Route path="/solutions/new">{() => <WriteGuard><NewSolution /></WriteGuard>}</Route>
         <Route path="/solutions/:id" component={SolutionDetail} />
         
         <Route path="/talent" component={TalentPool} />
@@ -68,7 +76,12 @@ function Router() {
 
         <Route path="/offers" component={OffersPage} />
 
-        <Route path="/admin" component={AdminPage} />
+        <Route path="/my-companies" component={MyCompaniesPage} />
+        <Route path="/my-companies/:id/activity" component={MyCompanyActivityPage} />
+        <Route path="/company-link" component={CompanyLinkPage} />
+        <Route path="/company-claims" component={CompanyClaimsPage} />
+
+        <Route path="/admin" component={AdminGuard} />
 
         <Route component={NotFound} />
       </Switch>
@@ -76,17 +89,46 @@ function Router() {
   );
 }
 
-function App() {
+function AdminGuard() {
+  return <WriteGuard><AdminPage /></WriteGuard>;
+}
+
+function ClerkProviderWithRoutes() {
+  const [, setLocation] = useLocation();
   return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      signInFallbackRedirectUrl={basePath || "/"}
+      signUpFallbackRedirectUrl={basePath || "/"}
+      localization={{
+        signIn: { start: { title: "Co-selling Hub 로그인", subtitle: "회원 계정으로 로그인하세요" } },
+        signUp: { start: { title: "Co-selling Hub 회원가입", subtitle: "회원 계정을 만드세요" } },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <AdminAuthProvider>
+        <TooltipProvider>
+          <Switch>
+            <Route path="/sign-in/*?" component={SignInPage} />
+            <Route path="/sign-up/*?" component={SignUpPage} />
+            <Route component={Router} />
+          </Switch>
+          <Toaster />
+        </TooltipProvider>
+      </AdminAuthProvider>
     </QueryClientProvider>
+    </ClerkProvider>
   );
+}
+
+function App() {
+  return <WouterRouter base={basePath}><ClerkProviderWithRoutes /></WouterRouter>;
 }
 
 export default App;

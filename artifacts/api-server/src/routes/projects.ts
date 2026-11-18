@@ -58,6 +58,7 @@ router.post("/projects", async (req, res): Promise<void> => {
     .insert(projectsTable)
     .values({
       ...parsed.data,
+      ownerCompanyId: parsed.data.ownerCompanyId ?? null,
       budget: parsed.data.budget ?? null,
       deadline: parsed.data.deadline ?? null,
       status: "matching",

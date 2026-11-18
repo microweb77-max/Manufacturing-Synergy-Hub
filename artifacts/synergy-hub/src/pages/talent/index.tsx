@@ -1,10 +1,11 @@
-import { useIsAdmin } from "@/lib/auth";
+import { useAdminAuth } from "@/lib/adminAuth";
 import { useEffect, useMemo, useState } from "react";
 import {
   useListTalentPosts,
   useCreateTalentPost,
   useDeleteTalentPost,
   useCreateResumeSubmission,
+  useCreateTalentContactRequest,
   getListTalentPostsQueryKey,
   type TalentPost,
 } from "@workspace/api-client-react";
@@ -70,6 +71,7 @@ import {
   FileUp,
   Link2,
   ArrowRight,
+  MessageSquare,
 } from "lucide-react";
 
 const postSchema = z.object({
@@ -127,6 +129,92 @@ function findMatchingHiring(
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map((m) => m.post);
+}
+
+function ContactRequestDialog({
+  post,
+  onClose,
+}: {
+  post: TalentPost | null;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const createRequest = useCreateTalentContactRequest();
+  const [companyName, setCompanyName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (post) {
+      setCompanyName("");
+      setContactPerson("");
+      setPhone("");
+      setEmail("");
+    }
+  }, [post]);
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post) return;
+    if (!companyName.trim() || !contactPerson.trim()) {
+      toast({ title: "필수 항목을 입력해주세요", description: "업체명과 담당자는 필수입니다.", variant: "destructive" });
+      return;
+    }
+    createRequest.mutate(
+      { data: { talentPostId: post.id, companyName: companyName.trim(), contactPerson: contactPerson.trim(), phone: phone.trim() || undefined, email: email.trim() || undefined } },
+      {
+        onSuccess: () => {
+          toast({ title: "연락 요청 완료", description: "요청이 접수되었습니다. 구직자가 확인 후 연락드립니다." });
+          onClose();
+        },
+        onError: () => {
+          toast({ title: "오류", description: "요청 처리 중 문제가 발생했습니다.", variant: "destructive" });
+        },
+      },
+    );
+  };
+
+  return (
+    <Dialog open={post !== null} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-[440px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            구직자 연락 요청
+          </DialogTitle>
+          <DialogDescription>
+            {post ? `"${post.title}" 구직자에게 연락 요청을 남깁니다.` : ""}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label>업체명 <span className="text-destructive">*</span></Label>
+            <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="예: 사이공 정밀 금형" />
+          </div>
+          <div className="space-y-2">
+            <Label>담당자 <span className="text-destructive">*</span></Label>
+            <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} placeholder="예: 홍길동 부장" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>연락처 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="예: +84 90 000 0000" />
+            </div>
+            <div className="space-y-2">
+              <Label>이메일 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" />
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+            <Button type="submit" disabled={createRequest.isPending}>
+              {createRequest.isPending ? "제출 중..." : "요청 보내기"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 const RESUME_ACCEPT =
@@ -342,6 +430,7 @@ function ResumeDialog({
 }
 
 export default function TalentPool() {
+  const { isAdmin } = useAdminAuth();
   const [tab, setTab] = useState<"hiring" | "seeking">("hiring");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
@@ -353,16 +442,19 @@ export default function TalentPool() {
   const { data: hiringPosts } = useListTalentPosts({ postType: "hiring" });
   const createPost = useCreateTalentPost();
   const deletePost = useDeleteTalentPost();
-  const isAdmin = useIsAdmin();
 
   const [highlightId, setHighlightId] = useState<number | null>(null);
   const [resumeTarget, setResumeTarget] = useState<TalentPost | null>(null);
+  const [contactTarget, setContactTarget] = useState<TalentPost | null>(null);
 
   const [keyword, setKeyword] = useState("");
   const [fPosition, setFPosition] = useState(ALL);
   const [fLocation, setFLocation] = useState(ALL);
   const [fEmployment, setFEmployment] = useState(ALL);
   const [fExperience, setFExperience] = useState(ALL);
+
+  const ITEMS_PER_PAGE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const positionOptions = useMemo(() => distinctValues(posts, (p) => p.position), [posts]);
   const locationOptions = useMemo(() => distinctValues(posts, (p) => p.location), [posts]);
@@ -375,11 +467,17 @@ export default function TalentPool() {
     setFLocation(ALL);
     setFEmployment(ALL);
     setFExperience(ALL);
+    setCurrentPage(1);
   };
 
   useEffect(() => {
     resetFilters();
   }, [tab]);
+
+  // 필터가 바뀌면 첫 페이지로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [keyword, fPosition, fLocation, fEmployment, fExperience]);
 
   const goToHiring = (id: number) => {
     setTab("hiring");
@@ -431,6 +529,13 @@ export default function TalentPool() {
       return true;
     });
   }, [posts, keyword, fPosition, fLocation, fEmployment, fExperience]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredPosts.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedPosts = filteredPosts.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE,
+  );
 
   const form = useForm<PostForm>({
     resolver: zodResolver(postSchema),
@@ -554,7 +659,7 @@ export default function TalentPool() {
         <div className="flex flex-wrap items-center gap-2">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => openDialog(tab)}>
+            <Button disabled={!isAdmin} onClick={() => openDialog(tab)}>
               <Plus className="mr-2 h-4 w-4" />
               {tab === "hiring" ? "구인 등록" : "구직 등록"}
             </Button>
@@ -908,7 +1013,7 @@ export default function TalentPool() {
                   ? "등록된 구인 정보가 없습니다."
                   : "등록된 구직 정보가 없습니다."}
               </p>
-              <Button variant="outline" onClick={() => openDialog(tab)}>
+              <Button disabled={!isAdmin} variant="outline" onClick={() => openDialog(tab)}>
                 <Plus className="mr-2 h-4 w-4" />
                 {tab === "hiring" ? "첫 구인 정보 등록" : "첫 구직 정보 등록"}
               </Button>
@@ -996,7 +1101,7 @@ export default function TalentPool() {
                 </div>
               ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {filteredPosts.map((post) => (
+              {paginatedPosts.map((post) => (
                 <Card
                   key={post.id}
                   id={`talent-card-${post.id}`}
@@ -1040,18 +1145,16 @@ export default function TalentPool() {
                           {post.authorName}
                         </div>
                       </div>
-                      {isAdmin && (
                       <Button
                         variant="ghost"
                         size="icon"
                         className="text-muted-foreground hover:text-destructive shrink-0"
                         onClick={() => handleDelete(post.id)}
-                        disabled={deletePost.isPending}
+                        disabled={!isAdmin || deletePost.isPending}
                         aria-label="삭제"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-3">
@@ -1137,6 +1240,7 @@ export default function TalentPool() {
                           size="sm"
                           className="w-full gap-1.5"
                           onClick={() => setResumeTarget(post)}
+                          disabled={!isAdmin}
                         >
                           <FileUp className="h-4 w-4" />
                           이력서 접수
@@ -1144,47 +1248,87 @@ export default function TalentPool() {
                       </div>
                     )}
 
-                    {post.postType === "seeking" &&
-                      (() => {
-                        const matches = findMatchingHiring(
-                          post,
-                          hiringPosts ?? [],
-                        );
-                        if (matches.length === 0) return null;
-                        return (
-                          <div className="pt-3 mt-auto border-t space-y-1.5">
-                            <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                              <Link2 className="h-3.5 w-3.5" />
-                              매칭되는 구인 정보
-                            </p>
-                            <div className="flex flex-col gap-1">
-                              {matches.map((h) => (
-                                <button
-                                  key={h.id}
-                                  type="button"
-                                  onClick={() => goToHiring(h.id)}
-                                  className="group flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm hover:border-primary/50 hover:bg-primary/5"
-                                >
-                                  <span className="truncate">
-                                    <span className="font-medium">{h.title}</span>
-                                    {h.authorName && (
-                                      <span className="text-muted-foreground">
-                                        {" "}
-                                        · {h.authorName}
-                                      </span>
-                                    )}
-                                  </span>
-                                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
-                                </button>
-                              ))}
+                    {post.postType === "seeking" && (
+                      <div className="pt-3 mt-auto border-t space-y-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full gap-1.5"
+                          onClick={() => setContactTarget(post)}
+                          disabled={!isAdmin}
+                        >
+                          <Phone className="h-4 w-4" />
+                          연락 요청
+                        </Button>
+                        {(() => {
+                          const matches = findMatchingHiring(post, hiringPosts ?? []);
+                          if (matches.length === 0) return null;
+                          return (
+                            <div className="space-y-1.5">
+                              <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                <Link2 className="h-3.5 w-3.5" />
+                                매칭되는 구인 정보
+                              </p>
+                              <div className="flex flex-col gap-1">
+                                {matches.map((h) => (
+                                  <button
+                                    key={h.id}
+                                    type="button"
+                                    onClick={() => goToHiring(h.id)}
+                                    className="group flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-left text-sm hover:border-primary/50 hover:bg-primary/5"
+                                  >
+                                    <span className="truncate">
+                                      <span className="font-medium">{h.title}</span>
+                                      {h.authorName && (
+                                        <span className="text-muted-foreground"> · {h.authorName}</span>
+                                      )}
+                                    </span>
+                                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover:text-primary" />
+                                  </button>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()}
+                          );
+                        })()}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
             </div>
+              )}
+
+              {/* 페이지네이션 */}
+              {filteredPosts.length > 0 && totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 pt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage <= 1}
+                  >
+                    이전
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={page === safePage ? "default" : "outline"}
+                      size="sm"
+                      className="w-9"
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage >= totalPages}
+                  >
+                    다음
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -1192,6 +1336,7 @@ export default function TalentPool() {
       </Tabs>
 
       <ResumeDialog post={resumeTarget} onClose={() => setResumeTarget(null)} />
+      <ContactRequestDialog post={contactTarget} onClose={() => setContactTarget(null)} />
     </div>
   );
 }

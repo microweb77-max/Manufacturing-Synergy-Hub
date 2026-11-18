@@ -20,9 +20,7 @@ export const supplyOffersTable = pgTable("supply_offers", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("supply_offers_company_id_idx").on(t.companyId)],
-);
+}, (t) => [index("supply_offers_company_id_idx").on(t.companyId)]);
 
 export const offerMatchesTable = pgTable("offer_matches", {
   id: serial("id").primaryKey(),
@@ -37,9 +35,7 @@ export const offerMatchesTable = pgTable("offer_matches", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("offer_matches_offer_id_idx").on(t.offerId)],
-);
+}, (t) => [index("offer_matches_offer_id_idx").on(t.offerId)]);
 
 export type SupplyOffer = typeof supplyOffersTable.$inferSelect;
 export type InsertSupplyOffer = typeof supplyOffersTable.$inferInsert;

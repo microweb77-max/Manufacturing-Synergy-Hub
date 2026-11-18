@@ -13,6 +13,19 @@ The api-server is bundled by `artifacts/api-server/build.mjs` (esbuild, ESM). It
 
 **How to apply:** when adding a `lib/integrations-*` package (or any lib that pulls in an externalized runtime package), add that underlying package (e.g. `@google/genai`) to `artifacts/api-server/package.json` dependencies too, then `pnpm install`. Verify with `ls artifacts/api-server/node_modules/@google/`.
 
+The same resolution constraint applies to bundled tests: `packages: "external"`
+leaves workspace TypeScript exports uncompiled, and bundling a workspace library
+does not make its external dependencies available beside the emitted test.
+
+**Why:** Node resolves bare imports from the emitted bundle, not from the original
+workspace library. A test can first fail on an unknown `.ts` extension, then fail
+on a library-only dependency after the TypeScript source is bundled.
+
+**How to apply:** bundle workspace sources explicitly and resolve library-only
+externals to their owning package's installation, or declare them directly in the
+bundle-owning package. Keep this dependency-resolution check separate from
+business-policy test failures.
+
 # AI-integration clients throw at import time — load lazily in handlers
 
 `lib/integrations-gemini-ai/src/client.ts` throws at module-eval time if `AI_INTEGRATIONS_GEMINI_*` env vars are missing. A top-level `import { ai }` in a route file therefore couples *all* routes in that file to the integration: missing env crashes API startup, not just the AI feature.

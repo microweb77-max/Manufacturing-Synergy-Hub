@@ -1,7 +1,8 @@
 import { useRoute } from "wouter";
-import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, useListProjectApplications, useCreateProjectApplication, useListCompanies, getListProjectMatchesQueryKey, getListProjectApplicationsQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
+import { useGetProject, useGetProjectRecommendations, useListProjectMatches, useCreateMatch, useListProjectApplications, useCreateProjectApplication, useListCompanies, useListMyCompanies, getListMyCompaniesQueryKey, getListProjectMatchesQueryKey, getListProjectApplicationsQueryKey, getGetProjectQueryKey, getGetProjectRecommendationsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useAuth } from "@clerk/react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +17,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Building2, Calendar, DollarSign, Tag, CheckCircle2, ChevronRight, Zap, Bot, Network, Sparkles, ShieldCheck, Send, UserPlus } from "lucide-react";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAdminAuth } from "@/lib/adminAuth";
 
 export default function ProjectDetail() {
+  const { isAdmin } = useAdminAuth();
   const [, params] = useRoute("/projects/:id");
   const id = params?.id ? parseInt(params.id, 10) : 0;
   const { toast } = useToast();
@@ -26,8 +29,12 @@ export default function ProjectDetail() {
   const { data: project, isLoading: isProjectLoading } = useGetProject(id, { query: { enabled: !!id, queryKey: getGetProjectQueryKey(id) } });
   const { data: recommendations, isLoading: isRecsLoading } = useGetProjectRecommendations(id, { query: { enabled: !!id, queryKey: getGetProjectRecommendationsQueryKey(id) } });
   const { data: matches, isLoading: isMatchesLoading } = useListProjectMatches(id, { query: { enabled: !!id, queryKey: getListProjectMatchesQueryKey(id) } });
-  const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
-  const { data: companies } = useListCompanies({});
+  const { data: applications, isLoading: isApplicationsLoading } = useListProjectApplications({ projectId: id }, { query: { enabled: !!id && isAdmin, queryKey: getListProjectApplicationsQueryKey({ projectId: id }) } });
+  const { isSignedIn, userId } = useAuth();
+  const { data: allCompanies } = useListCompanies({});
+  const { data: myCompanies } = useListMyCompanies({ query: { enabled: !!isSignedIn && !isAdmin, queryKey: [...getListMyCompaniesQueryKey(), userId ?? null], staleTime: 0, refetchOnWindowFocus: true, refetchInterval: 30_000 } });
+  const companies = isAdmin ? allCompanies : allCompanies?.filter((c) => myCompanies?.some((mc) => mc.companyId === c.id));
+  const canApply = isAdmin || (myCompanies?.length ?? 0) > 0;
   const createMatch = useCreateMatch();
   const createApplication = useCreateProjectApplication();
 
@@ -88,7 +95,7 @@ export default function ProjectDetail() {
     return <div className="p-4 md:p-8 max-w-6xl mx-auto"><Skeleton className="h-64 w-full" /></div>;
   }
 
-  if (!project) return <div className="p-4 md:p-8">프로젝트를 찾을 수 없습니다.</div>;
+  if (!project) return <div className="p-8">프로젝트를 찾을 수 없습니다.</div>;
 
   const isInvited = (companyId: number) => {
     return matches?.some(m => m.companyId === companyId);
@@ -200,7 +207,7 @@ export default function ProjectDetail() {
               <Skeleton className="h-40 w-full" />
             </div>
           ) : recommendations?.length === 0 ? (
-            <Card><CardContent className="p-4 md:p-8 text-center text-muted-foreground">조건에 맞는 추천 기업이 없습니다.</CardContent></Card>
+            <Card><CardContent className="p-8 text-center text-muted-foreground">조건에 맞는 추천 기업이 없습니다.</CardContent></Card>
           ) : (
             <div className="grid gap-4">
               {recommendations?.map((rec, idx) => {
@@ -251,7 +258,7 @@ export default function ProjectDetail() {
                           </div>
                           <Button 
                             variant={invited ? "secondary" : "default"} 
-                            disabled={invited || createMatch.isPending}
+                            disabled={!isAdmin || invited || createMatch.isPending}
                             onClick={() => handleInvite(rec.company.id, rec.synergyScore)}
                           >
                             {invited ? "초대 완료됨" : "매칭 제안하기"}
@@ -275,7 +282,7 @@ export default function ProjectDetail() {
               </div>
               <Dialog open={applyOpen} onOpenChange={(o) => { setApplyOpen(o); if (!o) resetApplyForm(); }}>
                 <DialogTrigger asChild>
-                  <Button className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
+                  <Button disabled={!canApply} title={canApply ? undefined : "인증된 회사 구성원만 지원할 수 있습니다"} className="shrink-0"><UserPlus className="w-4 h-4 mr-2" /> 지원하기</Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
@@ -287,7 +294,7 @@ export default function ProjectDetail() {
                       <Label>지원사 (기업 디렉토리)</Label>
                       <Select value={applyCompanyId} onValueChange={setApplyCompanyId}>
                         <SelectTrigger><SelectValue placeholder="지원할 기업을 선택하세요" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-60 overflow-y-auto">
                           {companies?.map((c) => {
                             const meta = getCompanyTypeMeta(c.type);
                             return (

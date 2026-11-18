@@ -18,9 +18,10 @@ export const performanceLogsTable = pgTable("performance_logs", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("performance_logs_project_id_idx").on(t.projectId), index("performance_logs_company_id_idx").on(t.companyId)],
-);
+}, (t) => [
+  index("performance_logs_project_id_idx").on(t.projectId),
+  index("performance_logs_company_id_idx").on(t.companyId),
+]);
 
 export type PerformanceLog = typeof performanceLogsTable.$inferSelect;
 export type InsertPerformanceLog = typeof performanceLogsTable.$inferInsert;

@@ -49,7 +49,6 @@ jobs:
 
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/synergy
-      ADMIN_PASSWORD: ci-admin-pass
 
     steps:
       - name: Checkout repository

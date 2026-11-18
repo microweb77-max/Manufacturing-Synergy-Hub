@@ -24,9 +24,7 @@ export const resumeSubmissionsTable = pgTable("resume_submissions", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-},
-  (t) => [index("resume_submissions_talent_post_id_idx").on(t.talentPostId)],
-);
+}, (t) => [index("resume_submissions_talent_post_id_idx").on(t.talentPostId)]);
 
 export type ResumeSubmission = typeof resumeSubmissionsTable.$inferSelect;
 export type InsertResumeSubmission = typeof resumeSubmissionsTable.$inferInsert;

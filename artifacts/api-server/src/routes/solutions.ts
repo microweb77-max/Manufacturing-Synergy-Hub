@@ -16,8 +16,6 @@ import {
 } from "@workspace/api-zod";
 import type { Company } from "@workspace/db";
 
-import { isMediaUrl } from "../lib/media";
-
 const router: IRouter = Router();
 
 function attachCompanies(
@@ -140,13 +138,9 @@ router.patch("/solutions/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updates = { ...parsed.data };
-  // A media URL echoed back by the admin form means "unchanged".
-  if (isMediaUrl(updates.imageUrl)) delete updates.imageUrl;
-
   const [solution] = await db
     .update(solutionsTable)
-    .set(updates)
+    .set(parsed.data)
     .where(eq(solutionsTable.id, params.data.id))
     .returning();
 

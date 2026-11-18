@@ -15,7 +15,8 @@ export interface TalentPostUpdate {
   location?: string;
   employmentType?: string;
   experienceLevel?: string;
-  headcount?: number;
+  /** @nullable */
+  headcount?: number | null;
   skills?: string[];
   description?: string;
   contactEmail?: string;
