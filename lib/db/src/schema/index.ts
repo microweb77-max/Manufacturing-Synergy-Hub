@@ -11,5 +11,6 @@ export * from "./resumes";
 export * from "./nav";
 export * from "./news";
 export * from "./newsRefreshRuns";
+export * from "./newsRefreshSlots";
 export * from "./banners";
 export * from "./contactRequests";

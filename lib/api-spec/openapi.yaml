@@ -1320,8 +1320,8 @@ paths:
     post:
       operationId: refreshScheduledNews
       tags: [news]
-      summary: Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
-      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
+      summary: Authenticated hourly scheduler callback (Asia/Ho_Chi_Minh)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam-time hour (scheduledSlot).
       parameters:
         - in: header
           name: Authorization
@@ -1331,16 +1331,19 @@ paths:
           description: Bearer scheduler credential supplied by the external scheduling service.
       responses:
         "200":
-          description: Completed or already completed today
+          description: Completed, or already completed for this hour
           content:
             application/json:
               schema:
                 type: object
-                required: [scheduledDay, timezone, inserted, skipped, alreadyCompleted]
+                required: [scheduledDay, scheduledSlot, timezone, inserted, skipped, alreadyCompleted]
                 properties:
                   scheduledDay:
                     type: string
                     format: date
+                  scheduledSlot:
+                    type: string
+                    description: Vietnam-time hour, "YYYY-MM-DDTHH"
                   timezone:
                     type: string
                   inserted:

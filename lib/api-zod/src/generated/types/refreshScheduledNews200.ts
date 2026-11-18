@@ -8,6 +8,8 @@
 
 export type RefreshScheduledNews200 = {
   scheduledDay: Date;
+  /** Vietnam-time hour, "YYYY-MM-DDTHH" */
+  scheduledSlot: string;
   timezone: string;
   inserted: number;
   skipped: number;

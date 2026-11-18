@@ -1784,8 +1784,8 @@ export const ListNewsResponse = zod.array(ListNewsResponseItem)
 
 
 /**
- * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
- * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam-time hour (scheduledSlot).
+ * @summary Authenticated hourly scheduler callback (Asia/Ho_Chi_Minh)
  */
 export const RefreshScheduledNewsHeader = zod.object({
   "Authorization": zod.string().describe('Bearer scheduler credential supplied by the external scheduling service.')
@@ -1793,6 +1793,7 @@ export const RefreshScheduledNewsHeader = zod.object({
 
 export const RefreshScheduledNewsResponse = zod.object({
   "scheduledDay": zod.coerce.date(),
+  "scheduledSlot": zod.string().describe('Vietnam-time hour, \"YYYY-MM-DDTHH\"'),
   "timezone": zod.string(),
   "inserted": zod.number(),
   "skipped": zod.number(),
