@@ -1,7 +1,8 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
 import { rateLimit } from "../lib/rateLimit";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, sql, inArray } from "drizzle-orm";
+import { buildCompanyPatch } from "../lib/companyBulkUpdate";
 import {
   db,
   companiesTable,
@@ -23,6 +24,8 @@ import {
   GetCompanyLeaderboardResponse,
   AnalyzeCompanyMaterialBody,
   AnalyzeCompanyMaterialResponse,
+  BulkUpdateCompaniesBody,
+  BulkUpdateCompaniesResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -255,6 +258,61 @@ router.post("/companies", async (req, res): Promise<void> => {
     .returning();
 
   res.status(201).json(CreateCompanyResponse.parse(toJson(company)));
+});
+
+// Admin-only (fail-closed in apiAuthorization: no company-member rule matches this path).
+// Policy: rows that fail validation are skipped and reported; all valid rows are
+// applied together in ONE transaction (all-or-nothing for the valid set).
+router.post("/companies/bulk-update", async (req, res): Promise<void> => {
+  const parsed = BulkUpdateCompaniesBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { items } = parsed.data;
+  const errors: { row: number; id?: number; reason: string }[] = [];
+  const candidates: { id: number; patch: Record<string, unknown> }[] = [];
+  const seen = new Set<number>();
+  let skipped = 0;
+
+  const ids = [...new Set(items.map((i) => i.id))];
+  const found = ids.length
+    ? await db.select({ id: companiesTable.id }).from(companiesTable).where(inArray(companiesTable.id, ids))
+    : [];
+  const existing = new Set(found.map((c) => c.id));
+
+  items.forEach((item, index) => {
+    const row = item.row ?? index + 1;
+    if (!existing.has(item.id)) {
+      errors.push({ row, id: item.id, reason: `id ${item.id}를 찾을 수 없습니다.` });
+      return;
+    }
+    if (seen.has(item.id)) {
+      errors.push({ row, id: item.id, reason: `id ${item.id}가 중복되었습니다.` });
+      return;
+    }
+    seen.add(item.id);
+    const built = buildCompanyPatch(item);
+    if ("error" in built) {
+      errors.push({ row, id: item.id, reason: built.error });
+      return;
+    }
+    if (!Object.keys(built.patch).length) {
+      skipped++;
+      return;
+    }
+    candidates.push({ id: item.id, patch: built.patch });
+  });
+
+  await db.transaction(async (tx) => {
+    for (const { id, patch } of candidates) {
+      await tx.update(companiesTable).set(patch).where(eq(companiesTable.id, id));
+    }
+  });
+
+  res.json(
+    BulkUpdateCompaniesResponse.parse({ updated: candidates.length, skipped, errors }),
+  );
 });
 
 router.get("/companies/:id", async (req, res): Promise<void> => {

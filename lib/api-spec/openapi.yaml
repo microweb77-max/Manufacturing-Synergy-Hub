@@ -308,6 +308,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Company"
+  /companies/bulk-update:
+    post:
+      operationId: bulkUpdateCompanies
+      tags: [companies]
+      summary: Bulk update existing companies by id (platform admin only)
+      description: >
+        Overwrites only the fields present in each item. Omitted fields are
+        preserved. Unknown ids are reported as errors and never created.
+        Valid rows are applied in a single transaction; invalid rows are skipped.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyBulkUpdateRequest"
+      responses:
+        "200":
+          description: Bulk update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompanyBulkUpdateResult"
+
   /companies/{id}:
     get:
       operationId: getCompany
@@ -1810,6 +1833,70 @@ components:
           type: string
         logoUrl:
           type: string
+
+    CompanyBulkUpdateItem:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: integer
+        row:
+          type: integer
+          description: Optional source row number (e.g. Excel row) echoed back in errors.
+        name:
+          type: string
+        taxCode:
+          type: string
+        phone:
+          type: string
+        kakaoTalkId:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        capabilityTags:
+          type: array
+          items:
+            type: string
+        techSpecs:
+          type: string
+        contactEmail:
+          type: string
+
+    CompanyBulkUpdateRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: "#/components/schemas/CompanyBulkUpdateItem"
+
+    CompanyBulkUpdateError:
+      type: object
+      required: [row, reason]
+      properties:
+        row:
+          type: integer
+        id:
+          type: integer
+        reason:
+          type: string
+
+    CompanyBulkUpdateResult:
+      type: object
+      required: [updated, skipped, errors]
+      properties:
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyBulkUpdateError"
 
     ClientCompany:
       type: object

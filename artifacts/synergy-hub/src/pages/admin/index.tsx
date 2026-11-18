@@ -65,6 +65,7 @@ import {
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { CompanyBulkUpdateDialog } from "./CompanyBulkUpdateDialog";
 import { getCompanyTypeMeta } from "@/lib/companyType";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -251,6 +252,7 @@ function CompaniesAdmin() {
     <AdminSection
       title="기업"
       description="등록된 협력사 정보를 관리합니다."
+      headerActions={<CompanyBulkUpdateDialog companies={data} disabled={isLoading || !data} />}
       items={data}
       isLoading={isLoading}
       getId={(c) => c.id}

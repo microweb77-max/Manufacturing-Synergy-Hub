@@ -335,6 +335,41 @@ export const CreateCompanyResponse = zod.object({
 
 
 /**
+ * Overwrites only the fields present in each item. Omitted fields are preserved. Unknown ids are reported as errors and never created. Valid rows are applied in a single transaction; invalid rows are skipped.
+ * @summary Bulk update existing companies by id (platform admin only)
+ */
+export const bulkUpdateCompaniesBodyItemsMax = 5000;
+
+
+
+export const BulkUpdateCompaniesBody = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "row": zod.number().optional().describe('Optional source row number (e.g. Excel row) echoed back in errors.'),
+  "name": zod.string().optional(),
+  "taxCode": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "kakaoTalkId": zod.string().optional(),
+  "description": zod.string().optional(),
+  "location": zod.string().optional(),
+  "capabilityTags": zod.array(zod.string()).optional(),
+  "techSpecs": zod.string().optional(),
+  "contactEmail": zod.string().optional()
+})).max(bulkUpdateCompaniesBodyItemsMax)
+})
+
+export const BulkUpdateCompaniesResponse = zod.object({
+  "updated": zod.number(),
+  "skipped": zod.number(),
+  "errors": zod.array(zod.object({
+  "row": zod.number(),
+  "id": zod.number().optional(),
+  "reason": zod.string()
+}))
+})
+
+
+/**
  * @summary Get a company
  */
 export const GetCompanyParams = zod.object({
