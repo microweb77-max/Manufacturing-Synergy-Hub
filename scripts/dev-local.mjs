@@ -38,8 +38,10 @@ const build = spawnSync(process.execPath, ["./build.mjs"], {
 if (build.status !== 0) process.exit(build.status ?? 1);
 
 const children = [];
-function run(name, cmd, args, cwd, env) {
-  const child = spawn(cmd, args, { cwd, env: { ...process.env, ...env }, stdio: "inherit", shell: isWin });
+// `shell` is only needed for Windows .cmd shims (pnpm.cmd). Never use it for
+// process.execPath: an unquoted "C:\Program Files\nodejs\node.exe" breaks under cmd.exe.
+function run(name, cmd, args, cwd, env, { shell = false } = {}) {
+  const child = spawn(cmd, args, { cwd, env: { ...process.env, ...env }, stdio: "inherit", shell });
   child.on("exit", (code) => {
     console.log(`[dev-local] ${name} exited (${code}). Stopping.`);
     for (const c of children) if (c !== child) c.kill();
@@ -56,7 +58,7 @@ run("web", isWin ? "pnpm.cmd" : "pnpm", ["exec", "vite", "--config", "vite.confi
   PORT: webPort,
   BASE_PATH: "/",
   API_PROXY_TARGET: `http://localhost:${apiPort}`,
-});
+}, { shell: isWin });
 
 console.log(`[dev-local] open http://localhost:${webPort}  (API on :${apiPort}). Ctrl+C to stop.`);
 for (const sig of ["SIGINT", "SIGTERM"]) {
