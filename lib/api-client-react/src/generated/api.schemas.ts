@@ -313,6 +313,38 @@ export interface CompanyUpdate {
   logoUrl?: string;
 }
 
+export interface CompanyBulkUpdateItem {
+  id: number;
+  /** Optional source row number (e.g. Excel row) echoed back in errors. */
+  row?: number;
+  name?: string;
+  taxCode?: string;
+  phone?: string;
+  kakaoTalkId?: string;
+  description?: string;
+  location?: string;
+  capabilityTags?: string[];
+  techSpecs?: string;
+  contactEmail?: string;
+}
+
+export interface CompanyBulkUpdateRequest {
+  /** @maxItems 5000 */
+  items: CompanyBulkUpdateItem[];
+}
+
+export interface CompanyBulkUpdateError {
+  row: number;
+  id?: number;
+  reason: string;
+}
+
+export interface CompanyBulkUpdateResult {
+  updated: number;
+  skipped: number;
+  errors: CompanyBulkUpdateError[];
+}
+
 export interface ClientCompany {
   no: number;
   nameKo: string;

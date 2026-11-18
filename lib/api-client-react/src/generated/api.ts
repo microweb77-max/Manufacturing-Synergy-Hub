@@ -32,6 +32,8 @@ import type {
   CollectNewsRequest,
   CollectNewsResult,
   Company,
+  CompanyBulkUpdateRequest,
+  CompanyBulkUpdateResult,
   CompanyClaimDecision,
   CompanyClaimInput,
   CompanyClaimReview,
@@ -1526,6 +1528,77 @@ export const useCreateCompany = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateCompanyMutationOptions(options));
+    }
+
+export const getBulkUpdateCompaniesUrl = () => {
+
+
+
+
+  return `/api/companies/bulk-update`
+}
+
+/**
+ * Overwrites only the fields present in each item. Omitted fields are preserved. Unknown ids are reported as errors and never created. Valid rows are applied in a single transaction; invalid rows are skipped.
+ * @summary Bulk update existing companies by id (platform admin only)
+ */
+export const bulkUpdateCompanies = async (companyBulkUpdateRequest: CompanyBulkUpdateRequest, options?: RequestInit): Promise<CompanyBulkUpdateResult> => {
+
+  return customFetch<CompanyBulkUpdateResult>(getBulkUpdateCompaniesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(companyBulkUpdateRequest)
+  }
+);}
+
+
+
+
+export const getBulkUpdateCompaniesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateCompanies>>, TError,{data: BodyType<CompanyBulkUpdateRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateCompanies>>, TError,{data: BodyType<CompanyBulkUpdateRequest>}, TContext> => {
+
+const mutationKey = ['bulkUpdateCompanies'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkUpdateCompanies>>, {data: BodyType<CompanyBulkUpdateRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkUpdateCompanies(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkUpdateCompaniesMutationResult = NonNullable<Awaited<ReturnType<typeof bulkUpdateCompanies>>>
+    export type BulkUpdateCompaniesMutationBody = BodyType<CompanyBulkUpdateRequest>
+    export type BulkUpdateCompaniesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Bulk update existing companies by id (platform admin only)
+ */
+export const useBulkUpdateCompanies = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkUpdateCompanies>>, TError,{data: BodyType<CompanyBulkUpdateRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkUpdateCompanies>>,
+        TError,
+        {data: BodyType<CompanyBulkUpdateRequest>},
+        TContext
+      > => {
+      return useMutation(getBulkUpdateCompaniesMutationOptions(options));
     }
 
 export const getGetCompanyUrl = (id: number,) => {

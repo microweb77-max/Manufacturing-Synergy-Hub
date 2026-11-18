@@ -68,6 +68,14 @@ try {
   });
   const clientsResult = spawnSync(process.execPath, ["--test", clientsOutput], { stdio: "inherit" });
   if (clientsResult.status !== 0) process.exitCode = clientsResult.status ?? 1;
+  const bulkOutput = path.join(temp, "company-bulk-update.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/companyBulkUpdate.test.ts")],
+    outfile: bulkOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+    alias: { "@workspace/api-zod": path.resolve(artifact, "../../lib/api-zod/src/index.ts") },
+  });
+  const bulkResult = spawnSync(process.execPath, ["--test", bulkOutput], { stdio: "inherit" });
+  if (bulkResult.status !== 0) process.exitCode = bulkResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }
