@@ -4,9 +4,16 @@ import { collectNews, NewsCollectionError } from "../routes/news";
 
 export const NEWS_TIMEZONE = "Asia/Ho_Chi_Minh";
 
+// Vietnam is UTC+07:00 year-round (no daylight-saving transitions).
+const VIETNAM_OFFSET_MS = 7 * 60 * 60 * 1000;
+
 export function vietnamDay(now = new Date()): string {
-  // Vietnam is UTC+07:00 year-round (no daylight-saving transitions).
-  return new Date(now.getTime() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return new Date(now.getTime() + VIETNAM_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// Hourly collection slot in Vietnam time, e.g. "2026-10-07T00".
+export function vietnamSlot(now = new Date()): string {
+  return new Date(now.getTime() + VIETNAM_OFFSET_MS).toISOString().slice(0, 13);
 }
 
 export function schedulerTokenMatches(header: string | undefined, secret: string | undefined): boolean {
@@ -35,17 +42,19 @@ export function createScheduledNewsHandler(
       res.status(401).json({ error: "예약 호출 인증에 실패했습니다." });
       return;
     }
-    const day = vietnamDay(now());
+    const at = now();
+    const slot = vietnamSlot(at);
+    const day = vietnamDay(at);
     try {
-      const result = await collect("", day);
-      req.log?.info({ day, inserted: result.inserted, alreadyCompleted: result.alreadyCompleted }, "Scheduled news refresh completed");
+      const result = await collect("", slot);
+      req.log?.info({ slot, inserted: result.inserted, alreadyCompleted: result.alreadyCompleted }, "Scheduled news refresh completed");
       res.json({
-        scheduledDay: day, timezone: NEWS_TIMEZONE,
+        scheduledDay: day, scheduledSlot: slot, timezone: NEWS_TIMEZONE,
         inserted: result.inserted, skipped: result.skipped,
         alreadyCompleted: result.alreadyCompleted,
       });
     } catch (err) {
-      req.log?.error({ err, day }, "Scheduled news refresh failed");
+      req.log?.error({ err, slot }, "Scheduled news refresh failed");
       const status = err instanceof NewsCollectionError ? err.status : 502;
       if (status === 429) res.set("Retry-After", "60");
       res.status(status).json({ error: "예약 뉴스 수집에 실패했습니다. 다시 시도할 수 있습니다." });

@@ -5154,8 +5154,8 @@ export const getRefreshScheduledNewsUrl = () => {
 }
 
 /**
- * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day.
- * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam-time hour (scheduledSlot).
+ * @summary Authenticated hourly scheduler callback (Asia/Ho_Chi_Minh)
  */
 export const refreshScheduledNews = async ( options?: RequestInit): Promise<RefreshScheduledNews200> => {
 
@@ -5203,7 +5203,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RefreshScheduledNewsMutationError = ErrorType<void>
 
     /**
- * @summary Authenticated daily scheduler callback (Asia/Ho_Chi_Minh)
+ * @summary Authenticated hourly scheduler callback (Asia/Ho_Chi_Minh)
  */
 export const useRefreshScheduledNews = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledNews>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}

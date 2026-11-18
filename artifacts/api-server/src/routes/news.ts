@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
 import { desc } from "drizzle-orm";
-import { db, pool, newsArticlesTable, newsRefreshRunsTable } from "@workspace/db";
+import { db, pool, newsArticlesTable, newsRefreshSlotsTable } from "@workspace/db";
 import {
   ListNewsResponse,
   CollectNewsBody,
@@ -88,8 +88,14 @@ router.post("/news/collect", async (req, res): Promise<void> => {
   }
 });
 
+// How many recently saved headlines are passed to the search prompt so an
+// hourly run looks for stories we don't already have.
+const RECENT_TITLES_FOR_PROMPT = 40;
+
 // Both admin/manual and scheduler paths share this lock and collection logic.
-export async function collectNews(topic = "", scheduledDay?: string) {
+// `scheduledSlot` is the Vietnam-time hour ("YYYY-MM-DDTHH") of a scheduler run;
+// a slot that already completed is skipped without contacting Gemini.
+export async function collectNews(topic = "", scheduledSlot?: string) {
   const focus = topic
     ? `특히 "${topic}" 주제에 집중해서 찾아줘.`
     : "제조업 투자(FDI), 공장 신설/증설, 자동화, 전자/반도체, 물류/공급망, 산업단지, 무역/수출 등 폭넓은 주제를 포함해줘.";
@@ -100,10 +106,10 @@ export async function collectNews(topic = "", scheduledDay?: string) {
     // Session advisory lock works across Autoscale instances and process restarts.
     locked = (await connection.query("SELECT pg_try_advisory_lock(728301, 1) AS locked")).rows[0].locked;
     if (!locked) throw new NewsCollectionError(429, "이미 뉴스 수집이 진행 중입니다.");
-    if (scheduledDay) {
+    if (scheduledSlot) {
       const completed = await connection.query(
-        "SELECT inserted, skipped FROM news_refresh_runs WHERE scheduled_day=$1::date",
-        [scheduledDay],
+        "SELECT inserted, skipped FROM news_refresh_slots WHERE scheduled_slot=$1",
+        [scheduledSlot],
       );
       if (completed.rowCount) return {
         inserted: 0, skipped: 0, articles: [], alreadyCompleted: true,
@@ -116,9 +122,21 @@ export async function collectNews(topic = "", scheduledDay?: string) {
     const { ai } = await import("@workspace/integrations-gemini-ai");
     const abortSignal = AbortSignal.timeout(240_000);
 
+    const recent = await db
+      .select({ title: newsArticlesTable.title, originalTitle: newsArticlesTable.originalTitle })
+      .from(newsArticlesTable)
+      .orderBy(desc(newsArticlesTable.createdAt))
+      .limit(RECENT_TITLES_FOR_PROMPT);
+    const knownList = recent
+      .map((r) => `- ${r.originalTitle || r.title}`)
+      .join("\n");
+    const today = scheduledSlot?.slice(0, 10) ?? new Date().toISOString().slice(0, 10);
+
     const searchPrompt = `베트남 제조업/산업 분야의 최신 뉴스를 웹에서 검색해서 8건 정리해줘. ${focus}
-가능한 한 최근(최근 몇 주 이내) 기사 위주로 찾아줘.
-오늘 날짜는 ${scheduledDay ?? new Date().toISOString().slice(0, 10)}야.
+최근 24~48시간 이내에 보도된 기사를 최우선으로 찾고, 부족하면 최근 1주일 이내 기사로 채워줘.
+오늘 날짜는 ${today}야.${knownList ? `
+아래는 이미 수집한 기사 목록이야. 같은 사건을 다룬 기사는 제외하고 새로운 기사만 찾아줘:
+${knownList}` : ""}
 각 뉴스마다 다음을 포함해줘: 기사 원제목, 언론사/출처명, 보도 날짜, 핵심 내용 요약.
 베트남 제조업/산업/투자/무역과 무관한 뉴스는 제외해줘.`;
 
@@ -218,7 +236,7 @@ ${searchText}`;
     }
 
     // Articles and completion marker are committed together. A failed attempt
-    // never marks the day as completed, so the scheduler can safely retry.
+    // never marks the slot as completed, so the scheduler can safely retry.
     const inserted = await db.transaction(async (tx) => {
       const rows = toInsert.length > 0
         ? await tx
@@ -236,9 +254,9 @@ ${searchText}`;
             )
             .returning()
         : [];
-      if (scheduledDay) {
-        await tx.insert(newsRefreshRunsTable).values({
-          scheduledDay, inserted: rows.length, skipped,
+      if (scheduledSlot) {
+        await tx.insert(newsRefreshSlotsTable).values({
+          scheduledSlot, inserted: rows.length, skipped,
         });
       }
       return rows;

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import express from "express";
-import { createScheduledNewsHandler, schedulerTokenMatches, vietnamDay } from "../src/jobs/newsSchedule";
+import { createScheduledNewsHandler, schedulerTokenMatches, vietnamDay, vietnamSlot } from "../src/jobs/newsSchedule";
 import { collectNews, NewsCollectionError } from "../src/routes/news";
 import { pool } from "@workspace/db";
 
@@ -11,6 +11,13 @@ test("Vietnam calendar day changes at 17:00 UTC, including year boundaries", () 
   assert.equal(vietnamDay(new Date("2026-10-06T16:59:59.999Z")), "2026-10-06");
   assert.equal(vietnamDay(new Date("2026-10-06T17:00:00.000Z")), "2026-10-07");
   assert.equal(vietnamDay(new Date("2026-12-31T17:00:00.000Z")), "2027-01-01");
+});
+
+test("hourly slot is the Vietnam-time hour, rolling over the day at 17:00 UTC", () => {
+  assert.equal(vietnamSlot(new Date("2026-10-06T16:59:59.999Z")), "2026-10-06T23");
+  assert.equal(vietnamSlot(new Date("2026-10-06T17:00:00.000Z")), "2026-10-07T00");
+  assert.equal(vietnamSlot(new Date("2026-10-07T06:30:00.000Z")), "2026-10-07T13");
+  assert.equal(vietnamSlot(new Date("2026-12-31T17:00:00.000Z")), "2027-01-01T00");
 });
 
 test("scheduler auth fails closed and rejects empty, incorrect and oversized credentials", () => {
@@ -26,9 +33,9 @@ test("scheduled endpoint requires its own token, ignores cookie admin flags, and
   let calls = 0;
   let fail = false;
   const app = express();
-  app.post("/api/scheduled/news", createScheduledNewsHandler(async (_topic, day) => {
+  app.post("/api/scheduled/news", createScheduledNewsHandler(async (_topic, slot) => {
     calls++;
-    assert.equal(day, "2026-10-07");
+    assert.equal(slot, "2026-10-07T00");
     if (fail) throw new NewsCollectionError(429, "busy");
     return { inserted: 2, skipped: 1, articles: [], alreadyCompleted: false };
   }, () => fixtureSecret, () => new Date("2026-10-06T17:00:00Z")));
@@ -51,7 +58,7 @@ test("scheduled endpoint requires its own token, ignores cookie admin flags, and
     const success = await fetch(`${base}/api/scheduled/news`, { method: "POST", headers });
     assert.equal(success.status, 200);
     assert.deepEqual(await success.json(), {
-      scheduledDay: "2026-10-07", timezone: "Asia/Ho_Chi_Minh",
+      scheduledDay: "2026-10-07", scheduledSlot: "2026-10-07T00", timezone: "Asia/Ho_Chi_Minh",
       inserted: 2, skipped: 1, alreadyCompleted: false,
     });
     fail = true;
@@ -63,19 +70,19 @@ test("scheduled endpoint requires its own token, ignores cookie admin flags, and
   }
 });
 
-test("persistent completed-day marker skips collection without contacting Gemini", async () => {
-  const day = "1900-01-01";
+test("persistent completed-slot marker skips collection without contacting Gemini", async () => {
+  const slot = "1900-01-01T00";
   const inserted = await pool.query(
-    "INSERT INTO news_refresh_runs(scheduled_day,inserted,skipped) VALUES($1,0,0) ON CONFLICT DO NOTHING RETURNING scheduled_day",
-    [day],
+    "INSERT INTO news_refresh_slots(scheduled_slot,inserted,skipped) VALUES($1,0,0) ON CONFLICT DO NOTHING RETURNING scheduled_slot",
+    [slot],
   );
   assert.equal(inserted.rowCount, 1, "Test fixture must not overwrite an existing run.");
   try {
-    const result = await collectNews("", day);
+    const result = await collectNews("", slot);
     assert.equal(result.alreadyCompleted, true);
     assert.equal(result.inserted, 0);
   } finally {
-    await pool.query("DELETE FROM news_refresh_runs WHERE scheduled_day=$1", [day]);
+    await pool.query("DELETE FROM news_refresh_slots WHERE scheduled_slot=$1", [slot]);
   }
 });
 

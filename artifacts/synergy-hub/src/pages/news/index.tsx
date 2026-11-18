@@ -79,7 +79,7 @@ export default function NewsPage() {
         </div>
         <p className="text-sm text-muted-foreground flex items-center gap-2 pt-2">
           <Calendar className="h-4 w-4 shrink-0" />
-          자동 갱신 일정: 매일 자정 00:00 · 베트남 시간
+          자동 갱신 일정: 매시간 정각 · 베트남 시간
         </p>
       </div>
 

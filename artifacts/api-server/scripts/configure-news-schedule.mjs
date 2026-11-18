@@ -25,7 +25,7 @@ async function api(path, method = "GET", payload) {
 }
 
 // Don't enable a job against an unpublished route. This performs one genuine
-// collection; if it succeeds, repeat calls on this Vietnam day are a no-op.
+// collection; if it succeeds, repeat calls in this Vietnam-time hour are a no-op.
 if (enable) {
   const response = await fetch(targetUrl, {
     method: "POST", headers: { Authorization: `Bearer ${token}` },
@@ -34,7 +34,7 @@ if (enable) {
   if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
     throw new Error(`Published news callback not verified (HTTP ${response.status}). Publish and apply schema changes first.`);
   const result = await response.json();
-  if (!result.scheduledDay || typeof result.alreadyCompleted !== "boolean")
+  if (!result.scheduledSlot || typeof result.alreadyCompleted !== "boolean")
     throw new Error("Unexpected callback response; job not enabled.");
 }
 const jobs = await api("/jobs");
@@ -42,7 +42,7 @@ if (jobs.someFailed) throw new Error("Incomplete scheduler job listing; refusing
 const matches = jobs.jobs.filter((job) => job.url === targetUrl);
 if (matches.length > 1) throw new Error("Multiple matching jobs already exist; review before changing them.");
 const job = {
-  title: "Manufacturing Synergy Hub — midnight Vietnam news",
+  title: "Manufacturing Synergy Hub — hourly Vietnam news",
   enabled: enable,
   url: targetUrl,
   requestMethod: 1,
@@ -51,7 +51,8 @@ const job = {
   redirectSuccess: false,
   schedule: {
     timezone: "Asia/Ho_Chi_Minh", expiresAt: 0,
-    hours: [0], minutes: [0], mdays: [-1], months: [-1], wdays: [-1],
+    // Every hour on the hour (-1 = every value in cron-job.org's API).
+    hours: [-1], minutes: [0], mdays: [-1], months: [-1], wdays: [-1],
   },
   extendedData: { headers: { Authorization: `Bearer ${token}` }, body: "" },
   notification: { onFailure: true, onFailureCount: 1, onSuccess: true, onDisable: true },
@@ -65,7 +66,7 @@ if (matches.length) {
 }
 const { jobDetails } = await api(`/jobs/${jobId}`);
 if (jobDetails.enabled !== enable || jobDetails.schedule.timezone !== job.schedule.timezone ||
-    JSON.stringify(jobDetails.schedule.hours) !== "[0]" ||
+    JSON.stringify(jobDetails.schedule.hours) !== "[-1]" ||
     JSON.stringify(jobDetails.schedule.minutes) !== "[0]" ||
     jobDetails.requestMethod !== 1 || jobDetails.url !== targetUrl ||
     jobDetails.requestTimeout < 300) {
