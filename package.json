@@ -8,7 +8,8 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "dev:local": "node scripts/dev-local.mjs",
-    "db:push:local": "node scripts/db-push-local.mjs"
+    "db:push:local": "node scripts/db-push-local.mjs",
+    "test": "pnpm --filter @workspace/api-server run test && pnpm --filter @workspace/synergy-hub run test:excel-import"
   },
   "private": true,
   "devDependencies": {
