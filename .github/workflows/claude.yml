@@ -48,7 +48,10 @@ jobs:
           --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
 
     env:
+      CI: "true"
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/synergy
+      PORT: "3000"
+      BASE_PATH: /
 
     steps:
       - name: Checkout repository
@@ -80,5 +83,5 @@ jobs:
           label_trigger: "claude"
           claude_args: |
             --max-turns 80
-            --allowedTools "Bash(pnpm:*),Bash(node:*),Bash(git:*),Bash(curl:*),Bash(ls:*),Bash(cat:*),Bash(grep:*),Bash(find:*),Bash(mkdir:*),Bash(sleep:*)"
-            --append-system-prompt "Follow CLAUDE.md, especially the 'Cowork → Claude Code workflow' section. Reply to the user in Korean."
+            --allowedTools "Bash(pnpm:*),Bash(node:*),Bash(npx:*),Bash(git:*),Bash(curl:*),Bash(ls:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(grep:*),Bash(find:*),Bash(mkdir:*),Bash(mv:*),Bash(cp:*),Bash(sleep:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh pr checks:*),Bash(gh issue view:*)"
+            --append-system-prompt "Follow CLAUDE.md, especially the 'Cowork → Claude Code workflow' section. When the work for an issue is complete and verified, open the pull request yourself with gh pr create --base main (Korean title/description, include 'Closes #<issue>'), then post the PR link in your reply. Reply to the user in Korean."
