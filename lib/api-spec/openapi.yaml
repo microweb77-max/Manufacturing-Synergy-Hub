@@ -24,6 +24,8 @@ tags:
     description: Talent pool job postings and seekers
   - name: clientCompanies
     description: Korean FDI manufacturing client directory (KOTRA)
+  - name: tenders
+    description: Tender / support program / buyer RFQ announcements
   - name: events
     description: Vietnam manufacturing/automation/AI events
   - name: me
@@ -1554,6 +1556,171 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EventItem"
+  /tenders:
+    get:
+      operationId: listTenders
+      tags: [tenders]
+      summary: List published tenders (public). Anonymous responses omit restricted fields on the server.
+      parameters:
+        - in: query
+          name: sourceType
+          schema:
+            $ref: "#/components/schemas/TenderSourceType"
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: deadlineWithin
+          schema:
+            type: string
+            enum: ["7", "30", all]
+        - in: query
+          name: includeClosed
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Tenders ordered by deadline (soonest first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenderItem"
+    post:
+      operationId: createTender
+      tags: [tenders]
+      summary: Create a tender (platform admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenderInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderItem"
+  /tenders/collect:
+    post:
+      operationId: collectTenders
+      tags: [tenders]
+      summary: Collect tenders via grounded web search (platform admin)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectTendersRequest"
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectTendersResult"
+        "429":
+          description: Collection already running or cooling down
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Collection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tenders/{id}:
+    get:
+      operationId: getTender
+      tags: [tenders]
+      summary: Get one published tender (public, same restriction rule as the list)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tender
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateTender
+      tags: [tenders]
+      summary: Update a tender (platform admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenderUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenderItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteTender
+      tags: [tenders]
+      summary: Delete a tender (platform admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/tenders:
+    get:
+      operationId: listAdminTenders
+      tags: [tenders]
+      summary: List ALL tenders including hidden and closed (platform admin)
+      responses:
+        "200":
+          description: Tenders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenderItem"
   /me/bookmarks:
     get:
       operationId: listMyBookmarks
@@ -1674,6 +1841,39 @@ paths:
       operationId: refreshScheduledEvents
       tags: [events]
       summary: Weekly scheduler callback that collects events (scheduler token)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [inserted, skipped]
+                properties:
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+        "401":
+          description: Invalid scheduler credential
+        "429":
+          description: Collection already running or cooling down
+        "502":
+          description: Collection failed
+        "503":
+          description: Scheduler credential not configured
+  /scheduled/tenders-collect:
+    post:
+      operationId: refreshScheduledTenders
+      tags: [tenders]
+      summary: Weekly scheduler callback that collects tenders (scheduler token)
       description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
       parameters:
         - in: header
@@ -2792,6 +2992,148 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/EventItem"
+    TenderSourceType:
+      type: string
+      enum: [gov_vn, kr_support, buyer_rfq]
+    TenderItem:
+      type: object
+      description: >
+        Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are
+        removed server-side and summary is only its first sentence.
+      required: [id, title, summary, sourceType, category, deadline, source, status, restricted, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        sourceType:
+          $ref: "#/components/schemas/TenderSourceType"
+        category:
+          type: string
+        buyer:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        budget:
+          type: ["string", "null"]
+        eligibility:
+          type: ["string", "null"]
+        submission:
+          type: ["string", "null"]
+        publishedDate:
+          type: ["string", "null"]
+        deadline:
+          type: string
+        sourceUrl:
+          type: ["string", "null"]
+        source:
+          type: string
+          enum: [auto, manual]
+        status:
+          type: string
+          enum: [published, hidden]
+        restricted:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    TenderInput:
+      type: object
+      required: [title, deadline]
+      properties:
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        sourceType:
+          $ref: "#/components/schemas/TenderSourceType"
+        category:
+          type: string
+          description: 설비 / 자동화 / IT·소프트웨어 / 부품·소재 / 건설·인프라 / 서비스 / 기타
+        buyer:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        budget:
+          type: ["string", "null"]
+        eligibility:
+          type: ["string", "null"]
+        submission:
+          type: ["string", "null"]
+        publishedDate:
+          type: ["string", "null"]
+        deadline:
+          type: string
+          description: YYYY-MM-DD
+        sourceUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [published, hidden]
+    TenderUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        sourceType:
+          $ref: "#/components/schemas/TenderSourceType"
+        category:
+          type: string
+          description: 설비 / 자동화 / IT·소프트웨어 / 부품·소재 / 건설·인프라 / 서비스 / 기타
+        buyer:
+          type: ["string", "null"]
+        country:
+          type: ["string", "null"]
+        city:
+          type: ["string", "null"]
+        budget:
+          type: ["string", "null"]
+        eligibility:
+          type: ["string", "null"]
+        submission:
+          type: ["string", "null"]
+        publishedDate:
+          type: ["string", "null"]
+        deadline:
+          type: string
+          description: YYYY-MM-DD
+        sourceUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [published, hidden]
+    CollectTendersRequest:
+      type: object
+      properties:
+        sourceType:
+          $ref: "#/components/schemas/TenderSourceType"
+    CollectTendersResult:
+      type: object
+      required: [inserted, skipped, tenders]
+      properties:
+        inserted:
+          type: integer
+        skipped:
+          type: integer
+        tenders:
+          type: array
+          items:
+            $ref: "#/components/schemas/TenderItem"
     BookmarkItemType:
       type: string
       enum: [event, tender]

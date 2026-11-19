@@ -17,3 +17,4 @@ export * from "./contactRequests";
 export * from "./events";
 export * from "./userBookmarks";
 export * from "./userAlertPreferences";
+export * from "./tenders";

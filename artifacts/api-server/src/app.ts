@@ -8,6 +8,7 @@ import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./mid
 import { createApiAuthorization } from "./middlewares/apiAuthorization";
 import scheduledNewsRouter from "./jobs/newsSchedule";
 import scheduledEventsRouter from "./jobs/eventsSchedule";
+import scheduledTendersRouter from "./jobs/tendersSchedule";
 import { apiSecurityHeaders, createApiCors, parseApiJson, apiNotFound, apiErrorHandler } from "./middlewares/requestGuards";
 
 const app: Express = express();
@@ -39,6 +40,7 @@ app.use("/api", apiSecurityHeaders);
 // cookies or browser-controlled admin flags. Keep all normal API writes protected.
 app.use("/api/scheduled", scheduledNewsRouter);
 app.use("/api/scheduled", scheduledEventsRouter);
+app.use("/api/scheduled", scheduledTendersRouter);
 // No reflected credentialed CORS: web requests use same-origin session cookies.
 app.use(createApiCors());
 app.use(clerkMiddleware((req) => ({

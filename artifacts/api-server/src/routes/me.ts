@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { clerkClient } from "@clerk/express";
-import { eq } from "drizzle-orm";
-import { db, eventsTable } from "@workspace/db";
+import { and, eq } from "drizzle-orm";
+import { db, eventsTable, tendersTable } from "@workspace/db";
 import {
   ListMyBookmarksQueryParams,
   AddMyBookmarkBody,
@@ -15,6 +15,7 @@ import {
   getAlertPreference, saveAlertPreference, isValidEmail, verifiedEmails, resolveAlertEmail,
 } from "../lib/userItems";
 import { EVENT_CATEGORIES } from "../lib/events";
+import { isValidTenderAlertValue } from "../lib/tenders";
 import type { Identity } from "../middlewares/apiAuthorization";
 
 // Everything here is "my own data": the access policy lives in apiAuthorization.ts
@@ -38,6 +39,12 @@ router.post("/me/bookmarks", async (req: Request, res: Response): Promise<void> 
     const [ev] = await db.select({ id: eventsTable.id }).from(eventsTable)
       .where(eq(eventsTable.id, body.data.itemId));
     if (!ev) { res.status(404).json({ error: "행사를 찾을 수 없습니다." }); return; }
+  }
+  if (body.data.itemType === "tender") {
+    // Hidden tenders can't be bookmarked either (members never see them).
+    const [t] = await db.select({ id: tendersTable.id }).from(tendersTable)
+      .where(and(eq(tendersTable.id, body.data.itemId), eq(tendersTable.status, "published")));
+    if (!t) { res.status(404).json({ error: "공고를 찾을 수 없습니다." }); return; }
   }
   res.json(toJson(await addBookmark(me(res).userId, body.data.itemType, body.data.itemId)));
 });
@@ -72,6 +79,10 @@ router.put("/me/alert-preferences", async (req: Request, res: Response): Promise
   const categories = [...new Set(body.data.categories.map((c) => c.trim()).filter(Boolean))];
   if (itemType === "event" && categories.some((c) => !(EVENT_CATEGORIES as readonly string[]).includes(c))) {
     res.status(400).json({ error: "유효하지 않은 분야입니다." });
+    return;
+  }
+  if (itemType === "tender" && categories.some((c) => !isValidTenderAlertValue(c))) {
+    res.status(400).json({ error: "유효하지 않은 유형 또는 분야입니다." });
     return;
   }
   const requested = body.data.email?.trim() || null;

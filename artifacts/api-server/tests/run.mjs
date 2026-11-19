@@ -84,6 +84,15 @@ try {
   });
   const eventsResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", eventsOutput], { stdio: "inherit" });
   if (eventsResult.status !== 0) process.exitCode = eventsResult.status ?? 1;
+  const tendersOutput = path.join(temp, "tenders.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/tenders.test.ts")],
+    outfile: tendersOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+    alias: { "@workspace/db": path.resolve(artifact, "../../lib/db/src/index.ts"), "@workspace/api-zod": path.resolve(artifact, "../../lib/api-zod/src/index.ts") },
+    plugins: [databaseDependency],
+  });
+  const tendersResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", tendersOutput], { stdio: "inherit" });
+  if (tendersResult.status !== 0) process.exitCode = tendersResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }
