@@ -109,3 +109,6 @@ pnpm run dev:local          # API :8080 + Vite :5173 with /api proxy
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+
+## MST 일회성 시드 (수동)
+`pnpm --filter @workspace/api-server db:seed:tax-codes [-- --apply]` — 저장소 CSV의 MST를 `companies.tax_code`에만 채운다(기본 dry-run, 자동 실행 금지). 자세한 규칙은 `docs/specs/004-mst-seed.md`.
