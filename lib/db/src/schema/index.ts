@@ -5,6 +5,7 @@ export * from "./matches";
 export * from "./solutions";
 export * from "./performance";
 export * from "./talent";
+export * from "./talentRefreshRuns";
 export * from "./offers";
 export * from "./applications";
 export * from "./resumes";

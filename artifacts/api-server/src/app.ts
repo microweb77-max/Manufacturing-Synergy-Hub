@@ -7,6 +7,7 @@ import { publishableKeyFromHost } from "@clerk/shared/keys";
 import { CLERK_PROXY_PATH, clerkProxyMiddleware, getClerkProxyHost } from "./middlewares/clerkProxyMiddleware";
 import { createApiAuthorization } from "./middlewares/apiAuthorization";
 import scheduledNewsRouter from "./jobs/newsSchedule";
+import scheduledTalentRouter from "./jobs/talentSchedule";
 import { apiSecurityHeaders, createApiCors, parseApiJson, apiNotFound, apiErrorHandler } from "./middlewares/requestGuards";
 
 const app: Express = express();
@@ -36,7 +37,7 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use("/api", apiSecurityHeaders);
 // Machine-to-machine endpoint: independent bearer authentication, never Clerk
 // cookies or browser-controlled admin flags. Keep all normal API writes protected.
-app.use("/api/scheduled", scheduledNewsRouter);
+app.use("/api/scheduled", scheduledNewsRouter, scheduledTalentRouter);
 // No reflected credentialed CORS: web requests use same-origin session cookies.
 app.use(createApiCors());
 app.use(clerkMiddleware((req) => ({

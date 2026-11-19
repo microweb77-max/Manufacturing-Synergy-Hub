@@ -78,6 +78,7 @@ import type {
   ProjectUpdate,
   Recommendation,
   RefreshScheduledNews200,
+  RefreshScheduledTalent200,
   ResumeSubmission,
   ResumeSubmissionInput,
   ResumeSubmissionUpdate,
@@ -5214,6 +5215,77 @@ export const useRefreshScheduledNews = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRefreshScheduledNewsMutationOptions(options));
+    }
+
+export const getRefreshScheduledTalentUrl = () => {
+
+
+
+
+  return `/api/scheduled/talent`
+}
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day (scheduledDay).
+ * @summary Authenticated daily scheduler callback for 구인 (hiring) posts (Asia/Ho_Chi_Minh)
+ */
+export const refreshScheduledTalent = async ( options?: RequestInit): Promise<RefreshScheduledTalent200> => {
+
+  return customFetch<RefreshScheduledTalent200>(getRefreshScheduledTalentUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshScheduledTalentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledTalent>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledTalent>>, TError,void, TContext> => {
+
+const mutationKey = ['refreshScheduledTalent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshScheduledTalent>>, void> = () => {
+
+
+          return  refreshScheduledTalent(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshScheduledTalentMutationResult = NonNullable<Awaited<ReturnType<typeof refreshScheduledTalent>>>
+
+    export type RefreshScheduledTalentMutationError = ErrorType<void>
+
+    /**
+ * @summary Authenticated daily scheduler callback for 구인 (hiring) posts (Asia/Ho_Chi_Minh)
+ */
+export const useRefreshScheduledTalent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledTalent>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshScheduledTalent>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshScheduledTalentMutationOptions(options));
     }
 
 export const getCollectNewsUrl = () => {
