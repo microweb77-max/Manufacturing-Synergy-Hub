@@ -2083,6 +2083,7 @@ export const GetMyAlertPreferencesResponse = zod.object({
   "categories": zod.array(zod.string()),
   "weeklyEmail": zod.boolean(),
   "email": zod.string().nullish(),
+  "availableEmails": zod.array(zod.string()).optional().describe('Verified email addresses of the member\'s account (selectable recipients).'),
   "lastSentAt": zod.string().nullish()
 })
 
@@ -2094,7 +2095,7 @@ export const PutMyAlertPreferencesBody = zod.object({
   "itemType": zod.enum(['event', 'tender']),
   "categories": zod.array(zod.string()),
   "weeklyEmail": zod.boolean(),
-  "email": zod.string().nullish().describe('Optional; defaults to the account\'s primary email.')
+  "email": zod.string().nullish().describe('Optional; must be one of the account\'s verified emails (else 400). Defaults to the primary verified email.')
 })
 
 export const PutMyAlertPreferencesResponse = zod.object({
@@ -2102,6 +2103,7 @@ export const PutMyAlertPreferencesResponse = zod.object({
   "categories": zod.array(zod.string()),
   "weeklyEmail": zod.boolean(),
   "email": zod.string().nullish(),
+  "availableEmails": zod.array(zod.string()).optional().describe('Verified email addresses of the member\'s account (selectable recipients).'),
   "lastSentAt": zod.string().nullish()
 })
 

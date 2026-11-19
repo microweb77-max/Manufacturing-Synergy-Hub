@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -81,7 +80,9 @@ function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChan
   const [draft, setDraft] = useState<{ categories: string[]; weeklyEmail: boolean; email: string } | null>(null);
   const categories = draft?.categories ?? data?.categories ?? [];
   const weeklyEmail = draft?.weeklyEmail ?? data?.weeklyEmail ?? false;
-  const email = draft?.email ?? data?.email ?? "";
+  const availableEmails = data?.availableEmails ?? [];
+  const savedEmail = data?.email && availableEmails.includes(data.email) ? data.email : "";
+  const email = draft?.email ?? savedEmail ?? "";
   const edit = (patch: Partial<{ categories: string[]; weeklyEmail: boolean; email: string }>) =>
     setDraft({ categories, weeklyEmail, email, ...patch });
 
@@ -95,7 +96,7 @@ function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           setDraft(null);
           onOpenChange(false);
         },
-        onError: () => toast({ title: "오류", description: "저장하지 못했습니다. 이메일 형식을 확인해 주세요.", variant: "destructive" }),
+        onError: () => toast({ title: "오류", description: "저장하지 못했습니다. 인증된 이메일인지 확인해 주세요.", variant: "destructive" }),
       },
     );
   };
@@ -125,13 +126,25 @@ function AlertSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChan
           </div>
           {weeklyEmail && (
             <div className="space-y-1">
-              <Label htmlFor="alert-email">받을 이메일 <span className="text-muted-foreground font-normal">(비우면 계정 이메일)</span></Label>
-              <Input id="alert-email" type="email" value={email} onChange={(e) => edit({ email: e.target.value })} placeholder="name@company.com" />
+              <Label htmlFor="alert-email">받을 이메일 <span className="text-muted-foreground font-normal">(계정에 인증된 이메일만 선택 가능)</span></Label>
+              {availableEmails.length > 0 ? (
+                <select
+                  id="alert-email"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                  value={email}
+                  onChange={(e) => edit({ email: e.target.value })}
+                >
+                  <option value="">기본 이메일 ({availableEmails[0]})</option>
+                  {availableEmails.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
+              ) : (
+                <p className="text-sm text-muted-foreground">인증된 이메일이 없어 알림을 켤 수 없습니다.</p>
+              )}
             </div>
           )}
         </div>
         <div className="flex justify-end">
-          <Button onClick={submit} disabled={save.isPending || (weeklyEmail && categories.length === 0)}>저장</Button>
+          <Button onClick={submit} disabled={save.isPending || (weeklyEmail && (categories.length === 0 || availableEmails.length === 0))}>저장</Button>
         </div>
       </DialogContent>
     </Dialog>

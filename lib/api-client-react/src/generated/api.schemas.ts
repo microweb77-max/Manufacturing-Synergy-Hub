@@ -739,6 +739,8 @@ export interface AlertPreference {
   weeklyEmail: boolean;
   /** @nullable */
   email?: string | null;
+  /** Verified email addresses of the member's account (selectable recipients). */
+  availableEmails?: string[];
   /** @nullable */
   lastSentAt?: string | null;
 }
@@ -748,7 +750,7 @@ export interface AlertPreferenceInput {
   categories: string[];
   weeklyEmail: boolean;
   /**
-     * Optional; defaults to the account's primary email.
+     * Optional; must be one of the account's verified emails (else 400). Defaults to the primary verified email.
      * @nullable
      */
   email?: string | null;

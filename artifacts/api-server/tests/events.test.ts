@@ -9,7 +9,7 @@ import {
 } from "../src/lib/events";
 import {
   addBookmark, listBookmarks, removeBookmark, saveAlertPreference, getAlertPreference,
-  sendWeeklyEventAlerts, unsubscribeByToken,
+  sendWeeklyEventAlerts, unsubscribeByToken, resolveAlertEmail, verifiedEmails,
 } from "../src/lib/userItems";
 import alertsRouter from "../src/routes/alerts";
 import { createScheduledEventsCollectHandler, createWeeklyAlertsHandler } from "../src/jobs/eventsSchedule";
@@ -166,4 +166,27 @@ test("scheduled endpoints require the scheduler token and fail closed when uncon
     assert.deepEqual(await ok.json(), { inserted: 1, skipped: 2 });
     assert.equal((await fetch(base + "/alerts", { method: "POST", headers: { Authorization: `Bearer ${secret}` } })).status, 200);
   } finally { await new Promise<void>((res, rej) => server.close(e => e ? rej(e) : res())); }
+});
+
+test("alert recipient must be one of the member's verified emails", () => {
+  const user = {
+    primaryEmailAddressId: "e2",
+    emailAddresses: [
+      { id: "e1", emailAddress: "work@example.com", verification: { status: "verified" } },
+      { id: "e2", emailAddress: "Main@example.com", verification: { status: "verified" } },
+      { id: "e3", emailAddress: "pending@example.com", verification: { status: "unverified" } },
+      { id: "e4", emailAddress: "none@example.com", verification: null },
+    ],
+  };
+  assert.deepEqual(verifiedEmails(user), ["Main@example.com", "work@example.com"]);
+  // default → primary verified
+  assert.deepEqual(resolveAlertEmail(user, null), { email: "Main@example.com" });
+  // verified address allowed (case-insensitive, returns the stored spelling)
+  assert.deepEqual(resolveAlertEmail(user, "WORK@example.com"), { email: "work@example.com" });
+  // unverified, no-status and third-party addresses rejected
+  assert.equal(resolveAlertEmail(user, "pending@example.com"), "invalid");
+  assert.equal(resolveAlertEmail(user, "none@example.com"), "invalid");
+  assert.equal(resolveAlertEmail(user, "victim@other.com"), "invalid");
+  // no verified email at all → no default
+  assert.deepEqual(resolveAlertEmail({ primaryEmailAddressId: null, emailAddresses: [] }, null), { email: null });
 });

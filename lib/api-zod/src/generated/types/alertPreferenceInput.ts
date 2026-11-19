@@ -12,7 +12,7 @@ export interface AlertPreferenceInput {
   categories: string[];
   weeklyEmail: boolean;
   /**
-     * Optional; defaults to the account's primary email.
+     * Optional; must be one of the account's verified emails (else 400). Defaults to the primary verified email.
      * @nullable
      */
   email?: string | null;

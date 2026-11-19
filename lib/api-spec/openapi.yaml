@@ -2829,6 +2829,11 @@ components:
           type: boolean
         email:
           type: ["string", "null"]
+        availableEmails:
+          type: array
+          description: Verified email addresses of the member's account (selectable recipients).
+          items:
+            type: string
         lastSentAt:
           type: ["string", "null"]
     AlertPreferenceInput:
@@ -2845,7 +2850,7 @@ components:
           type: boolean
         email:
           type: ["string", "null"]
-          description: Optional; defaults to the account's primary email.
+          description: Optional; must be one of the account's verified emails (else 400). Defaults to the primary verified email.
     Banner:
       type: object
       required:

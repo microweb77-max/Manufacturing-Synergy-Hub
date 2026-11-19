@@ -12,7 +12,7 @@ import {
 import { toJson } from "../lib/serialize";
 import {
   listBookmarks, addBookmark, removeBookmark,
-  getAlertPreference, saveAlertPreference, isValidEmail,
+  getAlertPreference, saveAlertPreference, isValidEmail, verifiedEmails, resolveAlertEmail,
 } from "../lib/userItems";
 import { EVENT_CATEGORIES } from "../lib/events";
 import type { Identity } from "../middlewares/apiAuthorization";
@@ -53,21 +53,17 @@ router.get("/me/alert-preferences", async (req: Request, res: Response): Promise
   const q = GetMyAlertPreferencesQueryParams.safeParse(req.query);
   if (!q.success) { res.status(400).json({ error: q.error.message }); return; }
   const pref = await getAlertPreference(me(res).userId, q.data.itemType);
+  const availableEmails = await clerkClient.users.getUser(me(res).userId)
+    .then(verifiedEmails).catch(() => [] as string[]);
   res.json(toJson({
     itemType: q.data.itemType,
     categories: pref?.categories ?? [],
     weeklyEmail: pref?.weeklyEmail ?? false,
     email: pref?.email ?? null,
+    availableEmails,
     lastSentAt: pref?.lastSentAt ?? null,
   }));
 });
-
-async function primaryEmail(userId: string): Promise<string | null> {
-  const user = await clerkClient.users.getUser(userId);
-  const primary = user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)
-    ?? user.emailAddresses[0];
-  return primary?.emailAddress ?? null;
-}
 
 router.put("/me/alert-preferences", async (req: Request, res: Response): Promise<void> => {
   const body = PutMyAlertPreferencesBody.safeParse(req.body);
@@ -78,11 +74,27 @@ router.put("/me/alert-preferences", async (req: Request, res: Response): Promise
     res.status(400).json({ error: "유효하지 않은 분야입니다." });
     return;
   }
-  let email = body.data.email?.trim() || null;
-  if (email && !isValidEmail(email)) { res.status(400).json({ error: "이메일 형식이 올바르지 않습니다." }); return; }
-  if (weeklyEmail && !email) {
-    email = await primaryEmail(me(res).userId).catch(() => null);
-    if (!email) { res.status(400).json({ error: "알림을 받을 이메일을 입력해 주세요." }); return; }
+  const requested = body.data.email?.trim() || null;
+  if (requested && !isValidEmail(requested)) { res.status(400).json({ error: "이메일 형식이 올바르지 않습니다." }); return; }
+  let email: string | null = null;
+  if (weeklyEmail || requested) {
+    let user;
+    try {
+      user = await clerkClient.users.getUser(me(res).userId);
+    } catch {
+      res.status(502).json({ error: "계정 이메일을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요." });
+      return;
+    }
+    const resolved = resolveAlertEmail(user, requested);
+    if (resolved === "invalid") {
+      res.status(400).json({ error: "계정에 등록·인증된 이메일만 사용할 수 있습니다." });
+      return;
+    }
+    email = resolved.email;
+    if (weeklyEmail && !email) {
+      res.status(400).json({ error: "인증된 이메일이 없어 알림을 켤 수 없습니다." });
+      return;
+    }
   }
   const row = await saveAlertPreference(me(res).userId, itemType, { categories, weeklyEmail, email });
   res.json(toJson({

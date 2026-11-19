@@ -10,6 +10,34 @@ export type ItemType = "event" | "tender";
 const EMAIL_RE = /^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/;
 export const isValidEmail = (v: string) => EMAIL_RE.test(v);
 
+// ---------- Alert recipient: only the member's own verified Clerk emails ----------
+
+export interface ClerkUserEmails {
+  primaryEmailAddressId: string | null;
+  emailAddresses: { id: string; emailAddress: string; verification?: { status?: string | null } | null }[];
+}
+
+/** Verified addresses of the account, primary first. */
+export function verifiedEmails(user: ClerkUserEmails): string[] {
+  const ok = user.emailAddresses.filter((e) => e.verification?.status === "verified");
+  ok.sort((a, b) => Number(b.id === user.primaryEmailAddressId) - Number(a.id === user.primaryEmailAddressId));
+  return ok.map((e) => e.emailAddress);
+}
+
+/**
+ * Picks the recipient. No request → primary verified email (null if none).
+ * A requested address must match one of the account's verified emails, else "invalid".
+ */
+export function resolveAlertEmail(
+  user: ClerkUserEmails,
+  requested: string | null,
+): { email: string | null } | "invalid" {
+  const list = verifiedEmails(user);
+  if (!requested) return { email: list[0] ?? null };
+  const match = list.find((e) => e.toLowerCase() === requested.toLowerCase());
+  return match ? { email: match } : "invalid";
+}
+
 // ---------- Bookmarks: every query is scoped to the caller's own clerkUserId ----------
 
 export async function listBookmarks(userId: string, itemType?: ItemType) {

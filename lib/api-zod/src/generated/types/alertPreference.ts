@@ -13,6 +13,8 @@ export interface AlertPreference {
   weeklyEmail: boolean;
   /** @nullable */
   email?: string | null;
+  /** Verified email addresses of the member's account (selectable recipients). */
+  availableEmails?: string[];
   /** @nullable */
   lastSentAt?: string | null;
 }
