@@ -10,15 +10,13 @@ export function membershipLink(req: Request, token: string) {
   const protocol = origin ? new URL(origin).protocol : host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http:" : "https:";
   return `${protocol}//${host}/company-link#token=${token}`;
 }
-export async function sendMembershipMail(to: string, companyName: string, link: string, invitation = false) {
+async function sendGmail(to: string, subject: string, text: string) {
   if (!/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(to)) throw new Error("Invalid recipient");
   const connectors = new ReplitConnectors();
   const profile = await connectors.proxy("google-mail", "/gmail/v1/users/me/profile", { method: "GET" });
   if (!profile.ok) throw new Error("Gmail sender unavailable");
   const { emailAddress } = await profile.json() as { emailAddress: string };
   if (!/^[^\s@<>\r\n]+@[^\s@<>\r\n]+$/.test(emailAddress)) throw new Error("Invalid sender");
-  const subject = invitation ? "회사 담당자 초대" : "회사 프로필 인증";
-  const text = `${companyName}\n\n${invitation ? "초대받은 이메일이 인증된 계정으로 로그인하여 초대를 수락하세요. 유효기간: 48시간." : "요청한 계정으로 로그인하여 회사 인증을 완료하세요. 유효기간: 30분."}\n\n${link}\n\n요청하지 않은 경우 링크를 열지 마세요. 이 링크는 한 번만 사용할 수 있습니다.`;
   const raw = Buffer.from([
     `From: ${emailAddress}`, `To: ${to}`,
     `Subject: =?UTF-8?B?${Buffer.from(subject).toString("base64")}?=`,
@@ -30,4 +28,15 @@ export async function sendMembershipMail(to: string, companyName: string, link: 
   });
   // Never automatically retry a send: a lost response may have delivered it.
   if (!response.ok) throw new Error("Gmail send failed");
+}
+
+export async function sendMembershipMail(to: string, companyName: string, link: string, invitation = false) {
+  const subject = invitation ? "회사 담당자 초대" : "회사 프로필 인증";
+  const text = `${companyName}\n\n${invitation ? "초대받은 이메일이 인증된 계정으로 로그인하여 초대를 수락하세요. 유효기간: 48시간." : "요청한 계정으로 로그인하여 회사 인증을 완료하세요. 유효기간: 30분."}\n\n${link}\n\n요청하지 않은 경우 링크를 열지 마세요. 이 링크는 한 번만 사용할 수 있습니다.`;
+  await sendGmail(to, subject, text);
+}
+
+/** Plain-text digest mail (weekly alerts). Shared by 행사 and later 사업공고. */
+export async function sendDigestMail(to: string, subject: string, text: string) {
+  await sendGmail(to, subject, text);
 }

@@ -75,6 +75,15 @@ try {
   });
   const newsDateResult = spawnSync(process.execPath, ["--test", newsDateOutput], { stdio: "inherit" });
   if (newsDateResult.status !== 0) process.exitCode = newsDateResult.status ?? 1;
+  const eventsOutput = path.join(temp, "events.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/events.test.ts")],
+    outfile: eventsOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+    alias: { "@workspace/db": path.resolve(artifact, "../../lib/db/src/index.ts"), "@workspace/api-zod": path.resolve(artifact, "../../lib/api-zod/src/index.ts") },
+    plugins: [databaseDependency],
+  });
+  const eventsResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", eventsOutput], { stdio: "inherit" });
+  if (eventsResult.status !== 0) process.exitCode = eventsResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }

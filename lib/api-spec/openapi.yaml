@@ -24,6 +24,10 @@ tags:
     description: Talent pool job postings and seekers
   - name: clientCompanies
     description: Korean FDI manufacturing client directory (KOTRA)
+  - name: events
+    description: Vietnam manufacturing/automation/AI events
+  - name: me
+    description: Signed-in member bookmarks and alert preferences
   - name: news
     description: Vietnam manufacturing news (crawled and translated to Korean)
   - name: banners
@@ -1385,6 +1389,351 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List published events (public). Upcoming only unless includePast=true.
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: city
+          schema:
+            type: string
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [month, three-months, all]
+        - in: query
+          name: includePast
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Events ordered by start date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventItem"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create an event (platform admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventItem"
+  /events/collect:
+    post:
+      operationId: collectEvents
+      tags: [events]
+      summary: Collect upcoming Vietnam manufacturing/automation/AI events via grounded web search (platform admin)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollectEventsRequest"
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollectEventsResult"
+        "429":
+          description: Collection already running or cooling down
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Collection failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get one published event (public)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update an event (platform admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventItem"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete an event (platform admin)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/events:
+    get:
+      operationId: listAdminEvents
+      tags: [events]
+      summary: List ALL events including hidden and past (platform admin)
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventItem"
+  /me/bookmarks:
+    get:
+      operationId: listMyBookmarks
+      tags: [me]
+      summary: List my bookmarks (own only)
+      parameters:
+        - in: query
+          name: itemType
+          schema:
+            $ref: "#/components/schemas/BookmarkItemType"
+      responses:
+        "200":
+          description: Bookmarks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bookmark"
+    post:
+      operationId: addMyBookmark
+      tags: [me]
+      summary: Bookmark an item (idempotent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookmarkInput"
+      responses:
+        "200":
+          description: Bookmark
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bookmark"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: removeMyBookmark
+      tags: [me]
+      summary: Remove one of my bookmarks (idempotent)
+      parameters:
+        - in: query
+          name: itemType
+          required: true
+          schema:
+            $ref: "#/components/schemas/BookmarkItemType"
+        - in: query
+          name: itemId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+  /me/alert-preferences:
+    get:
+      operationId: getMyAlertPreferences
+      tags: [me]
+      summary: Get my alert preferences for an item type
+      parameters:
+        - in: query
+          name: itemType
+          required: true
+          schema:
+            $ref: "#/components/schemas/BookmarkItemType"
+      responses:
+        "200":
+          description: Preferences (defaults when never saved)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertPreference"
+    put:
+      operationId: putMyAlertPreferences
+      tags: [me]
+      summary: Save my alert preferences for an item type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertPreferenceInput"
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertPreference"
+  /alerts/unsubscribe:
+    get:
+      operationId: unsubscribeAlerts
+      tags: [me]
+      summary: One-click unsubscribe from weekly alert mails (token link, returns HTML)
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unsubscribed (HTML page)
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Invalid token
+  /scheduled/events-collect:
+    post:
+      operationId: refreshScheduledEvents
+      tags: [events]
+      summary: Weekly scheduler callback that collects events (scheduler token)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Collected
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [inserted, skipped]
+                properties:
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+        "401":
+          description: Invalid scheduler credential
+        "429":
+          description: Collection already running or cooling down
+        "502":
+          description: Collection failed
+        "503":
+          description: Scheduler credential not configured
+  /scheduled/weekly-alerts:
+    post:
+      operationId: sendScheduledWeeklyAlerts
+      tags: [events]
+      summary: Weekly scheduler callback that sends alert digest mails (scheduler token)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN. Failed sends are never retried.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Processed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sent, failed, skipped]
+                properties:
+                  sent:
+                    type: integer
+                  failed:
+                    type: integer
+                  skipped:
+                    type: integer
+        "401":
+          description: Invalid scheduler credential
+        "503":
+          description: Scheduler credential not configured
+
   /banners:
     get:
       operationId: listBanners
@@ -2326,6 +2675,182 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NewsArticle"
+    EventItem:
+      type: object
+      required: [id, title, summary, category, city, startDate, isOnline, source, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        category:
+          type: string
+          description: 제조 / 자동화 / AI / 전자·반도체 / 물류 / 기타
+        city:
+          type: string
+          description: 하노이 / 호치민 / 다낭 / 기타·온라인
+        venue:
+          type: ["string", "null"]
+        organizer:
+          type: ["string", "null"]
+        startDate:
+          type: string
+          description: YYYY-MM-DD
+        endDate:
+          type: ["string", "null"]
+          description: YYYY-MM-DD
+        isOnline:
+          type: boolean
+        sourceUrl:
+          type: ["string", "null"]
+        source:
+          type: string
+          enum: [auto, manual]
+        status:
+          type: string
+          enum: [published, hidden]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    EventInput:
+      type: object
+      required: [title, startDate]
+      properties:
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        category:
+          type: string
+        city:
+          type: string
+        venue:
+          type: ["string", "null"]
+        organizer:
+          type: ["string", "null"]
+        startDate:
+          type: string
+        endDate:
+          type: ["string", "null"]
+        isOnline:
+          type: boolean
+        sourceUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [published, hidden]
+    EventUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        originalTitle:
+          type: ["string", "null"]
+        summary:
+          type: string
+        category:
+          type: string
+        city:
+          type: string
+        venue:
+          type: ["string", "null"]
+        organizer:
+          type: ["string", "null"]
+        startDate:
+          type: string
+        endDate:
+          type: ["string", "null"]
+        isOnline:
+          type: boolean
+        sourceUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [published, hidden]
+    CollectEventsRequest:
+      type: object
+      properties:
+        topic:
+          type: string
+          description: Optional topic focus (e.g. 반도체, AI, 스마트팩토리)
+    CollectEventsResult:
+      type: object
+      required: [inserted, skipped, events]
+      properties:
+        inserted:
+          type: integer
+        skipped:
+          type: integer
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventItem"
+    BookmarkItemType:
+      type: string
+      enum: [event, tender]
+    Bookmark:
+      type: object
+      required: [id, itemType, itemId, createdAt]
+      properties:
+        id:
+          type: integer
+        itemType:
+          $ref: "#/components/schemas/BookmarkItemType"
+        itemId:
+          type: integer
+        createdAt:
+          type: string
+    BookmarkInput:
+      type: object
+      required: [itemType, itemId]
+      properties:
+        itemType:
+          $ref: "#/components/schemas/BookmarkItemType"
+        itemId:
+          type: integer
+    AlertPreference:
+      type: object
+      required: [itemType, categories, weeklyEmail]
+      properties:
+        itemType:
+          $ref: "#/components/schemas/BookmarkItemType"
+        categories:
+          type: array
+          items:
+            type: string
+        weeklyEmail:
+          type: boolean
+        email:
+          type: ["string", "null"]
+        availableEmails:
+          type: array
+          description: Verified email addresses of the member's account (selectable recipients).
+          items:
+            type: string
+        lastSentAt:
+          type: ["string", "null"]
+    AlertPreferenceInput:
+      type: object
+      required: [itemType, categories, weeklyEmail]
+      properties:
+        itemType:
+          $ref: "#/components/schemas/BookmarkItemType"
+        categories:
+          type: array
+          items:
+            type: string
+        weeklyEmail:
+          type: boolean
+        email:
+          type: ["string", "null"]
+          description: Optional; must be one of the account's verified emails (else 400). Defaults to the primary verified email.
     Banner:
       type: object
       required:

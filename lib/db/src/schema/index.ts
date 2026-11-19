@@ -14,3 +14,6 @@ export * from "./newsRefreshRuns";
 export * from "./newsRefreshSlots";
 export * from "./banners";
 export * from "./contactRequests";
+export * from "./events";
+export * from "./userBookmarks";
+export * from "./userAlertPreferences";

@@ -21,12 +21,18 @@ import type {
 
 import type {
   ActivityItem,
+  AlertPreference,
+  AlertPreferenceInput,
   AnalyzeMaterialInput,
   AnalyzeMaterialResult,
   Banner,
   BannerInput,
   BannerUpdate,
+  Bookmark,
+  BookmarkInput,
   ClientCompany,
+  CollectEventsRequest,
+  CollectEventsResult,
   CollectJobsRequest,
   CollectJobsResult,
   CollectNewsRequest,
@@ -44,10 +50,16 @@ import type {
   CompanyVerification,
   DashboardSummary,
   Error,
+  EventInput,
+  EventItem,
+  EventUpdate,
   GetCurrentSession200,
+  GetMyAlertPreferencesParams,
   HealthStatus,
   ListCompaniesParams,
+  ListEventsParams,
   ListMatchesParams,
+  ListMyBookmarksParams,
   ListPerformanceLogsParams,
   ListProjectApplicationsParams,
   ListProjectsParams,
@@ -77,10 +89,13 @@ import type {
   ProjectInput,
   ProjectUpdate,
   Recommendation,
+  RefreshScheduledEvents200,
   RefreshScheduledNews200,
+  RemoveMyBookmarkParams,
   ResumeSubmission,
   ResumeSubmissionInput,
   ResumeSubmissionUpdate,
+  SendScheduledWeeklyAlerts200,
   Solution,
   SolutionInput,
   SolutionUpdate,
@@ -92,7 +107,8 @@ import type {
   TalentContactRequestUpdate,
   TalentPost,
   TalentPostInput,
-  TalentPostUpdate
+  TalentPostUpdate,
+  UnsubscribeAlertsParams
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -5284,6 +5300,1136 @@ export const useCollectNews = <TError = ErrorType<Error>,
         TContext
       > => {
       return useMutation(getCollectNewsMutationOptions(options));
+    }
+
+export const getListEventsUrl = (params?: ListEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/events?${stringifiedParams}` : `/api/events`
+}
+
+/**
+ * @summary List published events (public). Upcoming only unless includePast=true.
+ */
+export const listEvents = async (params?: ListEventsParams, options?: RequestInit): Promise<EventItem[]> => {
+
+  return customFetch<EventItem[]>(getListEventsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEventsQueryKey = (params?: ListEventsParams,) => {
+    return [
+    `/api/events`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListEventsQueryOptions = <TData = Awaited<ReturnType<typeof listEvents>>, TError = ErrorType<unknown>>(params?: ListEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEventsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEvents>>> = ({ signal }) => listEvents(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listEvents>>>
+export type ListEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List published events (public). Upcoming only unless includePast=true.
+ */
+
+export function useListEvents<TData = Awaited<ReturnType<typeof listEvents>>, TError = ErrorType<unknown>>(
+ params?: ListEventsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateEventUrl = () => {
+
+
+
+
+  return `/api/events`
+}
+
+/**
+ * @summary Create an event (platform admin)
+ */
+export const createEvent = async (eventInput: EventInput, options?: RequestInit): Promise<EventItem> => {
+
+  return customFetch<EventItem>(getCreateEventUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(eventInput)
+  }
+);}
+
+
+
+
+export const getCreateEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEvent>>, TError,{data: BodyType<EventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEvent>>, TError,{data: BodyType<EventInput>}, TContext> => {
+
+const mutationKey = ['createEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEvent>>, {data: BodyType<EventInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEvent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEventMutationResult = NonNullable<Awaited<ReturnType<typeof createEvent>>>
+    export type CreateEventMutationBody = BodyType<EventInput>
+    export type CreateEventMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create an event (platform admin)
+ */
+export const useCreateEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEvent>>, TError,{data: BodyType<EventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createEvent>>,
+        TError,
+        {data: BodyType<EventInput>},
+        TContext
+      > => {
+      return useMutation(getCreateEventMutationOptions(options));
+    }
+
+export const getCollectEventsUrl = () => {
+
+
+
+
+  return `/api/events/collect`
+}
+
+/**
+ * @summary Collect upcoming Vietnam manufacturing/automation/AI events via grounded web search (platform admin)
+ */
+export const collectEvents = async (collectEventsRequest?: CollectEventsRequest, options?: RequestInit): Promise<CollectEventsResult> => {
+
+  return customFetch<CollectEventsResult>(getCollectEventsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(collectEventsRequest)
+  }
+);}
+
+
+
+
+export const getCollectEventsMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectEvents>>, TError,{data?: BodyType<CollectEventsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof collectEvents>>, TError,{data?: BodyType<CollectEventsRequest>}, TContext> => {
+
+const mutationKey = ['collectEvents'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof collectEvents>>, {data?: BodyType<CollectEventsRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  collectEvents(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CollectEventsMutationResult = NonNullable<Awaited<ReturnType<typeof collectEvents>>>
+    export type CollectEventsMutationBody = BodyType<CollectEventsRequest> | undefined
+    export type CollectEventsMutationError = ErrorType<Error>
+
+    /**
+ * @summary Collect upcoming Vietnam manufacturing/automation/AI events via grounded web search (platform admin)
+ */
+export const useCollectEvents = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof collectEvents>>, TError,{data?: BodyType<CollectEventsRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof collectEvents>>,
+        TError,
+        {data?: BodyType<CollectEventsRequest>},
+        TContext
+      > => {
+      return useMutation(getCollectEventsMutationOptions(options));
+    }
+
+export const getGetEventUrl = (id: number,) => {
+
+
+
+
+  return `/api/events/${id}`
+}
+
+/**
+ * @summary Get one published event (public)
+ */
+export const getEvent = async (id: number, options?: RequestInit): Promise<EventItem> => {
+
+  return customFetch<EventItem>(getGetEventUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEventQueryKey = (id: number,) => {
+    return [
+    `/api/events/${id}`
+    ] as const;
+    }
+
+
+export const getGetEventQueryOptions = <TData = Awaited<ReturnType<typeof getEvent>>, TError = ErrorType<Error>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEventQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvent>>> = ({ signal }) => getEvent(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEventQueryResult = NonNullable<Awaited<ReturnType<typeof getEvent>>>
+export type GetEventQueryError = ErrorType<Error>
+
+
+/**
+ * @summary Get one published event (public)
+ */
+
+export function useGetEvent<TData = Awaited<ReturnType<typeof getEvent>>, TError = ErrorType<Error>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvent>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEventQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateEventUrl = (id: number,) => {
+
+
+
+
+  return `/api/events/${id}`
+}
+
+/**
+ * @summary Update an event (platform admin)
+ */
+export const updateEvent = async (id: number,
+    eventUpdate: EventUpdate, options?: RequestInit): Promise<EventItem> => {
+
+  return customFetch<EventItem>(getUpdateEventUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(eventUpdate)
+  }
+);}
+
+
+
+
+export const getUpdateEventMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,{id: number;data: BodyType<EventUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,{id: number;data: BodyType<EventUpdate>}, TContext> => {
+
+const mutationKey = ['updateEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEvent>>, {id: number;data: BodyType<EventUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEvent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEventMutationResult = NonNullable<Awaited<ReturnType<typeof updateEvent>>>
+    export type UpdateEventMutationBody = BodyType<EventUpdate>
+    export type UpdateEventMutationError = ErrorType<Error>
+
+    /**
+ * @summary Update an event (platform admin)
+ */
+export const useUpdateEvent = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvent>>, TError,{id: number;data: BodyType<EventUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEvent>>,
+        TError,
+        {id: number;data: BodyType<EventUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateEventMutationOptions(options));
+    }
+
+export const getDeleteEventUrl = (id: number,) => {
+
+
+
+
+  return `/api/events/${id}`
+}
+
+/**
+ * @summary Delete an event (platform admin)
+ */
+export const deleteEvent = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEventUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEventMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEvent>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEvent>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEvent>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEvent(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEventMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEvent>>>
+
+    export type DeleteEventMutationError = ErrorType<Error>
+
+    /**
+ * @summary Delete an event (platform admin)
+ */
+export const useDeleteEvent = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEvent>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEvent>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteEventMutationOptions(options));
+    }
+
+export const getListAdminEventsUrl = () => {
+
+
+
+
+  return `/api/admin/events`
+}
+
+/**
+ * @summary List ALL events including hidden and past (platform admin)
+ */
+export const listAdminEvents = async ( options?: RequestInit): Promise<EventItem[]> => {
+
+  return customFetch<EventItem[]>(getListAdminEventsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminEventsQueryKey = () => {
+    return [
+    `/api/admin/events`
+    ] as const;
+    }
+
+
+export const getListAdminEventsQueryOptions = <TData = Awaited<ReturnType<typeof listAdminEvents>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminEventsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminEvents>>> = ({ signal }) => listAdminEvents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminEvents>>>
+export type ListAdminEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List ALL events including hidden and past (platform admin)
+ */
+
+export function useListAdminEvents<TData = Awaited<ReturnType<typeof listAdminEvents>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListMyBookmarksUrl = (params?: ListMyBookmarksParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/me/bookmarks?${stringifiedParams}` : `/api/me/bookmarks`
+}
+
+/**
+ * @summary List my bookmarks (own only)
+ */
+export const listMyBookmarks = async (params?: ListMyBookmarksParams, options?: RequestInit): Promise<Bookmark[]> => {
+
+  return customFetch<Bookmark[]>(getListMyBookmarksUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMyBookmarksQueryKey = (params?: ListMyBookmarksParams,) => {
+    return [
+    `/api/me/bookmarks`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMyBookmarksQueryOptions = <TData = Awaited<ReturnType<typeof listMyBookmarks>>, TError = ErrorType<unknown>>(params?: ListMyBookmarksParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyBookmarks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyBookmarksQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyBookmarks>>> = ({ signal }) => listMyBookmarks(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyBookmarks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listMyBookmarks>>>
+export type ListMyBookmarksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List my bookmarks (own only)
+ */
+
+export function useListMyBookmarks<TData = Awaited<ReturnType<typeof listMyBookmarks>>, TError = ErrorType<unknown>>(
+ params?: ListMyBookmarksParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyBookmarks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyBookmarksQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAddMyBookmarkUrl = () => {
+
+
+
+
+  return `/api/me/bookmarks`
+}
+
+/**
+ * @summary Bookmark an item (idempotent)
+ */
+export const addMyBookmark = async (bookmarkInput: BookmarkInput, options?: RequestInit): Promise<Bookmark> => {
+
+  return customFetch<Bookmark>(getAddMyBookmarkUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(bookmarkInput)
+  }
+);}
+
+
+
+
+export const getAddMyBookmarkMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMyBookmark>>, TError,{data: BodyType<BookmarkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMyBookmark>>, TError,{data: BodyType<BookmarkInput>}, TContext> => {
+
+const mutationKey = ['addMyBookmark'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMyBookmark>>, {data: BodyType<BookmarkInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  addMyBookmark(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMyBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof addMyBookmark>>>
+    export type AddMyBookmarkMutationBody = BodyType<BookmarkInput>
+    export type AddMyBookmarkMutationError = ErrorType<Error>
+
+    /**
+ * @summary Bookmark an item (idempotent)
+ */
+export const useAddMyBookmark = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMyBookmark>>, TError,{data: BodyType<BookmarkInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMyBookmark>>,
+        TError,
+        {data: BodyType<BookmarkInput>},
+        TContext
+      > => {
+      return useMutation(getAddMyBookmarkMutationOptions(options));
+    }
+
+export const getRemoveMyBookmarkUrl = (params: RemoveMyBookmarkParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/me/bookmarks?${stringifiedParams}` : `/api/me/bookmarks`
+}
+
+/**
+ * @summary Remove one of my bookmarks (idempotent)
+ */
+export const removeMyBookmark = async (params: RemoveMyBookmarkParams, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveMyBookmarkUrl(params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveMyBookmarkMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMyBookmark>>, TError,{params: RemoveMyBookmarkParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeMyBookmark>>, TError,{params: RemoveMyBookmarkParams}, TContext> => {
+
+const mutationKey = ['removeMyBookmark'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeMyBookmark>>, {params: RemoveMyBookmarkParams}> = (props) => {
+          const {params} = props ?? {};
+
+          return  removeMyBookmark(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveMyBookmarkMutationResult = NonNullable<Awaited<ReturnType<typeof removeMyBookmark>>>
+
+    export type RemoveMyBookmarkMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove one of my bookmarks (idempotent)
+ */
+export const useRemoveMyBookmark = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMyBookmark>>, TError,{params: RemoveMyBookmarkParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeMyBookmark>>,
+        TError,
+        {params: RemoveMyBookmarkParams},
+        TContext
+      > => {
+      return useMutation(getRemoveMyBookmarkMutationOptions(options));
+    }
+
+export const getGetMyAlertPreferencesUrl = (params: GetMyAlertPreferencesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/me/alert-preferences?${stringifiedParams}` : `/api/me/alert-preferences`
+}
+
+/**
+ * @summary Get my alert preferences for an item type
+ */
+export const getMyAlertPreferences = async (params: GetMyAlertPreferencesParams, options?: RequestInit): Promise<AlertPreference> => {
+
+  return customFetch<AlertPreference>(getGetMyAlertPreferencesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMyAlertPreferencesQueryKey = (params?: GetMyAlertPreferencesParams,) => {
+    return [
+    `/api/me/alert-preferences`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMyAlertPreferencesQueryOptions = <TData = Awaited<ReturnType<typeof getMyAlertPreferences>>, TError = ErrorType<unknown>>(params: GetMyAlertPreferencesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAlertPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMyAlertPreferencesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyAlertPreferences>>> = ({ signal }) => getMyAlertPreferences(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMyAlertPreferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMyAlertPreferencesQueryResult = NonNullable<Awaited<ReturnType<typeof getMyAlertPreferences>>>
+export type GetMyAlertPreferencesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get my alert preferences for an item type
+ */
+
+export function useGetMyAlertPreferences<TData = Awaited<ReturnType<typeof getMyAlertPreferences>>, TError = ErrorType<unknown>>(
+ params: GetMyAlertPreferencesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMyAlertPreferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMyAlertPreferencesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPutMyAlertPreferencesUrl = () => {
+
+
+
+
+  return `/api/me/alert-preferences`
+}
+
+/**
+ * @summary Save my alert preferences for an item type
+ */
+export const putMyAlertPreferences = async (alertPreferenceInput: AlertPreferenceInput, options?: RequestInit): Promise<AlertPreference> => {
+
+  return customFetch<AlertPreference>(getPutMyAlertPreferencesUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(alertPreferenceInput)
+  }
+);}
+
+
+
+
+export const getPutMyAlertPreferencesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putMyAlertPreferences>>, TError,{data: BodyType<AlertPreferenceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof putMyAlertPreferences>>, TError,{data: BodyType<AlertPreferenceInput>}, TContext> => {
+
+const mutationKey = ['putMyAlertPreferences'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putMyAlertPreferences>>, {data: BodyType<AlertPreferenceInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  putMyAlertPreferences(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutMyAlertPreferencesMutationResult = NonNullable<Awaited<ReturnType<typeof putMyAlertPreferences>>>
+    export type PutMyAlertPreferencesMutationBody = BodyType<AlertPreferenceInput>
+    export type PutMyAlertPreferencesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save my alert preferences for an item type
+ */
+export const usePutMyAlertPreferences = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putMyAlertPreferences>>, TError,{data: BodyType<AlertPreferenceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof putMyAlertPreferences>>,
+        TError,
+        {data: BodyType<AlertPreferenceInput>},
+        TContext
+      > => {
+      return useMutation(getPutMyAlertPreferencesMutationOptions(options));
+    }
+
+export const getUnsubscribeAlertsUrl = (params: UnsubscribeAlertsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/alerts/unsubscribe?${stringifiedParams}` : `/api/alerts/unsubscribe`
+}
+
+/**
+ * @summary One-click unsubscribe from weekly alert mails (token link, returns HTML)
+ */
+export const unsubscribeAlerts = async (params: UnsubscribeAlertsParams, options?: RequestInit): Promise<string> => {
+
+  return customFetch<string>(getUnsubscribeAlertsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnsubscribeAlertsQueryKey = (params?: UnsubscribeAlertsParams,) => {
+    return [
+    `/api/alerts/unsubscribe`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getUnsubscribeAlertsQueryOptions = <TData = Awaited<ReturnType<typeof unsubscribeAlerts>>, TError = ErrorType<void>>(params: UnsubscribeAlertsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof unsubscribeAlerts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUnsubscribeAlertsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof unsubscribeAlerts>>> = ({ signal }) => unsubscribeAlerts(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof unsubscribeAlerts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type UnsubscribeAlertsQueryResult = NonNullable<Awaited<ReturnType<typeof unsubscribeAlerts>>>
+export type UnsubscribeAlertsQueryError = ErrorType<void>
+
+
+/**
+ * @summary One-click unsubscribe from weekly alert mails (token link, returns HTML)
+ */
+
+export function useUnsubscribeAlerts<TData = Awaited<ReturnType<typeof unsubscribeAlerts>>, TError = ErrorType<void>>(
+ params: UnsubscribeAlertsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof unsubscribeAlerts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getUnsubscribeAlertsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRefreshScheduledEventsUrl = () => {
+
+
+
+
+  return `/api/scheduled/events-collect`
+}
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
+ * @summary Weekly scheduler callback that collects events (scheduler token)
+ */
+export const refreshScheduledEvents = async ( options?: RequestInit): Promise<RefreshScheduledEvents200> => {
+
+  return customFetch<RefreshScheduledEvents200>(getRefreshScheduledEventsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRefreshScheduledEventsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledEvents>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledEvents>>, TError,void, TContext> => {
+
+const mutationKey = ['refreshScheduledEvents'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshScheduledEvents>>, void> = () => {
+
+
+          return  refreshScheduledEvents(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshScheduledEventsMutationResult = NonNullable<Awaited<ReturnType<typeof refreshScheduledEvents>>>
+
+    export type RefreshScheduledEventsMutationError = ErrorType<void>
+
+    /**
+ * @summary Weekly scheduler callback that collects events (scheduler token)
+ */
+export const useRefreshScheduledEvents = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshScheduledEvents>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshScheduledEvents>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRefreshScheduledEventsMutationOptions(options));
+    }
+
+export const getSendScheduledWeeklyAlertsUrl = () => {
+
+
+
+
+  return `/api/scheduled/weekly-alerts`
+}
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN. Failed sends are never retried.
+ * @summary Weekly scheduler callback that sends alert digest mails (scheduler token)
+ */
+export const sendScheduledWeeklyAlerts = async ( options?: RequestInit): Promise<SendScheduledWeeklyAlerts200> => {
+
+  return customFetch<SendScheduledWeeklyAlerts200>(getSendScheduledWeeklyAlertsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSendScheduledWeeklyAlertsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>, TError,void, TContext> => {
+
+const mutationKey = ['sendScheduledWeeklyAlerts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>, void> = () => {
+
+
+          return  sendScheduledWeeklyAlerts(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendScheduledWeeklyAlertsMutationResult = NonNullable<Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>>
+
+    export type SendScheduledWeeklyAlertsMutationError = ErrorType<void>
+
+    /**
+ * @summary Weekly scheduler callback that sends alert digest mails (scheduler token)
+ */
+export const useSendScheduledWeeklyAlerts = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendScheduledWeeklyAlerts>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSendScheduledWeeklyAlertsMutationOptions(options));
     }
 
 export const getListBannersUrl = () => {

@@ -600,6 +600,162 @@ export interface CollectNewsResult {
   articles: NewsArticle[];
 }
 
+export type EventItemSource = typeof EventItemSource[keyof typeof EventItemSource];
+
+
+export const EventItemSource = {
+  auto: 'auto',
+  manual: 'manual',
+} as const;
+
+export type EventItemStatus = typeof EventItemStatus[keyof typeof EventItemStatus];
+
+
+export const EventItemStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+export interface EventItem {
+  id: number;
+  title: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary: string;
+  /** 제조 / 자동화 / AI / 전자·반도체 / 물류 / 기타 */
+  category: string;
+  /** 하노이 / 호치민 / 다낭 / 기타·온라인 */
+  city: string;
+  /** @nullable */
+  venue?: string | null;
+  /** @nullable */
+  organizer?: string | null;
+  /** YYYY-MM-DD */
+  startDate: string;
+  /**
+     * YYYY-MM-DD
+     * @nullable
+     */
+  endDate?: string | null;
+  isOnline: boolean;
+  /** @nullable */
+  sourceUrl?: string | null;
+  source: EventItemSource;
+  status: EventItemStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EventInputStatus = typeof EventInputStatus[keyof typeof EventInputStatus];
+
+
+export const EventInputStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+export interface EventInput {
+  title: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary?: string;
+  category?: string;
+  city?: string;
+  /** @nullable */
+  venue?: string | null;
+  /** @nullable */
+  organizer?: string | null;
+  startDate: string;
+  /** @nullable */
+  endDate?: string | null;
+  isOnline?: boolean;
+  /** @nullable */
+  sourceUrl?: string | null;
+  status?: EventInputStatus;
+}
+
+export type EventUpdateStatus = typeof EventUpdateStatus[keyof typeof EventUpdateStatus];
+
+
+export const EventUpdateStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+export interface EventUpdate {
+  title?: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary?: string;
+  category?: string;
+  city?: string;
+  /** @nullable */
+  venue?: string | null;
+  /** @nullable */
+  organizer?: string | null;
+  startDate?: string;
+  /** @nullable */
+  endDate?: string | null;
+  isOnline?: boolean;
+  /** @nullable */
+  sourceUrl?: string | null;
+  status?: EventUpdateStatus;
+}
+
+export interface CollectEventsRequest {
+  /** Optional topic focus (e.g. 반도체, AI, 스마트팩토리) */
+  topic?: string;
+}
+
+export interface CollectEventsResult {
+  inserted: number;
+  skipped: number;
+  events: EventItem[];
+}
+
+export type BookmarkItemType = typeof BookmarkItemType[keyof typeof BookmarkItemType];
+
+
+export const BookmarkItemType = {
+  event: 'event',
+  tender: 'tender',
+} as const;
+
+export interface Bookmark {
+  id: number;
+  itemType: BookmarkItemType;
+  itemId: number;
+  createdAt: string;
+}
+
+export interface BookmarkInput {
+  itemType: BookmarkItemType;
+  itemId: number;
+}
+
+export interface AlertPreference {
+  itemType: BookmarkItemType;
+  categories: string[];
+  weeklyEmail: boolean;
+  /** @nullable */
+  email?: string | null;
+  /** Verified email addresses of the member's account (selectable recipients). */
+  availableEmails?: string[];
+  /** @nullable */
+  lastSentAt?: string | null;
+}
+
+export interface AlertPreferenceInput {
+  itemType: BookmarkItemType;
+  categories: string[];
+  weeklyEmail: boolean;
+  /**
+     * Optional; must be one of the account's verified emails (else 400). Defaults to the primary verified email.
+     * @nullable
+     */
+  email?: string | null;
+}
+
 export interface Banner {
   id: number;
   title: string;
@@ -1033,5 +1189,49 @@ export type RefreshScheduledNews200 = {
   inserted: number;
   skipped: number;
   alreadyCompleted: boolean;
+};
+
+export type ListEventsParams = {
+category?: string;
+city?: string;
+period?: ListEventsPeriod;
+includePast?: boolean;
+};
+
+export type ListEventsPeriod = typeof ListEventsPeriod[keyof typeof ListEventsPeriod];
+
+
+export const ListEventsPeriod = {
+  month: 'month',
+  'three-months': 'three-months',
+  all: 'all',
+} as const;
+
+export type ListMyBookmarksParams = {
+itemType?: BookmarkItemType;
+};
+
+export type RemoveMyBookmarkParams = {
+itemType: BookmarkItemType;
+itemId: number;
+};
+
+export type GetMyAlertPreferencesParams = {
+itemType: BookmarkItemType;
+};
+
+export type UnsubscribeAlertsParams = {
+token: string;
+};
+
+export type RefreshScheduledEvents200 = {
+  inserted: number;
+  skipped: number;
+};
+
+export type SendScheduledWeeklyAlerts200 = {
+  sent: number;
+  failed: number;
+  skipped: number;
 };
 
