@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
+import { compareNewsByDate, normalizePublishedDate } from "../lib/newsDate";
 import { desc } from "drizzle-orm";
 import { db, pool, newsArticlesTable, newsRefreshSlotsTable } from "@workspace/db";
 import {
@@ -64,6 +65,8 @@ router.get("/news", async (_req, res): Promise<void> => {
     .select()
     .from(newsArticlesTable)
     .orderBy(desc(newsArticlesTable.createdAt));
+  // Newest article (publication) date first, not collection time.
+  rows.sort(compareNewsByDate);
 
   res.json(ListNewsResponse.parse(toJson(rows)));
 });
@@ -170,7 +173,7 @@ ${knownList}` : ""}
 - "summary": 기사 핵심 내용 요약 (한국어 3~5문장)
 - "category": 뉴스 분야 (다음 중 하나로 분류: "투자·FDI", "생산·공장", "자동화·기술", "전자·반도체", "물류·공급망", "무역·수출", "산업단지", "기타")
 - "source": 언론사/출처명 (없으면 "")
-- "publishedAt": 보도 날짜 (알 수 있으면 "YYYY-MM-DD" 또는 원문 표기, 없으면 "")
+- "publishedAt": 보도 날짜. 반드시 "YYYY-MM-DD" 형식으로만 적고, 알 수 없으면 ""로 둬.
 - "sourceUrl": 아래 [출처 목록]에서 이 기사와 가장 관련된 URL을 그대로 선택해서 넣어줘. 관련 출처가 없으면 ""로 둬. 목록에 없는 URL은 절대 만들지 마.
 title과 summary는 반드시 자연스러운 한국어로 작성해줘. JSON 배열만 출력하고 다른 설명은 절대 붙이지 마.
 
@@ -201,7 +204,8 @@ ${searchText}`;
         const sourceUrl = allowedUrls.has(picked) ? picked : fallbackUrl;
         const originalTitle = toStr(o.originalTitle);
         const source = toStr(o.source);
-        const publishedAt = toStr(o.publishedAt);
+        const rawPublishedAt = toStr(o.publishedAt);
+        const publishedAt = normalizePublishedDate(rawPublishedAt) ?? rawPublishedAt;
         return {
           title,
           summary: toStr(o.summary),

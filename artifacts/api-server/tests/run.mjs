@@ -68,6 +68,13 @@ try {
   });
   const clientsResult = spawnSync(process.execPath, ["--test", clientsOutput], { stdio: "inherit" });
   if (clientsResult.status !== 0) process.exitCode = clientsResult.status ?? 1;
+  const newsDateOutput = path.join(temp, "news-date.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/newsDate.test.ts")],
+    outfile: newsDateOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+  });
+  const newsDateResult = spawnSync(process.execPath, ["--test", newsDateOutput], { stdio: "inherit" });
+  if (newsDateResult.status !== 0) process.exitCode = newsDateResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }
