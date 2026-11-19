@@ -62,6 +62,13 @@ import {
   useUpdateBanner,
   useDeleteBanner,
   getListBannersQueryKey,
+  useListAdminEvents,
+  getListAdminEventsQueryKey,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
+  useCollectEvents,
+  getListEventsQueryKey,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -832,6 +839,170 @@ function PerformanceAdmin() {
           invalidate();
         } catch {
           toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+        }
+      }}
+    />
+  );
+}
+
+function CollectEventsControl() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [topic, setTopic] = useState("");
+  const collect = useCollectEvents();
+
+  const run = () => {
+    collect.mutate(
+      { data: topic.trim() ? { topic: topic.trim() } : {} },
+      {
+        onSuccess: (r) => {
+          toast({
+            title: "행사 수집 완료",
+            description: r.inserted > 0
+              ? `새 행사 ${r.inserted}건을 등록했습니다.${r.skipped > 0 ? ` (중복 ${r.skipped}건 제외)` : ""}`
+              : "새로 등록할 행사를 찾지 못했습니다.",
+          });
+          qc.invalidateQueries({ queryKey: getListAdminEventsQueryKey() });
+          qc.invalidateQueries({ queryKey: getListEventsQueryKey() });
+          setOpen(false);
+          setTopic("");
+        },
+        onError: () => toast({ title: "오류", description: "행사 자동 수집 중 문제가 발생했습니다. (진행 중이거나 쿨다운일 수 있습니다)", variant: "destructive" }),
+      },
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><Sparkles className="mr-1.5 h-4 w-4" />행사 자동 수집</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />베트남 제조·AI 행사 자동 수집</DialogTitle>
+          <DialogDescription>웹에서 향후 6개월 내 전시회·컨퍼런스·세미나를 검색해 한국어로 등록합니다. 이미 등록된 행사(제목+시작일 동일)는 제외됩니다.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="collect-events-topic">주제 집중 <span className="text-muted-foreground font-normal">(선택)</span></Label>
+          <Input id="collect-events-topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="예: 스마트팩토리, 반도체, AI" disabled={collect.isPending} />
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={run} disabled={collect.isPending}>
+            {collect.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />수집 중...</>) : (<><Sparkles className="mr-2 h-4 w-4" />수집 시작</>)}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EventsAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListAdminEvents();
+  const create = useCreateEvent();
+  const update = useUpdateEvent();
+  const del = useDeleteEvent();
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: getListAdminEventsQueryKey() });
+    qc.invalidateQueries({ queryKey: getListEventsQueryKey() });
+  };
+
+  const buildBody = (v: FormValues) => ({
+    title: v.title,
+    originalTitle: v.originalTitle || null,
+    summary: v.summary,
+    category: v.category,
+    city: v.city,
+    venue: v.venue || null,
+    organizer: v.organizer || null,
+    startDate: v.startDate,
+    endDate: v.endDate || null,
+    isOnline: v.isOnline === "true",
+    sourceUrl: v.sourceUrl || null,
+    status: v.status as "published" | "hidden",
+  });
+  const fail = () => {
+    toast({ title: "오류", description: "저장에 실패했습니다. 날짜(YYYY-MM-DD)와 링크(https://)를 확인하세요.", variant: "destructive" });
+    throw new Error("failed");
+  };
+
+  return (
+    <AdminSection
+      title="행사"
+      description="행사·전시회·세미나를 관리합니다. 숨김 처리한 행사는 공개 페이지에 표시되지 않습니다."
+      items={data}
+      isLoading={isLoading}
+      getId={(e) => e.id}
+      getRowLabel={(e) => e.title}
+      headerActions={<CollectEventsControl />}
+      getSearchText={(e) => [e.title, e.originalTitle ?? "", e.organizer ?? "", e.venue ?? ""].join(" ")}
+      searchPlaceholder="행사명 · 주최 · 장소 검색"
+      filters={[
+        { key: "status", label: "상태", getValue: (e) => e.status, options: [
+          { value: "published", label: "공개" }, { value: "hidden", label: "숨김" },
+        ] },
+        { key: "source", label: "출처", getValue: (e) => e.source, options: [
+          { value: "manual", label: "직접 등록" }, { value: "auto", label: "자동 수집" },
+        ] },
+      ]}
+      columns={[
+        { key: "startDate", header: "시작일", render: (e) => e.startDate, sortValue: (e) => e.startDate },
+        { key: "title", header: "행사명", render: (e) => <span className="font-medium">{e.title}</span>, sortValue: (e) => e.title },
+        { key: "category", header: "분야", render: (e) => e.category },
+        { key: "city", header: "지역", render: (e) => e.city },
+        { key: "status", header: "상태", render: (e) => <Badge variant={e.status === "published" ? "default" : "secondary"}>{e.status === "published" ? "공개" : "숨김"}</Badge> },
+        { key: "source", header: "출처", render: (e) => e.source === "auto" ? <Badge variant="outline" className="gap-1"><Sparkles className="h-3 w-3" />자동수집</Badge> : <span className="text-muted-foreground text-xs">직접</span> },
+      ]}
+      fields={[
+        { name: "title", label: "행사명 (한국어)", type: "text", required: true, full: true },
+        { name: "originalTitle", label: "원제목", type: "text", full: true },
+        { name: "startDate", label: "시작일 (YYYY-MM-DD)", type: "text", required: true },
+        { name: "endDate", label: "종료일 (YYYY-MM-DD)", type: "text" },
+        { name: "category", label: "분야", type: "select", options: ["제조", "자동화", "AI", "전자·반도체", "물류", "기타"].map((c) => ({ value: c, label: c })) },
+        { name: "city", label: "지역", type: "select", options: ["하노이", "호치민", "다낭", "기타·온라인"].map((c) => ({ value: c, label: c })) },
+        { name: "venue", label: "장소", type: "text" },
+        { name: "organizer", label: "주최", type: "text" },
+        { name: "isOnline", label: "온라인 여부", type: "select", options: [{ value: "false", label: "오프라인" }, { value: "true", label: "온라인" }] },
+        { name: "status", label: "상태", type: "select", options: [{ value: "published", label: "공개" }, { value: "hidden", label: "숨김" }] },
+        { name: "sourceUrl", label: "원문 링크 (https://)", type: "text", full: true },
+        { name: "summary", label: "요약", type: "textarea", full: true },
+      ]}
+      emptyValues={{
+        title: "", originalTitle: "", startDate: "", endDate: "", category: "제조", city: "하노이",
+        venue: "", organizer: "", isOnline: "false", status: "published", sourceUrl: "", summary: "",
+      }}
+      toFormValues={(e) => ({
+        title: e.title, originalTitle: e.originalTitle ?? "", startDate: e.startDate, endDate: e.endDate ?? "",
+        category: e.category, city: e.city, venue: e.venue ?? "", organizer: e.organizer ?? "",
+        isOnline: e.isOnline ? "true" : "false", status: e.status, sourceUrl: e.sourceUrl ?? "", summary: e.summary,
+      })}
+      onCreate={async (v, options) => {
+        try {
+          await create.mutateAsync({ data: buildBody(v) });
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "행사가 등록되었습니다." });
+            invalidate();
+          }
+        } catch { fail(); }
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({ id, data: buildBody(v) });
+          toast({ title: "수정 완료", description: "행사가 수정되었습니다." });
+          invalidate();
+        } catch { fail(); }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "행사가 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
         }
       }}
     />
@@ -2009,6 +2180,7 @@ export default function AdminPage() {
           <TabsTrigger value="resumes">이력서 접수</TabsTrigger>
           <TabsTrigger value="solutions">솔루션</TabsTrigger>
           <TabsTrigger value="performance">성과</TabsTrigger>
+          <TabsTrigger value="events">행사</TabsTrigger>
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
           <TabsTrigger value="offers">공급 오퍼</TabsTrigger>
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
@@ -2036,6 +2208,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="performance" className="mt-6">
           <PerformanceAdmin />
+        </TabsContent>
+        <TabsContent value="events" className="mt-6">
+          <EventsAdmin />
         </TabsContent>
         <TabsContent value="talent" className="mt-6">
           <TalentAdmin />

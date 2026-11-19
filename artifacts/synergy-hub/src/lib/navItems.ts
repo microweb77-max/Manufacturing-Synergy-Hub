@@ -8,6 +8,7 @@ import {
   Building2,
   Package,
   Newspaper,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,6 +24,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { key: "dashboard", href: "/", label: "대시보드", icon: LayoutDashboard },
   { key: "news", href: "/news", label: "최근 소식", icon: Newspaper },
+  { key: "events", href: "/events", label: "행사·세미나", icon: CalendarDays },
   { key: "companies", href: "/companies", label: "공급사 디렉토리", icon: Factory },
   {
     key: "client-companies",
