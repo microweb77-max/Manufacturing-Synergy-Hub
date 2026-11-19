@@ -1035,3 +1035,19 @@ export type RefreshScheduledNews200 = {
   alreadyCompleted: boolean;
 };
 
+export type RefreshScheduledTalent200PostType = typeof RefreshScheduledTalent200PostType[keyof typeof RefreshScheduledTalent200PostType];
+
+
+export const RefreshScheduledTalent200PostType = {
+  hiring: 'hiring',
+} as const;
+
+export type RefreshScheduledTalent200 = {
+  scheduledDay: string;
+  timezone: string;
+  postType: RefreshScheduledTalent200PostType;
+  inserted: number;
+  skipped: number;
+  alreadyCompleted: boolean;
+};
+

@@ -10,7 +10,28 @@ const origin = new URL(process.argv[urlArg + 1]);
 if (origin.protocol !== "https:" || origin.username || origin.password || origin.pathname !== "/") {
   throw new Error("Use a verified HTTPS production origin without credentials or a path.");
 }
-const targetUrl = new URL("/api/scheduled/news", origin).href;
+// --job news (default): hourly news. --job talent: daily 구인 postings at 08:00.
+const jobArg = process.argv.indexOf("--job");
+const jobName = jobArg < 0 ? "news" : process.argv[jobArg + 1];
+const JOBS = {
+  news: {
+    path: "/api/scheduled/news",
+    title: spec.title,
+    // Every hour on the hour (-1 = every value in cron-job.org's API).
+    hours: [-1], minutes: [0],
+    verified: (r) => Boolean(r.scheduledSlot),
+  },
+  talent: {
+    path: "/api/scheduled/talent",
+    title: "Manufacturing Synergy Hub — daily Vietnam job postings",
+    // Once a day at 08:00 Vietnam time.
+    hours: [8], minutes: [0],
+    verified: (r) => Boolean(r.scheduledDay && r.postType),
+  },
+};
+const spec = JOBS[jobName];
+if (!spec) throw new Error(`Unknown --job "${jobName}" (use news or talent).`);
+const targetUrl = new URL(spec.path, origin).href;
 const enable = process.argv.includes("--enable");
 
 async function api(path, method = "GET", payload) {
@@ -25,16 +46,17 @@ async function api(path, method = "GET", payload) {
 }
 
 // Don't enable a job against an unpublished route. This performs one genuine
-// collection; if it succeeds, repeat calls in this Vietnam-time hour are a no-op.
+// collection; if it succeeds, repeat calls in this Vietnam-time hour (news) or
+// day (talent) are a no-op.
 if (enable) {
   const response = await fetch(targetUrl, {
     method: "POST", headers: { Authorization: `Bearer ${token}` },
     signal: AbortSignal.timeout(300_000),
   });
   if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
-    throw new Error(`Published news callback not verified (HTTP ${response.status}). Publish and apply schema changes first.`);
+    throw new Error(`Published ${jobName} callback not verified (HTTP ${response.status}). Publish and apply schema changes first.`);
   const result = await response.json();
-  if (!result.scheduledSlot || typeof result.alreadyCompleted !== "boolean")
+  if (!spec.verified(result) || typeof result.alreadyCompleted !== "boolean")
     throw new Error("Unexpected callback response; job not enabled.");
 }
 const jobs = await api("/jobs");
@@ -42,7 +64,7 @@ if (jobs.someFailed) throw new Error("Incomplete scheduler job listing; refusing
 const matches = jobs.jobs.filter((job) => job.url === targetUrl);
 if (matches.length > 1) throw new Error("Multiple matching jobs already exist; review before changing them.");
 const job = {
-  title: "Manufacturing Synergy Hub — hourly Vietnam news",
+  title: spec.title,
   enabled: enable,
   url: targetUrl,
   requestMethod: 1,
@@ -51,8 +73,7 @@ const job = {
   redirectSuccess: false,
   schedule: {
     timezone: "Asia/Ho_Chi_Minh", expiresAt: 0,
-    // Every hour on the hour (-1 = every value in cron-job.org's API).
-    hours: [-1], minutes: [0], mdays: [-1], months: [-1], wdays: [-1],
+    hours: spec.hours, minutes: spec.minutes, mdays: [-1], months: [-1], wdays: [-1],
   },
   extendedData: { headers: { Authorization: `Bearer ${token}` }, body: "" },
   notification: { onFailure: true, onFailureCount: 1, onSuccess: true, onDisable: true },
@@ -66,8 +87,8 @@ if (matches.length) {
 }
 const { jobDetails } = await api(`/jobs/${jobId}`);
 if (jobDetails.enabled !== enable || jobDetails.schedule.timezone !== job.schedule.timezone ||
-    JSON.stringify(jobDetails.schedule.hours) !== "[-1]" ||
-    JSON.stringify(jobDetails.schedule.minutes) !== "[0]" ||
+    JSON.stringify(jobDetails.schedule.hours) !== JSON.stringify(spec.hours) ||
+    JSON.stringify(jobDetails.schedule.minutes) !== JSON.stringify(spec.minutes) ||
     jobDetails.requestMethod !== 1 || jobDetails.url !== targetUrl ||
     jobDetails.requestTimeout < 300) {
   // Never silently retain an enabled job with the wrong schedule or timeout.

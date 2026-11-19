@@ -93,6 +93,8 @@ export * from './projectUpdate';
 export * from './projectUpdateStatus';
 export * from './recommendation';
 export * from './refreshScheduledNews200';
+export * from './refreshScheduledTalent200';
+export * from './refreshScheduledTalent200PostType';
 export * from './resumeSubmission';
 export * from './resumeSubmissionInput';
 export * from './resumeSubmissionStatus';

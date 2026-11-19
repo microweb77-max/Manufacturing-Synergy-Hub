@@ -1360,6 +1360,50 @@ paths:
           description: Collection failed and may be retried
         "503":
           description: Scheduler credential not configured
+  /scheduled/talent:
+    post:
+      operationId: refreshScheduledTalent
+      tags: [talent]
+      summary: Authenticated daily scheduler callback for 구인 (hiring) posts (Asia/Ho_Chi_Minh)
+      description: Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day (scheduledDay).
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer scheduler credential supplied by the external scheduling service.
+      responses:
+        "200":
+          description: Completed, or already completed for this day
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [scheduledDay, timezone, postType, inserted, skipped, alreadyCompleted]
+                properties:
+                  scheduledDay:
+                    type: string
+                    format: date
+                  timezone:
+                    type: string
+                  postType:
+                    type: string
+                    enum: [hiring]
+                  inserted:
+                    type: integer
+                  skipped:
+                    type: integer
+                  alreadyCompleted:
+                    type: boolean
+        "401":
+          description: Invalid scheduler credential
+        "429":
+          description: A collection is already running; retry later
+        "502":
+          description: Collection failed and may be retried
+        "503":
+          description: Scheduler credential not configured
   /news/collect:
     post:
       operationId: collectNews

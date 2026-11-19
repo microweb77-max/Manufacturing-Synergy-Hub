@@ -1802,6 +1802,24 @@ export const RefreshScheduledNewsResponse = zod.object({
 
 
 /**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN, not a member session. Successful runs are idempotent per Vietnam calendar day (scheduledDay).
+ * @summary Authenticated daily scheduler callback for 구인 (hiring) posts (Asia/Ho_Chi_Minh)
+ */
+export const RefreshScheduledTalentHeader = zod.object({
+  "Authorization": zod.string().describe('Bearer scheduler credential supplied by the external scheduling service.')
+})
+
+export const RefreshScheduledTalentResponse = zod.object({
+  "scheduledDay": zod.coerce.date(),
+  "timezone": zod.string(),
+  "postType": zod.enum(['hiring']),
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "alreadyCompleted": zod.boolean()
+})
+
+
+/**
  * @summary Crawl recent Vietnam manufacturing-industry news via web search and translate to Korean
  */
 export const CollectNewsBody = zod.object({

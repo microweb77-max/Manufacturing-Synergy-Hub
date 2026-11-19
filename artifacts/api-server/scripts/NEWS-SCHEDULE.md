@@ -48,3 +48,22 @@ instead of repeating the same ones; title de-duplication still applies.
 
 Do not claim the hourly schedule is active until secrets, publishing, schema,
 and the external enabled job have all been verified.
+
+## Daily 구인 (hiring) job postings
+
+The same setup script also manages a second job that POSTs to
+`/api/scheduled/talent` once a day at 08:00 `Asia/Ho_Chi_Minh`. It collects
+구인 (hiring) posts only (8 per run, two Gemini calls) and uses the same
+`NEWS_SCHEDULER_TOKEN`. 구직 (seeking) posts stay admin-triggered.
+
+1. Publish this code so the `talent_refresh_runs` table exists in production.
+2. Prepare a disabled job:
+   `node artifacts/api-server/scripts/configure-news-schedule.mjs --job talent --url https://VERIFIED-ORIGIN/`
+3. Run it again with `--enable`; it performs one real collection first.
+
+Completed days are recorded per post type in `talent_refresh_runs`
+(`YYYY-MM-DD`, `hiring`) in the same transaction as the inserted posts, so a
+retry on the same day is a no-op and a failed run can be retried. Talent
+collection uses its own advisory lock `(728301, 2)` and does not block news.
+Each run lists the 30 most recently saved posts of the same type in the search
+prompt so it looks for new postings.

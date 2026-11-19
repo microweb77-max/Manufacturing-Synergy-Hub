@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { toJson } from "../lib/serialize";
 import { eq, and, desc } from "drizzle-orm";
-import { db, talentPostsTable } from "@workspace/db";
+import { db, pool, talentPostsTable, talentRefreshRunsTable } from "@workspace/db";
 import {
   ListTalentPostsQueryParams,
   ListTalentPostsResponse,
@@ -30,11 +30,18 @@ type CollectedJob = {
 };
 
 const COLLECT_COOLDOWN_MS = 30_000;
-const lastCollectAt: Record<"hiring" | "seeking", number> = {
+const lastCollectAt: Record<TalentPostType, number> = {
   hiring: 0,
   seeking: 0,
 };
-let collectInProgress = false;
+
+export type TalentPostType = "hiring" | "seeking";
+
+export class TalentCollectionError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
 function extractJsonArray(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -153,52 +160,97 @@ router.post("/talent/collect-jobs", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-
-  const region = (parsed.data.region ?? "").trim();
   const postType = parsed.data.postType ?? "hiring";
+  try {
+    const result = await collectJobs(postType, (parsed.data.region ?? "").trim());
+    res.json(
+      CollectJobsResponse.parse(
+        toJson({ inserted: result.inserted, skipped: result.skipped, posts: result.posts }),
+      ),
+    );
+  } catch (err) {
+    if (err instanceof TalentCollectionError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
+    req.log.error({ err }, "Failed to collect jobs");
+    res.status(502).json({
+      error: `${
+        postType === "seeking" ? "구직" : "구인"
+      } 정보 자동 수집 중 오류가 발생했습니다.`,
+    });
+  }
+});
+
+// How many recently saved posts of the same type are listed in the search
+// prompt so a daily run looks for postings we don't already have.
+const RECENT_POSTS_FOR_PROMPT = 30;
+
+// Shared by the admin button and the daily scheduler. `scheduledDay` is the
+// Vietnam calendar day of a scheduler run; a day already completed for this
+// post type is skipped without contacting Gemini.
+export async function collectJobs(postType: TalentPostType, region = "", scheduledDay?: string) {
   const focus = region
     ? `특히 "${region}" 지역/분야에 집중해서 찾아줘.`
     : "호치민, 하노이, 박닌, 빈증, 동나이 등 주요 산업단지를 폭넓게 포함해줘.";
 
-  if (collectInProgress) {
-    res
-      .status(429)
-      .json({ error: "이미 수집이 진행 중입니다. 잠시 후 다시 시도해주세요." });
-    return;
-  }
-  const sinceLast = Date.now() - lastCollectAt[postType];
-  if (sinceLast < COLLECT_COOLDOWN_MS) {
-    const waitSec = Math.ceil((COLLECT_COOLDOWN_MS - sinceLast) / 1000);
-    res.status(429).json({
-      error: `잠시 후 다시 시도해주세요. (${waitSec}초 후 가능)`,
-    });
-    return;
-  }
-  collectInProgress = true;
-  lastCollectAt[postType] = Date.now();
-
+  const connection = await pool.connect();
+  let locked = false;
   try {
+    // Session advisory lock: one talent collection at a time across Autoscale
+    // instances (news uses key (728301, 1)).
+    locked = (await connection.query("SELECT pg_try_advisory_lock(728301, 2) AS locked")).rows[0].locked;
+    if (!locked) {
+      throw new TalentCollectionError(429, "이미 수집이 진행 중입니다. 잠시 후 다시 시도해주세요.");
+    }
+    if (scheduledDay) {
+      const completed = await connection.query(
+        "SELECT 1 FROM talent_refresh_runs WHERE scheduled_day=$1 AND post_type=$2",
+        [scheduledDay, postType],
+      );
+      if (completed.rowCount) return { inserted: 0, skipped: 0, posts: [], alreadyCompleted: true };
+    }
+    const sinceLast = Date.now() - lastCollectAt[postType];
+    if (sinceLast < COLLECT_COOLDOWN_MS) {
+      const waitSec = Math.ceil((COLLECT_COOLDOWN_MS - sinceLast) / 1000);
+      throw new TalentCollectionError(429, `잠시 후 다시 시도해주세요. (${waitSec}초 후 가능)`);
+    }
+    lastCollectAt[postType] = Date.now();
+
     const { ai } = await import("@workspace/integrations-gemini-ai");
+    const abortSignal = AbortSignal.timeout(240_000);
+
+    const recent = await db
+      .select({ title: talentPostsTable.title, authorName: talentPostsTable.authorName })
+      .from(talentPostsTable)
+      .where(eq(talentPostsTable.postType, postType))
+      .orderBy(desc(talentPostsTable.createdAt))
+      .limit(RECENT_POSTS_FOR_PROMPT);
+    const knownBlock = recent.length
+      ? "\n아래는 이미 수집한 목록이야. 같은 " +
+        (postType === "seeking" ? "구직자" : "공고") +
+        "는 제외하고 새로운 것만 찾아줘:\n" +
+        recent.map((r) => `- ${r.authorName}: ${r.title}`).join("\n")
+      : "";
 
     const searchPrompt =
       postType === "seeking"
         ? `베트남 내 제조업(공장, 설비, 자동화, 금형, 전자, 생산관리, 품질, 물류 등) 분야에서 일자리를 찾고 있는 구직자/인재 프로필 또는 이력 정보를 웹에서 검색해서 8건 정리해줘. ${focus}
 각 구직자마다 다음을 포함해줘: 구직자 이름 또는 식별명, 희망 직무, 희망 근무 지역, 보유 경력 수준, 본인 소개/경력 요약, 보유 기술/역량.
-실제 구직 활동 중인 사람 위주로, 제조업과 무관한 프로필은 제외해줘.`
+실제 구직 활동 중인 사람 위주로, 제조업과 무관한 프로필은 제외해줘.${knownBlock}`
         : `베트남 내 제조업(공장, 설비, 자동화, 금형, 전자, 생산관리, 품질, 물류 등) 관련 최신 채용/구인 공고를 웹에서 검색해서 8건 정리해줘. ${focus}
 각 공고마다 다음을 포함해줘: 채용 회사명, 모집 직무, 근무 지역, 고용 형태(정규직/계약직 등), 요구 경력, 주요 업무/자격요건 요약, 필요 기술/역량.
-실제 채용 중인 공고 위주로, 제조업과 무관한 공고는 제외해줘.`;
+최근 1~2주 이내에 게시된 공고를 우선해줘. 실제 채용 중인 공고 위주로, 제조업과 무관한 공고는 제외해줘.${knownBlock}`;
 
     const searchResp = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: searchPrompt }] }],
-      config: { tools: [{ googleSearch: {} }] },
+      config: { tools: [{ googleSearch: {} }], abortSignal },
     });
 
     const searchText = searchResp.text ?? "";
     if (!searchText.trim()) {
-      res.status(502).json({ error: "검색 결과를 가져오지 못했습니다." });
-      return;
+      throw new TalentCollectionError(502, "검색 결과를 가져오지 못했습니다.");
     }
 
     const chunks =
@@ -255,13 +307,12 @@ ${searchText}`;
     const structureResp = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: structurePrompt }] }],
-      config: { responseMimeType: "application/json", maxOutputTokens: 8192 },
+      config: { responseMimeType: "application/json", maxOutputTokens: 8192, abortSignal },
     });
 
     const arr = extractJsonArray(structureResp.text ?? "");
     if (!Array.isArray(arr)) {
-      res.status(502).json({ error: "공고 데이터를 해석하지 못했습니다." });
-      return;
+      throw new TalentCollectionError(502, "공고 데이터를 해석하지 못했습니다.");
     }
 
     const jobs: CollectedJob[] = arr
@@ -316,9 +367,11 @@ ${searchText}`;
       toInsert.push(job);
     }
 
-    const inserted =
-      toInsert.length > 0
-        ? await db
+    // Posts and the daily completion marker commit together, so a failed run
+    // never marks the day as done and the scheduler can retry it.
+    const inserted = await db.transaction(async (tx) => {
+      const rows = toInsert.length > 0
+        ? await tx
             .insert(talentPostsTable)
             .values(
               toInsert.map((job) => ({
@@ -337,26 +390,25 @@ ${searchText}`;
             )
             .returning()
         : [];
-
-    res.json(
-      CollectJobsResponse.parse(
-        toJson({
-          inserted: inserted.length,
-          skipped,
-          posts: inserted,
-        }),
-      ),
-    );
-  } catch (err) {
-    req.log.error({ err }, "Failed to collect jobs");
-    res.status(502).json({
-      error: `${
-        postType === "seeking" ? "구직" : "구인"
-      } 정보 자동 수집 중 오류가 발생했습니다.`,
+      if (scheduledDay) {
+        await tx.insert(talentRefreshRunsTable).values({
+          scheduledDay, postType, inserted: rows.length, skipped,
+        });
+      }
+      return rows;
     });
+    return { inserted: inserted.length, skipped, posts: inserted, alreadyCompleted: false };
   } finally {
-    collectInProgress = false;
+    try {
+      if (locked) await connection.query("SELECT pg_advisory_unlock(728301, 2)");
+    } catch {
+      // A broken connection must never go back into the pool with a held lock.
+      connection.release(true);
+      locked = false;
+      throw new Error("Failed to release the talent collection lock.");
+    }
+    connection.release();
   }
-});
+}
 
 export default router;

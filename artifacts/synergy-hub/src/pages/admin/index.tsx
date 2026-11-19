@@ -183,7 +183,7 @@ function CollectJobsControl({
           <DialogDescription>
             {postType === "seeking"
               ? "웹에서 베트남 제조업 분야 구직자/인재 정보를 검색해 구직 정보로 자동 등록합니다. 이미 등록된 항목은 제외됩니다."
-              : "웹에서 베트남 제조업 관련 최신 채용 공고를 검색해 구인 정보로 자동 등록합니다. 이미 등록된 공고는 제외됩니다."}
+              : "웹에서 베트남 제조업 관련 최신 채용 공고를 검색해 구인 정보로 자동 등록합니다. 이미 등록된 공고는 제외됩니다. 매일 오전 8시(베트남 시간)에도 자동으로 수집됩니다."}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-2">
