@@ -1826,6 +1826,326 @@ export const CollectNewsResponse = zod.object({
 
 
 /**
+ * @summary List published events (public). Upcoming only unless includePast=true.
+ */
+export const ListEventsQueryParams = zod.object({
+  "category": zod.coerce.string().optional(),
+  "city": zod.coerce.string().optional(),
+  "period": zod.enum(['month', 'three-months', 'all']).optional(),
+  "includePast": zod.coerce.boolean().optional()
+})
+
+export const ListEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListEventsResponse = zod.array(ListEventsResponseItem)
+
+
+/**
+ * @summary Create an event (platform admin)
+ */
+export const CreateEventBody = zod.object({
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string().optional(),
+  "category": zod.string().optional(),
+  "city": zod.string().optional(),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string().nullish(),
+  "isOnline": zod.boolean().optional(),
+  "sourceUrl": zod.string().nullish(),
+  "status": zod.enum(['published', 'hidden']).optional()
+})
+
+export const CreateEventResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Collect upcoming Vietnam manufacturing/automation/AI events via grounded web search (platform admin)
+ */
+export const CollectEventsBody = zod.object({
+  "topic": zod.string().optional().describe('Optional topic focus (e.g. 반도체, AI, 스마트팩토리)')
+})
+
+export const CollectEventsResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}))
+})
+
+
+/**
+ * @summary Get one published event (public)
+ */
+export const GetEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetEventResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Update an event (platform admin)
+ */
+export const UpdateEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateEventBody = zod.object({
+  "title": zod.string().optional(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string().optional(),
+  "category": zod.string().optional(),
+  "city": zod.string().optional(),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().optional(),
+  "endDate": zod.string().nullish(),
+  "isOnline": zod.boolean().optional(),
+  "sourceUrl": zod.string().nullish(),
+  "status": zod.enum(['published', 'hidden']).optional()
+})
+
+export const UpdateEventResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Delete an event (platform admin)
+ */
+export const DeleteEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteEventResponse = zod.void()
+
+
+/**
+ * @summary List ALL events including hidden and past (platform admin)
+ */
+export const ListAdminEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "category": zod.string().describe('제조 \/ 자동화 \/ AI \/ 전자·반도체 \/ 물류 \/ 기타'),
+  "city": zod.string().describe('하노이 \/ 호치민 \/ 다낭 \/ 기타·온라인'),
+  "venue": zod.string().nullish(),
+  "organizer": zod.string().nullish(),
+  "startDate": zod.string().describe('YYYY-MM-DD'),
+  "endDate": zod.string().nullish().describe('YYYY-MM-DD'),
+  "isOnline": zod.boolean(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListAdminEventsResponse = zod.array(ListAdminEventsResponseItem)
+
+
+/**
+ * @summary List my bookmarks (own only)
+ */
+export const ListMyBookmarksQueryParams = zod.object({
+  "itemType": zod.enum(['event', 'tender']).optional()
+})
+
+export const ListMyBookmarksResponseItem = zod.object({
+  "id": zod.number(),
+  "itemType": zod.enum(['event', 'tender']),
+  "itemId": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListMyBookmarksResponse = zod.array(ListMyBookmarksResponseItem)
+
+
+/**
+ * @summary Bookmark an item (idempotent)
+ */
+export const AddMyBookmarkBody = zod.object({
+  "itemType": zod.enum(['event', 'tender']),
+  "itemId": zod.number()
+})
+
+export const AddMyBookmarkResponse = zod.object({
+  "id": zod.number(),
+  "itemType": zod.enum(['event', 'tender']),
+  "itemId": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Remove one of my bookmarks (idempotent)
+ */
+export const RemoveMyBookmarkQueryParams = zod.object({
+  "itemType": zod.enum(['event', 'tender']),
+  "itemId": zod.coerce.number()
+})
+
+export const RemoveMyBookmarkResponse = zod.void()
+
+
+/**
+ * @summary Get my alert preferences for an item type
+ */
+export const GetMyAlertPreferencesQueryParams = zod.object({
+  "itemType": zod.enum(['event', 'tender'])
+})
+
+export const GetMyAlertPreferencesResponse = zod.object({
+  "itemType": zod.enum(['event', 'tender']),
+  "categories": zod.array(zod.string()),
+  "weeklyEmail": zod.boolean(),
+  "email": zod.string().nullish(),
+  "lastSentAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Save my alert preferences for an item type
+ */
+export const PutMyAlertPreferencesBody = zod.object({
+  "itemType": zod.enum(['event', 'tender']),
+  "categories": zod.array(zod.string()),
+  "weeklyEmail": zod.boolean(),
+  "email": zod.string().nullish().describe('Optional; defaults to the account\'s primary email.')
+})
+
+export const PutMyAlertPreferencesResponse = zod.object({
+  "itemType": zod.enum(['event', 'tender']),
+  "categories": zod.array(zod.string()),
+  "weeklyEmail": zod.boolean(),
+  "email": zod.string().nullish(),
+  "lastSentAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary One-click unsubscribe from weekly alert mails (token link, returns HTML)
+ */
+export const UnsubscribeAlertsQueryParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const UnsubscribeAlertsResponse = zod.unknown()
+
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
+ * @summary Weekly scheduler callback that collects events (scheduler token)
+ */
+export const RefreshScheduledEventsHeader = zod.object({
+  "Authorization": zod.string()
+})
+
+export const RefreshScheduledEventsResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number()
+})
+
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN. Failed sends are never retried.
+ * @summary Weekly scheduler callback that sends alert digest mails (scheduler token)
+ */
+export const SendScheduledWeeklyAlertsHeader = zod.object({
+  "Authorization": zod.string()
+})
+
+export const SendScheduledWeeklyAlertsResponse = zod.object({
+  "sent": zod.number(),
+  "failed": zod.number(),
+  "skipped": zod.number()
+})
+
+
+/**
  * @summary List dashboard banners (ordered by displayOrder)
  */
 export const ListBannersResponseItem = zod.object({

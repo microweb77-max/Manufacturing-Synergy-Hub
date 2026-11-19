@@ -13,6 +13,7 @@ const router: IRouter = Router();
 
 const VALID_NAV_KEYS = new Set([
   "news",
+  "events",
   "dashboard",
   "companies",
   "client-companies",

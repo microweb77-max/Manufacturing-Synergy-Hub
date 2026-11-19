@@ -18,6 +18,9 @@ import bannersRouter from "./banners";
 import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 import talentContactRequestsRouter from "./talentContactRequests";
+import eventsRouter from "./events";
+import meRouter from "./me";
+import alertsRouter from "./alerts";
 
 const router: IRouter = Router();
 
@@ -40,5 +43,8 @@ router.use(bannersRouter);
 router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
 router.use(talentContactRequestsRouter);
+router.use(eventsRouter);
+router.use(meRouter);
+router.use(alertsRouter);
 
 export default router;

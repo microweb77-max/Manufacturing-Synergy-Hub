@@ -18,6 +18,8 @@ export async function resolveIdentity(req: Parameters<RequestHandler>[0]): Promi
 
 const privateLists = new Set([
   "/project-applications", "/resume-submissions", "/talent-contact-requests", "/offer-matches",
+  "/admin", // admin-only reads (e.g. /admin/events incl. hidden events)
+  "/me",    // a member's own bookmarks / alert preferences
 ]);
 
 export function createApiAuthorization(
@@ -29,6 +31,9 @@ export function createApiAuthorization(
     const path = req.path.toLowerCase().replace(/\/+$/, "") || "/";
     const isRead = req.method === "GET" || req.method === "HEAD";
     const membership = path === "/membership" || path.startsWith("/membership/");
+    // "My own data": any verified member may use it; handlers scope every query to
+    // identity.userId. Never extend this to company- or admin-owned resources.
+    const selfService = path === "/me" || path.startsWith("/me/");
     const isPrivate = membership || [...privateLists].some(prefix => path === prefix || path.startsWith(`${prefix}/`));
     if (req.method === "OPTIONS" || (isRead && !isPrivate)) {
       next();
@@ -54,8 +59,8 @@ export function createApiAuthorization(
         return;
       }
       res.locals.identity = identity;
-      // Membership handlers enforce their own company-admin/reviewer rules.
-      if (!identity.isAdmin && !membership && !await authorizeCompany(req, identity)) {
+      // Membership handlers enforce their own company-admin/reviewer rules; /me/* is self-service.
+      if (!identity.isAdmin && !membership && !selfService && !await authorizeCompany(req, identity)) {
         res.status(403).json({
           error: "이 회사의 인증된 소속과 해당 작업 권한이 필요합니다.",
           code: "COMPANY_PERMISSION_REQUIRED",
