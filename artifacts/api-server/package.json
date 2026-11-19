@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node ./tests/run.mjs",
     "admin:role": "node ./scripts/platform-admin.mjs",
+    "db:seed:tax-codes": "node ./scripts/seed-tax-codes.mjs",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",

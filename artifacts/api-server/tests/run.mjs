@@ -93,6 +93,15 @@ try {
   });
   const tendersResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", tendersOutput], { stdio: "inherit" });
   if (tendersResult.status !== 0) process.exitCode = tendersResult.status ?? 1;
+  const seedOutput = path.join(temp, "seed-tax-codes.mjs");
+  await build({
+    entryPoints: [path.join(artifact, "tests/seedTaxCodes.test.ts")],
+    outfile: seedOutput, bundle: true, packages: "external", platform: "node", format: "esm",
+    alias: { "@workspace/db": path.resolve(artifact, "../../lib/db/src/index.ts"), "@workspace/api-zod": path.resolve(artifact, "../../lib/api-zod/src/index.ts") },
+    plugins: [databaseDependency],
+  });
+  const seedResult = spawnSync(process.execPath, ["--test", "--test-concurrency=1", seedOutput], { stdio: "inherit" });
+  if (seedResult.status !== 0) process.exitCode = seedResult.status ?? 1;
 } finally {
   await rm(temp, { recursive: true, force: true });
 }
