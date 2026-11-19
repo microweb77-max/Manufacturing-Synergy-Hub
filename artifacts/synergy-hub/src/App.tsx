@@ -29,6 +29,7 @@ import TalentPool from "./pages/talent";
 
 import NewsPage from "./pages/news";
 import EventsPage from "./pages/events";
+import TendersPage from "./pages/tenders";
 
 import AdminPage from "./pages/admin";
 
@@ -74,6 +75,7 @@ function Router() {
         <Route path="/news" component={NewsPage} />
 
         <Route path="/events" component={EventsPage} />
+        <Route path="/tenders" component={TendersPage} />
 
         <Route path="/client-companies" component={ClientCompaniesPage} />
 

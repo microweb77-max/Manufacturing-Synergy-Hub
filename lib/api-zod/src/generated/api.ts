@@ -2029,6 +2029,239 @@ export const ListAdminEventsResponse = zod.array(ListAdminEventsResponseItem)
 
 
 /**
+ * @summary List published tenders (public). Anonymous responses omit restricted fields on the server.
+ */
+export const ListTendersQueryParams = zod.object({
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']).optional(),
+  "category": zod.coerce.string().optional(),
+  "deadlineWithin": zod.enum(['7', '30', 'all']).optional(),
+  "includeClosed": zod.coerce.boolean().optional()
+})
+
+export const ListTendersResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n')
+export const ListTendersResponse = zod.array(ListTendersResponseItem)
+
+
+/**
+ * @summary Create a tender (platform admin)
+ */
+export const CreateTenderBody = zod.object({
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string().optional(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']).optional(),
+  "category": zod.string().optional().describe('설비 \/ 자동화 \/ IT·소프트웨어 \/ 부품·소재 \/ 건설·인프라 \/ 서비스 \/ 기타'),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string().describe('YYYY-MM-DD'),
+  "sourceUrl": zod.string().nullish(),
+  "status": zod.enum(['published', 'hidden']).optional()
+})
+
+export const CreateTenderResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n')
+
+
+/**
+ * @summary Collect tenders via grounded web search (platform admin)
+ */
+export const CollectTendersBody = zod.object({
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']).optional()
+})
+
+export const CollectTendersResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number(),
+  "tenders": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n'))
+})
+
+
+/**
+ * @summary Get one published tender (public, same restriction rule as the list)
+ */
+export const GetTenderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetTenderResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n')
+
+
+/**
+ * @summary Update a tender (platform admin)
+ */
+export const UpdateTenderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateTenderBody = zod.object({
+  "title": zod.string().optional(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string().optional(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']).optional(),
+  "category": zod.string().optional().describe('설비 \/ 자동화 \/ IT·소프트웨어 \/ 부품·소재 \/ 건설·인프라 \/ 서비스 \/ 기타'),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string().optional().describe('YYYY-MM-DD'),
+  "sourceUrl": zod.string().nullish(),
+  "status": zod.enum(['published', 'hidden']).optional()
+})
+
+export const UpdateTenderResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n')
+
+
+/**
+ * @summary Delete a tender (platform admin)
+ */
+export const DeleteTenderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteTenderResponse = zod.void()
+
+
+/**
+ * @summary List ALL tenders including hidden and closed (platform admin)
+ */
+export const ListAdminTendersResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "originalTitle": zod.string().nullish(),
+  "summary": zod.string(),
+  "sourceType": zod.enum(['gov_vn', 'kr_support', 'buyer_rfq']),
+  "category": zod.string(),
+  "buyer": zod.string().nullish(),
+  "country": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "budget": zod.string().nullish(),
+  "eligibility": zod.string().nullish(),
+  "submission": zod.string().nullish(),
+  "publishedDate": zod.string().nullish(),
+  "deadline": zod.string(),
+  "sourceUrl": zod.string().nullish(),
+  "source": zod.enum(['auto', 'manual']),
+  "status": zod.enum(['published', 'hidden']),
+  "restricted": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}).describe('Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.\n')
+export const ListAdminTendersResponse = zod.array(ListAdminTendersResponseItem)
+
+
+/**
  * @summary List my bookmarks (own only)
  */
 export const ListMyBookmarksQueryParams = zod.object({
@@ -2127,6 +2360,20 @@ export const RefreshScheduledEventsHeader = zod.object({
 })
 
 export const RefreshScheduledEventsResponse = zod.object({
+  "inserted": zod.number(),
+  "skipped": zod.number()
+})
+
+
+/**
+ * Machine-to-machine only. Uses NEWS_SCHEDULER_TOKEN.
+ * @summary Weekly scheduler callback that collects tenders (scheduler token)
+ */
+export const RefreshScheduledTendersHeader = zod.object({
+  "Authorization": zod.string()
+})
+
+export const RefreshScheduledTendersResponse = zod.object({
   "inserted": zod.number(),
   "skipped": zod.number()
 })

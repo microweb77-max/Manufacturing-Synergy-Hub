@@ -73,7 +73,7 @@ test("public reads and preflight remain open without calling the identity provid
 test("private submissions cannot be read by anonymous visitors or members", async () => {
   for (const identity of [null, { userId: "member", isAdmin: false }, { userId: "admin", isAdmin: true }]) {
     await withServer(identity, async base => {
-      for (const path of ["/resume-submissions", "/project-applications", "/talent-contact-requests", "/offer-matches", "/admin/events"]) {
+      for (const path of ["/resume-submissions", "/project-applications", "/talent-contact-requests", "/offer-matches", "/admin/events", "/admin/tenders"]) {
         for (const method of ["GET", "HEAD"]) {
           for (const variant of [path, path.toUpperCase(), path + "/1"]) {
             assert.equal((await fetch(base + variant + "/?page=1", { method })).status,

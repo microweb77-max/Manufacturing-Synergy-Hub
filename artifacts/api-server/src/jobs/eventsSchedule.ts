@@ -1,6 +1,6 @@
 import { Router, type RequestHandler } from "express";
 import { collectEvents, EventCollectionError } from "../routes/events";
-import { sendWeeklyEventAlerts } from "../lib/userItems";
+import { sendAllWeeklyAlerts } from "../lib/userItems";
 import { schedulerTokenMatches } from "./newsSchedule";
 
 // Same bearer-token scheme as the hourly news job (NEWS_SCHEDULER_TOKEN).
@@ -43,7 +43,7 @@ export function unsubscribeUrlBuilder(headers: { host?: string; "x-forwarded-hos
   return (token: string) => `${origin}/api/alerts/unsubscribe?token=${encodeURIComponent(token)}`;
 }
 
-export function createWeeklyAlertsHandler(send = sendWeeklyEventAlerts, getSecret?: () => string | undefined): RequestHandler {
+export function createWeeklyAlertsHandler(send: (url: (token: string) => string) => Promise<object> = sendAllWeeklyAlerts, getSecret?: () => string | undefined): RequestHandler {
   return guard(async (req, res) => {
     try {
       const result = await send(unsubscribeUrlBuilder(req.headers));

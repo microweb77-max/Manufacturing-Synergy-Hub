@@ -19,6 +19,7 @@ import clientCompaniesRouter from "./clientCompanies";
 import dashboardRouter from "./dashboard";
 import talentContactRequestsRouter from "./talentContactRequests";
 import eventsRouter from "./events";
+import tendersRouter from "./tenders";
 import meRouter from "./me";
 import alertsRouter from "./alerts";
 
@@ -44,6 +45,7 @@ router.use(clientCompaniesRouter);
 router.use(dashboardRouter);
 router.use(talentContactRequestsRouter);
 router.use(eventsRouter);
+router.use(tendersRouter);
 router.use(meRouter);
 router.use(alertsRouter);
 

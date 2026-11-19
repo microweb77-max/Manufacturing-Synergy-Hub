@@ -98,3 +98,27 @@ export function buildDigestText(
   });
   return `관심 분야의 새 행사 ${events.length}건이 등록되었습니다.\n\n${lines.join("\n\n")}\n\n---\n주간 알림 메일을 더 이상 받지 않으려면 아래 링크를 열어 주세요.\n${unsubscribeUrl}\n`;
 }
+
+// ---- shared with 사업공고 (lib/tenders / routes/tenders) ----
+
+export const vietnamToday = (now = new Date()) =>
+  new Date(now.getTime() + 7 * 3600_000).toISOString().slice(0, 10);
+
+export function toStr(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+
+export function extractJsonArray(text: string): unknown {
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const raw = fenced ? fenced[1] : text;
+  const start = raw.indexOf("[");
+  const end = raw.lastIndexOf("]");
+  if (start === -1 || end === -1 || end < start) throw new Error("No JSON array found in model output");
+  return JSON.parse(raw.slice(start, end + 1));
+}
+
+/** Only http(s) links may be stored (blocks javascript: etc. from manual input). */
+export function cleanUrl(v: string | null | undefined): string | null {
+  const t = (v ?? "").trim();
+  return t && isHttpUrl(t) ? t : null;
+}

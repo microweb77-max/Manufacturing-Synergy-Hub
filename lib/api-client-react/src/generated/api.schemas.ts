@@ -713,6 +713,150 @@ export interface CollectEventsResult {
   events: EventItem[];
 }
 
+export type TenderSourceType = typeof TenderSourceType[keyof typeof TenderSourceType];
+
+
+export const TenderSourceType = {
+  gov_vn: 'gov_vn',
+  kr_support: 'kr_support',
+  buyer_rfq: 'buyer_rfq',
+} as const;
+
+export type TenderItemSource = typeof TenderItemSource[keyof typeof TenderItemSource];
+
+
+export const TenderItemSource = {
+  auto: 'auto',
+  manual: 'manual',
+} as const;
+
+export type TenderItemStatus = typeof TenderItemStatus[keyof typeof TenderItemStatus];
+
+
+export const TenderItemStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+/**
+ * Anonymous callers get restricted=true; budget, eligibility, submission and sourceUrl are removed server-side and summary is only its first sentence.
+ */
+export interface TenderItem {
+  id: number;
+  title: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary: string;
+  sourceType: TenderSourceType;
+  category: string;
+  /** @nullable */
+  buyer?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  budget?: string | null;
+  /** @nullable */
+  eligibility?: string | null;
+  /** @nullable */
+  submission?: string | null;
+  /** @nullable */
+  publishedDate?: string | null;
+  deadline: string;
+  /** @nullable */
+  sourceUrl?: string | null;
+  source: TenderItemSource;
+  status: TenderItemStatus;
+  restricted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TenderInputStatus = typeof TenderInputStatus[keyof typeof TenderInputStatus];
+
+
+export const TenderInputStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+export interface TenderInput {
+  title: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary?: string;
+  sourceType?: TenderSourceType;
+  /** 설비 / 자동화 / IT·소프트웨어 / 부품·소재 / 건설·인프라 / 서비스 / 기타 */
+  category?: string;
+  /** @nullable */
+  buyer?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  budget?: string | null;
+  /** @nullable */
+  eligibility?: string | null;
+  /** @nullable */
+  submission?: string | null;
+  /** @nullable */
+  publishedDate?: string | null;
+  /** YYYY-MM-DD */
+  deadline: string;
+  /** @nullable */
+  sourceUrl?: string | null;
+  status?: TenderInputStatus;
+}
+
+export type TenderUpdateStatus = typeof TenderUpdateStatus[keyof typeof TenderUpdateStatus];
+
+
+export const TenderUpdateStatus = {
+  published: 'published',
+  hidden: 'hidden',
+} as const;
+
+export interface TenderUpdate {
+  title?: string;
+  /** @nullable */
+  originalTitle?: string | null;
+  summary?: string;
+  sourceType?: TenderSourceType;
+  /** 설비 / 자동화 / IT·소프트웨어 / 부품·소재 / 건설·인프라 / 서비스 / 기타 */
+  category?: string;
+  /** @nullable */
+  buyer?: string | null;
+  /** @nullable */
+  country?: string | null;
+  /** @nullable */
+  city?: string | null;
+  /** @nullable */
+  budget?: string | null;
+  /** @nullable */
+  eligibility?: string | null;
+  /** @nullable */
+  submission?: string | null;
+  /** @nullable */
+  publishedDate?: string | null;
+  /** YYYY-MM-DD */
+  deadline?: string;
+  /** @nullable */
+  sourceUrl?: string | null;
+  status?: TenderUpdateStatus;
+}
+
+export interface CollectTendersRequest {
+  sourceType?: TenderSourceType;
+}
+
+export interface CollectTendersResult {
+  inserted: number;
+  skipped: number;
+  tenders: TenderItem[];
+}
+
 export type BookmarkItemType = typeof BookmarkItemType[keyof typeof BookmarkItemType];
 
 
@@ -1207,6 +1351,22 @@ export const ListEventsPeriod = {
   all: 'all',
 } as const;
 
+export type ListTendersParams = {
+sourceType?: TenderSourceType;
+category?: string;
+deadlineWithin?: ListTendersDeadlineWithin;
+includeClosed?: boolean;
+};
+
+export type ListTendersDeadlineWithin = typeof ListTendersDeadlineWithin[keyof typeof ListTendersDeadlineWithin];
+
+
+export const ListTendersDeadlineWithin = {
+  NUMBER_7: '7',
+  NUMBER_30: '30',
+  all: 'all',
+} as const;
+
 export type ListMyBookmarksParams = {
 itemType?: BookmarkItemType;
 };
@@ -1225,6 +1385,11 @@ token: string;
 };
 
 export type RefreshScheduledEvents200 = {
+  inserted: number;
+  skipped: number;
+};
+
+export type RefreshScheduledTenders200 = {
   inserted: number;
   skipped: number;
 };

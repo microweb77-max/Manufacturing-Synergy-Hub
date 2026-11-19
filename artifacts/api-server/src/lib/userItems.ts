@@ -1,7 +1,10 @@
 import { randomBytes } from "node:crypto";
-import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm";
-import { db, eventsTable, userBookmarksTable, userAlertPreferencesTable } from "@workspace/db";
+import { and, eq, gt, gte, inArray, isNull, lte, sql } from "drizzle-orm";
+import {
+  db, eventsTable, tendersTable, tenderDeadlineRemindersTable, userBookmarksTable, userAlertPreferencesTable,
+} from "@workspace/db";
 import { buildDigestText } from "./events";
+import { addDays, buildTenderDigestText, tenderMatchesAlert } from "./tenders";
 import { sendDigestMail } from "./membershipMail";
 import { logger } from "./logger";
 
@@ -170,3 +173,107 @@ export async function sendWeeklyEventAlerts(
   return { sent, failed, skipped };
 }
 
+
+// ---------- 사업공고 weekly digest + "마감 3일 전" reminder (same job as events) ----------
+
+export const REMINDER_DAYS = 3;
+
+export async function sendWeeklyTenderAlerts(
+  unsubscribeUrlFor: (token: string) => string,
+  send: (to: string, subject: string, text: string) => Promise<void> = sendDigestMail,
+  now = new Date(),
+) {
+  const prefs = await db.select().from(userAlertPreferencesTable).where(and(
+    eq(userAlertPreferencesTable.itemType, "tender"),
+    eq(userAlertPreferencesTable.weeklyEmail, true),
+  ));
+  const today = new Date(now.getTime() + 7 * 3600_000).toISOString().slice(0, 10);
+  const soon = addDays(today, REMINDER_DAYS);
+  let sent = 0, failed = 0, skipped = 0;
+  for (const pref of prefs) {
+    if (!pref.email || !isValidEmail(pref.email)) { skipped += 1; continue; }
+
+    // New tenders in the member's chosen types/categories (weekly cadence, like events).
+    const since = pref.lastSentAt ?? new Date(now.getTime() - FIRST_WINDOW_MS);
+    const cadenceOk = !pref.lastSentAt || now.getTime() - pref.lastSentAt.getTime() >= MIN_RESEND_MS;
+    let fresh: (typeof tendersTable.$inferSelect)[] = [];
+    if (pref.categories.length && cadenceOk) {
+      fresh = (await db.select().from(tendersTable).where(and(
+        eq(tendersTable.status, "published"),
+        gt(tendersTable.createdAt, since),
+        gte(tendersTable.deadline, today),
+      )).orderBy(tendersTable.deadline)).filter((t) => tenderMatchesAlert(t, pref.categories));
+    }
+
+    // Bookmarked tenders closing within 3 days that this member was not reminded about yet.
+    const closingAll = await db.select({ t: tendersTable }).from(userBookmarksTable)
+      .innerJoin(tendersTable, eq(tendersTable.id, userBookmarksTable.itemId))
+      .where(and(
+        eq(userBookmarksTable.clerkUserId, pref.clerkUserId),
+        eq(userBookmarksTable.itemType, "tender"),
+        eq(tendersTable.status, "published"),
+        gte(tendersTable.deadline, today),
+        lte(tendersTable.deadline, soon),
+      ));
+    const reminded = closingAll.length
+      ? new Set((await db.select({ id: tenderDeadlineRemindersTable.tenderId }).from(tenderDeadlineRemindersTable)
+        .where(and(
+          eq(tenderDeadlineRemindersTable.clerkUserId, pref.clerkUserId),
+          inArray(tenderDeadlineRemindersTable.tenderId, closingAll.map((r) => r.t.id)),
+        ))).map((r) => r.id))
+      : new Set<number>();
+    let closing = closingAll.map((r) => r.t).filter((t) => !reminded.has(t.id));
+
+    if (!fresh.length && !closing.length) { skipped += 1; continue; } // nothing to say → no mail
+
+    // Claim BEFORE mailing so a failed send is never retried and nothing is sent twice.
+    if (fresh.length) {
+      const claimed = await db.update(userAlertPreferencesTable)
+        .set({ lastSentAt: now })
+        .where(and(
+          eq(userAlertPreferencesTable.clerkUserId, pref.clerkUserId),
+          eq(userAlertPreferencesTable.itemType, pref.itemType),
+          pref.lastSentAt ? eq(userAlertPreferencesTable.lastSentAt, pref.lastSentAt) : isNull(userAlertPreferencesTable.lastSentAt),
+        ))
+        .returning({ id: userAlertPreferencesTable.clerkUserId });
+      if (!claimed.length) fresh = [];
+    }
+    if (closing.length) {
+      const won = await db.insert(tenderDeadlineRemindersTable)
+        .values(closing.map((t) => ({ clerkUserId: pref.clerkUserId, tenderId: t.id })))
+        .onConflictDoNothing()
+        .returning({ id: tenderDeadlineRemindersTable.tenderId });
+      const wonIds = new Set(won.map((r) => r.id));
+      closing = closing.filter((t) => wonIds.has(t.id));
+    }
+    if (!fresh.length && !closing.length) { skipped += 1; continue; }
+    try {
+      await send(
+        pref.email,
+        `[제조업 시너지 허브] 사업공고 알림 (신규 ${fresh.length}건 · 마감 임박 ${closing.length}건)`,
+        buildTenderDigestText(fresh, closing, unsubscribeUrlFor(pref.unsubscribeToken)),
+      );
+      sent += 1;
+    } catch (err) {
+      failed += 1;
+      logger.error({ err, userId: pref.clerkUserId }, "Weekly tender alert mail failed (not retried)");
+    }
+  }
+  return { sent, failed, skipped };
+}
+
+/** Default for POST /api/scheduled/weekly-alerts: events keep their response shape, tenders are added. */
+export async function sendAllWeeklyAlerts(
+  unsubscribeUrlFor: (token: string) => string,
+  send?: (to: string, subject: string, text: string) => Promise<void>,
+  now = new Date(),
+) {
+  const events = await sendWeeklyEventAlerts(unsubscribeUrlFor, send, now);
+  let tenders = { sent: 0, failed: 0, skipped: 0 };
+  try {
+    tenders = await sendWeeklyTenderAlerts(unsubscribeUrlFor, send, now);
+  } catch (err) {
+    logger.error({ err }, "Weekly tender alerts failed");
+  }
+  return { ...events, tenders };
+}
