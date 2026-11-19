@@ -68,6 +68,13 @@ import {
   useUpdateEvent,
   useDeleteEvent,
   useCollectEvents,
+  useListAdminTenders,
+  getListAdminTendersQueryKey,
+  useCreateTender,
+  useUpdateTender,
+  useDeleteTender,
+  useCollectTenders,
+  getListTendersQueryKey,
   getListEventsQueryKey,
 } from "@workspace/api-client-react";
 import { useState, type ReactNode } from "react";
@@ -894,6 +901,194 @@ function CollectEventsControl() {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+const TENDER_TYPE_OPTIONS = [
+  { value: "gov_vn", label: "베트남 정부 입찰" },
+  { value: "kr_support", label: "한국 지원사업" },
+  { value: "buyer_rfq", label: "대형 발주처 RFQ" },
+];
+const TENDER_CATEGORY_OPTIONS = ["설비", "자동화", "IT·소프트웨어", "부품·소재", "건설·인프라", "서비스", "기타"].map((c) => ({ value: c, label: c }));
+
+function CollectTendersControl() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [sourceType, setSourceType] = useState("all");
+  const collect = useCollectTenders();
+
+  const run = () => {
+    collect.mutate(
+      { data: sourceType === "all" ? {} : { sourceType: sourceType as "gov_vn" | "kr_support" | "buyer_rfq" } },
+      {
+        onSuccess: (r) => {
+          toast({
+            title: "공고 수집 완료",
+            description: r.inserted > 0
+              ? `새 공고 ${r.inserted}건을 등록했습니다.${r.skipped > 0 ? ` (중복 ${r.skipped}건 제외)` : ""}`
+              : "새로 등록할 공고를 찾지 못했습니다.",
+          });
+          qc.invalidateQueries({ queryKey: getListAdminTendersQueryKey() });
+          qc.invalidateQueries({ queryKey: getListTendersQueryKey() });
+          setOpen(false);
+        },
+        onError: () => toast({ title: "오류", description: "공고 자동 수집 중 문제가 발생했습니다. (진행 중이거나 쿨다운일 수 있습니다)", variant: "destructive" }),
+      },
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline"><Sparkles className="mr-1.5 h-4 w-4" />공고 자동 수집</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[460px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" />사업공고 자동 수집</DialogTitle>
+          <DialogDescription>최근 30일 공고 중 마감 전인 건을 웹에서 검색해 한국어 요약으로 등록합니다. 원문 전문은 저장하지 않으며, 같은 제목+발주처+마감일은 제외됩니다.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-2">
+          <Label htmlFor="collect-tenders-type">공고 유형</Label>
+          <select
+            id="collect-tenders-type"
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+            value={sourceType}
+            onChange={(e) => setSourceType(e.target.value)}
+            disabled={collect.isPending}
+          >
+            <option value="all">전체 (3개 유형)</option>
+            {TENDER_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button onClick={run} disabled={collect.isPending}>
+            {collect.isPending ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />수집 중...</>) : (<><Sparkles className="mr-2 h-4 w-4" />수집 시작</>)}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TendersAdmin() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data, isLoading } = useListAdminTenders();
+  const create = useCreateTender();
+  const update = useUpdateTender();
+  const del = useDeleteTender();
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: getListAdminTendersQueryKey() });
+    qc.invalidateQueries({ queryKey: getListTendersQueryKey() });
+  };
+
+  const buildBody = (v: FormValues) => ({
+    title: v.title,
+    originalTitle: v.originalTitle || null,
+    summary: v.summary,
+    sourceType: v.sourceType as "gov_vn" | "kr_support" | "buyer_rfq",
+    category: v.category,
+    buyer: v.buyer || null,
+    country: v.country || null,
+    city: v.city || null,
+    budget: v.budget || null,
+    eligibility: v.eligibility || null,
+    submission: v.submission || null,
+    publishedDate: v.publishedDate || null,
+    deadline: v.deadline,
+    sourceUrl: v.sourceUrl || null,
+    status: v.status as "published" | "hidden",
+  });
+  const fail = () => {
+    toast({ title: "오류", description: "저장에 실패했습니다. 날짜(YYYY-MM-DD)와 링크(https://)를 확인하세요.", variant: "destructive" });
+    throw new Error("failed");
+  };
+
+  return (
+    <AdminSection
+      title="사업공고"
+      description="정부 입찰·지원사업·발주처 RFQ 공고를 관리합니다. 숨김 처리한 공고는 공개 페이지에 표시되지 않습니다."
+      items={data}
+      isLoading={isLoading}
+      getId={(t) => t.id}
+      getRowLabel={(t) => t.title}
+      headerActions={<CollectTendersControl />}
+      getSearchText={(t) => [t.title, t.originalTitle ?? "", t.buyer ?? ""].join(" ")}
+      searchPlaceholder="공고명 · 발주처 검색"
+      filters={[
+        { key: "sourceType", label: "유형", getValue: (t) => t.sourceType, options: TENDER_TYPE_OPTIONS },
+        { key: "status", label: "상태", getValue: (t) => t.status, options: [
+          { value: "published", label: "공개" }, { value: "hidden", label: "숨김" },
+        ] },
+        { key: "source", label: "출처", getValue: (t) => t.source, options: [
+          { value: "manual", label: "직접 등록" }, { value: "auto", label: "자동 수집" },
+        ] },
+      ]}
+      columns={[
+        { key: "deadline", header: "마감일", render: (t) => t.deadline, sortValue: (t) => t.deadline },
+        { key: "title", header: "공고명", render: (t) => <span className="font-medium">{t.title}</span>, sortValue: (t) => t.title },
+        { key: "sourceType", header: "유형", render: (t) => TENDER_TYPE_OPTIONS.find((o) => o.value === t.sourceType)?.label ?? t.sourceType },
+        { key: "category", header: "분야", render: (t) => t.category },
+        { key: "buyer", header: "발주처", render: (t) => t.buyer ?? "" },
+        { key: "status", header: "상태", render: (t) => <Badge variant={t.status === "published" ? "default" : "secondary"}>{t.status === "published" ? "공개" : "숨김"}</Badge> },
+        { key: "source", header: "출처", render: (t) => t.source === "auto" ? <Badge variant="outline" className="gap-1"><Sparkles className="h-3 w-3" />자동수집</Badge> : <span className="text-muted-foreground text-xs">직접</span> },
+      ]}
+      fields={[
+        { name: "title", label: "공고명 (한국어)", type: "text", required: true, full: true },
+        { name: "originalTitle", label: "원제목", type: "text", full: true },
+        { name: "sourceType", label: "유형", type: "select", options: TENDER_TYPE_OPTIONS },
+        { name: "category", label: "분야", type: "select", options: TENDER_CATEGORY_OPTIONS },
+        { name: "buyer", label: "발주처", type: "text" },
+        { name: "budget", label: "예산", type: "text" },
+        { name: "country", label: "국가", type: "text" },
+        { name: "city", label: "도시", type: "text" },
+        { name: "publishedDate", label: "게시일 (YYYY-MM-DD)", type: "text" },
+        { name: "deadline", label: "마감일 (YYYY-MM-DD)", type: "text", required: true },
+        { name: "status", label: "상태", type: "select", options: [{ value: "published", label: "공개" }, { value: "hidden", label: "숨김" }] },
+        { name: "sourceUrl", label: "원문 링크 (https://)", type: "text", full: true },
+        { name: "summary", label: "요약 (원문 전문 복사 금지)", type: "textarea", full: true },
+        { name: "eligibility", label: "참가 자격", type: "textarea", full: true },
+        { name: "submission", label: "제출 방법", type: "textarea", full: true },
+      ]}
+      emptyValues={{
+        title: "", originalTitle: "", sourceType: "gov_vn", category: "설비", buyer: "", budget: "", country: "베트남",
+        city: "", publishedDate: "", deadline: "", status: "published", sourceUrl: "", summary: "", eligibility: "", submission: "",
+      }}
+      toFormValues={(t) => ({
+        title: t.title, originalTitle: t.originalTitle ?? "", sourceType: t.sourceType, category: t.category,
+        buyer: t.buyer ?? "", budget: t.budget ?? "", country: t.country ?? "", city: t.city ?? "",
+        publishedDate: t.publishedDate ?? "", deadline: t.deadline, status: t.status, sourceUrl: t.sourceUrl ?? "",
+        summary: t.summary, eligibility: t.eligibility ?? "", submission: t.submission ?? "",
+      })}
+      onCreate={async (v, options) => {
+        try {
+          await create.mutateAsync({ data: buildBody(v) });
+          if (!options?.silent) {
+            toast({ title: "추가 완료", description: "공고가 등록되었습니다." });
+            invalidate();
+          }
+        } catch { fail(); }
+      }}
+      onUpdate={async (id, v) => {
+        try {
+          await update.mutateAsync({ id, data: buildBody(v) });
+          toast({ title: "수정 완료", description: "공고가 수정되었습니다." });
+          invalidate();
+        } catch { fail(); }
+      }}
+      onDelete={async (id) => {
+        try {
+          await del.mutateAsync({ id });
+          toast({ title: "삭제 완료", description: "공고가 삭제되었습니다." });
+          invalidate();
+        } catch {
+          toast({ title: "오류", description: "삭제에 실패했습니다.", variant: "destructive" });
+          throw new Error("failed");
+        }
+      }}
+    />
   );
 }
 
@@ -2181,6 +2376,7 @@ export default function AdminPage() {
           <TabsTrigger value="solutions">솔루션</TabsTrigger>
           <TabsTrigger value="performance">성과</TabsTrigger>
           <TabsTrigger value="events">행사</TabsTrigger>
+          <TabsTrigger value="tenders">사업공고</TabsTrigger>
           <TabsTrigger value="talent">인력 Pool</TabsTrigger>
           <TabsTrigger value="offers">공급 오퍼</TabsTrigger>
           <TabsTrigger value="offer-matches">오퍼 매칭</TabsTrigger>
@@ -2211,6 +2407,9 @@ export default function AdminPage() {
         </TabsContent>
         <TabsContent value="events" className="mt-6">
           <EventsAdmin />
+        </TabsContent>
+        <TabsContent value="tenders" className="mt-6">
+          <TendersAdmin />
         </TabsContent>
         <TabsContent value="talent" className="mt-6">
           <TalentAdmin />
