@@ -2,6 +2,8 @@
 
 B2B manufacturing collaboration portal for Vietnam (Korean UI). **Read `replit.md` first** — it is the detailed, up-to-date description of features, architecture, security model and gotchas.
 
+New human co-developers: start with [`ONBOARDING.md`](ONBOARDING.md) (Korean setup guide — accounts, Windows install, how to use Claude Code, rules, deploy).
+
 ## Run locally (Windows / macOS / Linux)
 
 ```bash
